@@ -25,7 +25,7 @@ This project rips the original 65816 + Super FX 2 machine code out of the ROM an
 
 A **static recompilation** of Stunt Race FX (SNES, 1994) from WDC 65C816 + Super FX 2 (GSU-2) assembly into native C code, playable on modern hardware via SDL2.
 
-Instead of emulating the CPU, we **are** the CPU. Each original subroutine has been hand-translated into C that calls into real SNES hardware emulation (PPU, APU, DMA) through the snesrecomp library. No interpreter. No JIT. Just raw, recompiled C.
+Each original subroutine is hand-translated into C that talks to real SNES hardware (PPU, APU, DMA, GSU-2) through the [snesrecomp](https://github.com/sp00nznet/snesrecomp) library. The project follows snesrecomp's **incremental interception** model (the same philosophy as N64Recomp, minus the all-or-nothing): the genuine ROM runs on a cycle-accurate CPU so the *whole game is playable today*, and each recompiled function transparently replaces its ROM subroutine — verified bit-for-bit against genuine execution — until coverage reaches 100% native. No JIT. Just raw recompiled C, taking over the game one function at a time.
 
 ## The Super FX Factor
 
@@ -35,6 +35,28 @@ This means we're not just recompiling one CPU — we're recompiling *two*. Buckl
 
 We built a **complete GSU-2 emulator from scratch** and integrated it directly into [snesrecomp](https://github.com/sp00nznet/snesrecomp)'s LakeSnes backend. It's now available for any Super FX game recompilation, not just this one. Full instruction set, pixel cache, instruction cache, the works. Written in pure C, MIT licensed, zero external dependencies.
 
+## Run Modes
+
+The launcher selects its execution model via the `SRF_MODE` environment variable:
+
+| `SRF_MODE` | What runs | Use |
+|------------|-----------|-----|
+| `realframe` *(default)* | The genuine ROM on LakeSnes's cycle-accurate CPU (GSU-2 included). The **whole game runs** — title, attract, menus, race. The call-target profiler ranks the hottest JSR/JSL targets on exit (your best recompilation candidates). | Play the full game; find what to recompile next. |
+| `intercept` | `realframe` **+ timed-recomp interception**: recompiled functions run *in place of* their ROM subroutines while everything else stays on the timed CPU. Coverage grows function-by-function toward 100% native. | The incremental static-recompilation path. |
+| `shells` | Legacy hand-stitched frame model (manual NMI + main-loop dispatch per frame). | Regression only. |
+
+Helper env vars: `SRF_MAX_FRAMES=N` (headless auto-stop, so the profiler/checksum print on exit); `SRF_INTERCEPT="addr:l,addr:s,…"` (override the intercept set for per-function bisection — `l`=JSL/RTL, `s`=JSR/RTS).
+
+### Verifying a recompiled function is faithful
+
+An intercepted function must reproduce genuine execution bit-for-bit. The workflow:
+
+1. **Profile** — `SRF_MODE=realframe SRF_MAX_FRAMES=N` and read the hottest targets.
+2. **Determine `is_long`** by scanning the ROM for the call opcode (JSL `22` = cross-bank/RTL, JSR `20` = in-bank/RTS) — never guess.
+3. **Bisect** — `SRF_MODE=intercept SRF_INTERCEPT=<addr>:<l|s>` and compare the printed **WRAM checksum** to the pure-`realframe` reference. Match ⇒ faithful ⇒ promote it into `k_intercepts` in `main.c`.
+
+**Verified faithful drop-in so far:** `$0B:B4C3` (entity allocator) — WRAM checksum identical to genuine execution over 300 frames. `intercept` mode is byte-for-byte identical to `realframe` with the current verified set.
+
 ## Status
 
 ### Infrastructure
@@ -43,9 +65,13 @@ We built a **complete GSU-2 emulator from scratch** and integrated it directly i
 |-----------|--------|---------|
 | GSU-2 emulator | Done | ~1,200 lines of C, full instruction set, pixel cache, pushed to snesrecomp |
 | GSU bus API | Done | `bus_gsu_read/write/run`, `bus_has_gsu()` |
-| Super FX cart detection | Done | Cart type 4 (LoROM+SuperFX), auto-detect from ROM header $FFD6 |
+| Super FX cart detection | Done | Cart type **6** (LoROM+SuperFX), auto-detect from ROM header $FFD6 (4/5 now reserved for DSP-1) |
 | 65816 disassembler | Done | M/X flag tracking, LoROM mapping, branch targets |
 | snesrecomp integration | Done | LakeSnes backend with GSU, SDL2 platform layer |
+| **Timed-recomp framework** | Done | Migrated onto current snesrecomp (`origin/main`): interpreter fallback, opcode-fetch interception hook, call-target profiler, RECOMP_PATCH auto-registration |
+| **GSU ↔ recomp-hook merge** | Done | Merged GSU-2 into the SMK-lineage LakeSnes (`c251118`) — the new framework had dropped Super FX; restored it + rewired the GSU bus impl |
+| **Real-frame full game** | Done | Genuine ROM runs end-to-end on the cycle-accurate CPU (GSU 3D included), deterministic frame-to-frame |
+| **Interception + verification** | Done | Recompiled functions replace ROM subroutines live; WRAM-checksum harness proves bit-exact fidelity |
 
 ### Boot & Initialization
 
