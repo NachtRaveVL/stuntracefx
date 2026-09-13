@@ -2,11 +2,11 @@
 
 	include	header.inc
 	incfile	mdynmacs.mc
-	incfile	dynstruct.inc
+	incfile	dynstruc.inc
 	include	mapmacs.inc
 
 	include	stratequ.inc
-	include	mapstructs.inc
+	include	mapstruc.inc
 
 	include	mario.ext
 	include	pstrats.ext

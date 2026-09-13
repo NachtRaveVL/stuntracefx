@@ -1,14 +1,63 @@
-build/
+#ROMs
 *.sfc
 *.smc
+*.SFC
+*.SMC
 *.srm
+*.ram
+
+#MSU stuff
+*.msu
+*.pcm
+
+#ZIPs
+*.7z
 *.zip
-*.exe
-*.obj
-*.o
-*.lib
-*.a
-.vs/
-out/
-CMakeSettings.json
-*.user
+*.rar
+
+#patches
+*.bps
+*.BPS
+*.ips
+*.IPS
+
+#Releases
+*/releases/*
+
+#backups
+*.bak
+*.BAK
+
+# build logs
+*.LOG
+*.log
+*/SF/*.DOC
+*/SF/*.doc
+*/SF/*.TMP
+*/SF/*.tmp
+*/SF/*.txt
+*.TXT
+*.CSV
+*.csv
+*.CSV#
+*.csv#
+
+# VSCode stuff
+# Allow settings and tasks and nothing else
+!/.vscode/settings.json
+!/.vsvode/tasks.json
+*/.vscode/*
+
+# Files generated during assembly
+Original/**/*.CCR
+Original/**/*.PCR
+XL/DATA/COL/*.PAC
+XL/DATA/COL/ALLCOLS.COL
+
+# Object files
+*.sob
+*.SOB
+
+# Linker Address Maps
+*.map
+*.MAP

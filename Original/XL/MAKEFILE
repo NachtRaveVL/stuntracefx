@@ -30,11 +30,11 @@ info: $(ALLFILES)
 
 ## Bank 0
 bank0.sob: bank0.asm $(STRATFILES) \
-$(STDFILES) mdynmacs.mc dynstruct.inc blink.asm \
+$(STDFILES) mdynmacs.mc dynstruc.inc blink.asm \
 data\etabs.dat sgtabs.asm data\nintendo.pal data\map-obj.cgx \
 sgdata.asm data\arctan.asm istrats.asm shapes.asm \
 shapes2.asm ashapes.asm a2shapes.asm afshapes.asm \
-af2shapes.asm a1shapes.asm ajshapes.asm aushapes.asm \
+af2shape.asm a1shapes.asm ajshapes.asm aushapes.asm \
 acshapes.asm rshapes.asm rshapes2.asm awshapes.asm \
 data\and.pcr 
 
@@ -50,7 +50,7 @@ mdynamic.mc mai.mc
 
 ## Bank 2, 3
 bank2.sob: bank2.asm bgmacs.inc\
-$(STDFILES) mdynmacs.mc dynstruct.inc xlirq.asm \
+$(STDFILES) mdynmacs.mc dynstruc.inc xlirq.asm \
 hdmatabs.asm ramstuff.asm data\gfx\mist.col data\gfx\bg2-c.col \
 data\gfx\bg2-c.col data\gfx\over_d.col xlmain.asm xltrans.asm \
 game.asm windows.asm defspr.asm data\gfx\night.col \
@@ -66,7 +66,7 @@ $(STDFILES) $(STRATFILES)
 
 ## Bank 5, bank 13
 bank5.sob: bank5.asm mapmacs.inc istrats.asm \
-$(STDFILES) mdynmacs.mc dynstruct.inc maps\test1.asm \
+$(STDFILES) mdynmacs.mc dynstruc.inc maps\test1.asm \
 maps\test2.asm maps\test3.asm maps\test4.asm maps\maplist.asm \
 data\and.ccr maps\MAPP.asm maps\maplist2.asm 
 
@@ -102,11 +102,11 @@ $(STDFILES) $(STRATFILES) pstrats.asm
 
 ## Banks 12, 13, 14, 15, 16, 17, 22
 shbanks.sob: shbanks.asm shmacs.inc stratequ.inc \
-$(STDFILES) mdynmacs.mc dynstructs.inc shapes.asm \
+$(STDFILES) mdynmacs.mc dynstruc.inc shapes.asm \
 rshapes.asm ashapes.asm snd\sgbgmm.bin a2shapes.asm \
 rshapes2.asm data\m.pcr snd\sgbgm2.bin afshapes.asm \
 snd\sgbgmn.bin a1shapes.asm awshapes.asm shapes2.asm \
-snd\sgbgmj.bin ajshapes.asm aushapes.asm af2shapes.asm \
+snd\sgbgmj.bin ajshapes.asm aushapes.asm af2shape.asm \
 data\dog.ccr snd\sgbgm7.bin snd\sgbgm3.bin acshapes.asm \
 
 ## Banks 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29, 30, 31

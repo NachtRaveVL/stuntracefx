@@ -5,9 +5,9 @@
 	include	bgmacs.inc
 	include	blink.ext
 
-	include	mapstructs.inc
+	include	mapstruc.inc
 	incfile	mdynmacs.mc
-	incfile	dynstruct.inc
+	incfile	dynstruc.inc
 	include	mapmacs.inc
 	include	shmacs.inc
 	include mkmacs.inc

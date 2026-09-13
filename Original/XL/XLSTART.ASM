@@ -15,20 +15,26 @@
 	shorti
 ProgramEntry
 	sei				;IRQdisable
-	rep	#%00001001		;set binary mode
+	clc
 	xce				;set native mode
+	cld				;set binary mode
 ;
 ;--------------------------------------------------------------------
 ;	Initiarize SFX
 ;--------------------------------------------------------------------
 
-	ai8
-	stz	$4200			;Disable NMI&IRQ
-	stz	$420b			;Disable M-DMA
-	stz	$420c			;Disable H-DMA
-	lda	#%10000000
-	sta	$2100			;Screen blanking!!
-	stz	$2133			;set PPU mode
+	; Establish stack, direct page and data bank before calling the
+	; register initialization recovered from retail $03:89b4.
+	ai16
+	ldx	#$02ff
+	txs
+	lda	#0
+	tcd
+	phk
+	plb
+	jsl	InitializeHardware
+	shorta
+	shorti
 	stz	$4016			;for controller auto scan
 ;--------------------------------------------------------------------
 	i16
@@ -203,6 +209,100 @@ VectorDataEnd
 ;--------------------------------------------------------------------
 WorkClearData
 	dw	0000
+;--------------------------------------------------------------------
+
+;--------------------------------------------------------------------
+; PPU/CPU register initialization recovered from retail $03:89b4.
+; A/X/Y are 8-bit on return. DB must select a bank with hardware I/O.
+; The early source keeps its existing RAM allocations and game flow.
+;--------------------------------------------------------------------
+InitializeHardware
+	ai8
+	lda	#$8f
+	sta	$2100
+	lda	#$00
+	sta	$2101
+	sta	$2102
+	sta	$2103
+	sta	$2105
+	sta	$2106
+	sta	$2107
+	sta	$2108
+	sta	$2109
+	sta	$210a
+	sta	$210b
+	sta	$210c
+	sta	$210d
+	sta	$210d
+	sta	$210e
+	sta	$210e
+	sta	$210f
+	sta	$210f
+	sta	$2110
+	sta	$2110
+	sta	$2111
+	sta	$2111
+	sta	$2112
+	sta	$2112
+	sta	$2113
+	sta	$2113
+	sta	$2114
+	sta	$2114
+	ldx	#$80
+	stx	$2115
+	sta	$2116
+	sta	$2117
+	sta	$211a
+	ldx	#$01
+	sta	$211b
+	stx	$211b
+	sta	$211c
+	sta	$211c
+	sta	$211d
+	sta	$211d
+	sta	$211e
+	stx	$211e
+	sta	$211f
+	sta	$211f
+	sta	$2120
+	sta	$2120
+	sta	$2121
+	sta	$2122
+	sta	$2123
+	sta	$2124
+	sta	$2125
+	sta	$2126
+	sta	$2127
+	sta	$2128
+	sta	$2129
+	sta	$212a
+	sta	$212b
+	sta	$212c
+	sta	$212d
+	sta	$212e
+	ldy	#$30
+	sty	$2130
+	sta	$2131
+	ldx	#$e0
+	stx	$2132
+	sta	$2133
+	sta	$4200
+	ldx	#$ff
+	stx	$4201
+	sta	$4202
+	sta	$4203
+	sta	$4204
+	sta	$4205
+	sta	$4206
+	sta	$4207
+	sta	$4208
+	sta	$4209
+	sta	$420a
+	sta	$420b
+	sta	$420c
+	sta	$420d
+	rtl
+
 ;--------------------------------------------------------------------
 
 
