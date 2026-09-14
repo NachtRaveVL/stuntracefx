@@ -441,6 +441,113 @@ getview_l
 
 
 
+
+; Update the angles of a retail camera record, US retail $02:de45.
+; Entry name and field names reconstructed.
+; X = camera record in low Work RAM, D = 0, DB = $7e.
+; X and P are preserved; A,Y and angle-helper temporaries are scratch.
+; Position/record setup belongs to the retail camera caller, not getview_l.
+
+getviewangles_l
+	php
+	ai16
+	lda	vc_flags,x
+	and	#vcf_lookat
+	bne	.lookat
+	brl	.follow
+.lookat
+	ai16
+	txy
+	lda	vc_target,x
+	tax
+	lda.w	vc_worldx,y
+	sta	x2
+	lda.w	vc_worldy,y
+	sta	y2
+	lda.w	vc_worldz,y
+	sta	z2
+	jsl	Yanglexabs16_l
+	clc
+	adc	#$8000
+	sta.w	vc_roty,y
+	lda.w	vc_flags,y
+	and	#vcf_pitchlag
+	bne	.pitchlag
+	jsl	Xanglexabs16_l
+	bra	.pitchdone
+.pitchlag
+	jsl	Xanglexabs16_l
+	sec
+	sbc.w	vc_rotx,y
+	asra
+	asra
+	clc
+	adc.w	vc_rotx,y
+.pitchdone
+	sta.w	vc_rotx,y
+	lda	al_rotz,x
+	and	#$ff
+	xba
+	nega
+	asra
+	asra
+	sec
+	sbc.w	vc_rotz,y
+	asra
+	clc
+	adc.w	vc_rotz,y
+	sta.w	vc_rotz,y
+	tyx
+	bra	.rollcheck
+.follow
+	a16
+	lda	vc_flags,x
+	and	#vcf_followrot
+	beq	.rollcheck
+	txy
+	lda	vc_target,x
+	tax
+	lda	al_rotx,x
+	and	#$ff
+	xba
+	nega
+	sec
+	sbc.w	vc_rotx,y
+	asra
+	clc
+	adc.w	vc_rotx,y
+	sta.w	vc_rotx,y
+	lda	al_roty,x
+	and	#$ff
+	xba
+	nega
+	sec
+	sbc.w	vc_roty,y
+	asra
+	clc
+	adc.w	vc_roty,y
+	sta.w	vc_roty,y
+	lda	al_rotz,x
+	and	#$ff
+	xba
+	nega
+	sec
+	sbc.w	vc_rotz,y
+	asra
+	clc
+	adc.w	vc_rotz,y
+	sta.w	vc_rotz,y
+	tyx
+.rollcheck
+	lda	vc_flags,x
+	and	#vcf_roll
+	bne	.done
+	stz	vc_rotz,x
+.done
+	plp
+	rtl
+
+
 	IFEQ	1
 
 irotcentre
