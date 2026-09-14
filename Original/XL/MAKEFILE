@@ -6,6 +6,10 @@ ASMFLAGS=-efilelist=0
 include symson.mak
 LINK=SL
 LOPTS=-b30 -h512 -t7d
+EXTEND=EXTEND
+EXTOPTS=8 ff
+CHECK=SFCHECK
+COPTS=-s -f
 ANSI=
 
 ALLFILES= bank0.sob bank1.sob bank2.sob \
@@ -22,8 +26,10 @@ all: finished.sg
 finished.sg: $(ALLFILES)
 	@$(LINK) $(LOPTS) -d @flist
 
-xl.rom: $(ALLFILES)
+xl.rom: $(ALLFILES) MAKEFILE
 	@$(LINK) $(LOPTS) -oxl.rom @flist
+	@$(EXTEND) $@ $(EXTOPTS)
+	@$(CHECK) $(COPTS) $@
 
 info: $(ALLFILES)
 	@$(LINK) $(LOPTS) -l1024 @flist

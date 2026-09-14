@@ -36,7 +36,7 @@
 	global	m_textcolour
 	global	m_planetstars,m_particlesON,m_defaultID
 	global	mallrotzsort,mdrawsprite32
-	global	marctan16
+	global	marctan16,mcallhypot16
 
 
 	ifne	mario_stats3d
