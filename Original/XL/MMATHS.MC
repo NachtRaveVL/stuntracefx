@@ -13,6 +13,7 @@
 ;
 ; msqrt16   	16 bit square root
 ; msqrt32	32 bit square root
+; mcallhypot16	16 bit x,z distance, SNES entry
 ; mdivs3216	32 bit by 16 bit signed divide
 ; mdivu3216	32 bit by 16 bit approx. unsigned divide
 ; mdivu3115	31 bit by 15 bit unsigned divide
@@ -144,6 +145,41 @@ msqrt32
 	with	rsqr
 
 	jmp	r11
+	nop
+
+
+;************************************************
+
+; Distance from signed 16 bit x,z differences.
+;
+; in:   m_x1,m_z1 = x,z differences
+; out:  m_x2 = sqrt(x*x + z*z)
+; dead: r0,r4-r8,r10-r13
+;
+; Recovered from US retail $01:80bc; entry name reconstructed.
+; Called through runmario_l; STOP returns control to the SNES.
+
+mcallhypot16
+	miwt	rsp,m_stack
+	lm	r0,[m_x1]
+	move	r6,r0
+	to	r8
+	lmult
+	move	r7,r4		; r8,r7 = x*x
+
+	lm	r0,[m_z1]
+	move	r6,r0
+	lmult			; r0,r4 = z*z
+	with	r4
+	add	r7
+	adc	r8		; r0,r4 = x*x + z*z
+
+	move	r5,r4
+	move	r4,r0
+	mcall	msqrt32
+	nop
+	sm	[m_x2],r6
+	stop
 	nop
 
 

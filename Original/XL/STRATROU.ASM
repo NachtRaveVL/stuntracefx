@@ -1763,28 +1763,36 @@ Xanglexy_off_l
 
 	shorta
 	longi
-Xanglexabs_l  
+Xanglexabs_l
+	jsl	Xanglexabs16_l
+	longa
+	sta	tpx
+	xba
+	and	#$ff
+	a8i16
+	rtl
+
+
+; Full 16 bit pitch toward (x2,y2,z2), US retail $03:c998.
+; Entry: a8i16, X = object. Exit: ai16, A = angle, X/Y preserved.
+; The early entry above retains its 8 bit angle and tpx result.
+; The 16 bit entry name is reconstructed.
+
+Xanglexabs16_l
 	phx
 	phy
-	
-	jsl	xzdiffs_abs_l
 	a16
-	lda	rangexz
+	jsl	xzdist_abs_l
 	sta	y1
 	lda.w	y2
 	sec
 	sbc	al_worldy,x
 	sta	x1
 	jsl	arctan16_l
-	a16	
-	sta	tpx
-	xba
-	and	#$ff
-	a8i16
+	a16
 	ply
 	plx
 	rtl
-
 
 
 ;*****************************************************************************
@@ -1808,30 +1816,63 @@ Xanglexabs_l
 
 	shorta
 	longi
-Yanglexabs_l  
-	phx
-	phy
-	
-	a16
-	
-	lda.w	x2
-	sec
-	sbc	al_worldx,x
-	sta	x1
-
-	lda.w	z2
-	sec
-	sbc	al_worldz,x
-	sta	y1
-
-	jsl	arctan16_l
-	a16	
+Yanglexabs_l
+	jsl	Yanglexabs16_l
+	longa
 	sta	tpx
 	xba
 	and	#$ff
 	a8i16
+	rtl
+
+
+; Full 16 bit yaw toward (x2,z2), US retail $03:c9b4.
+; Entry: a8i16, X = object. Exit: ai16, A = angle, X/Y preserved.
+; The early entry above retains its 8 bit angle and tpx result.
+; The 16 bit entry name is reconstructed.
+
+Yanglexabs16_l
+	phx
+	phy
+	a16
+	lda	x2
+	sec
+	sbc	al_worldx,x
+	sta	x1
+	lda	z2
+	sec
+	sbc	al_worldz,x
+	sta	y1
+	jsl	arctan16_l
+	a16
 	ply
 	plx
+	rtl
+
+
+; X,Z distance from object X to (x2,z2), US retail $03:c9ee.
+; Entry/exit: ai16. A = unsigned distance, X preserved.
+; Uses m_x1,m_z1,m_x2; x2,y2,z2 are preserved.
+; Entry name reconstructed. xzdiffs_abs_l keeps its early interface.
+
+xzdist_abs_l
+	lda	x2
+	sec
+	sbc	al_worldx,x
+	sta.l	m_x1
+	lda	z2
+	sec
+	sbc	al_worldz,x
+	sta.l	m_z1
+	phx
+	a8
+	lda	#mcallhypot16>>16
+	ldx	#mcallhypot16&$ffff
+	jsl	runmario_l
+	a16
+	i16
+	plx
+	lda.l	m_x2
 	rtl
 
 

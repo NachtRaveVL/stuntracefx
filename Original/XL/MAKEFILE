@@ -6,6 +6,10 @@ ASMFLAGS=-efilelist=0
 include symson.mak
 LINK=SL
 LOPTS=-b30 -h512 -t7d
+EXTEND=EXTEND
+EXTOPTS=8 ff
+CHECK=SFCHECK
+COPTS=-s -f
 ANSI=
 
 ALLFILES= bank0.sob bank1.sob bank2.sob \
@@ -22,19 +26,21 @@ all: finished.sg
 finished.sg: $(ALLFILES)
 	@$(LINK) $(LOPTS) -d @flist
 
-xl.rom: $(ALLFILES)
+xl.rom: $(ALLFILES) MAKEFILE
 	@$(LINK) $(LOPTS) -oxl.rom @flist
+	@$(EXTEND) $@ $(EXTOPTS)
+	@$(CHECK) $(COPTS) $@
 
 info: $(ALLFILES)
 	@$(LINK) $(LOPTS) -l1024 @flist
 
 ## Bank 0
 bank0.sob: bank0.asm $(STRATFILES) \
-$(STDFILES) mdynmacs.mc dynstruct.inc blink.asm \
+$(STDFILES) mdynmacs.mc dynstruc.inc blink.asm \
 data\etabs.dat sgtabs.asm data\nintendo.pal data\map-obj.cgx \
 sgdata.asm data\arctan.asm istrats.asm shapes.asm \
 shapes2.asm ashapes.asm a2shapes.asm afshapes.asm \
-af2shapes.asm a1shapes.asm ajshapes.asm aushapes.asm \
+af2shape.asm a1shapes.asm ajshapes.asm aushapes.asm \
 acshapes.asm rshapes.asm rshapes2.asm awshapes.asm \
 data\and.pcr 
 
@@ -50,15 +56,14 @@ mdynamic.mc mai.mc
 
 ## Bank 2, 3
 bank2.sob: bank2.asm bgmacs.inc\
-$(STDFILES) mdynmacs.mc dynstruct.inc xlirq.asm \
+$(STDFILES) mdynmacs.mc dynstruc.inc xlirq.asm \
 hdmatabs.asm ramstuff.asm data\gfx\mist.col data\gfx\bg2-c.col \
 data\gfx\bg2-c.col data\gfx\over_d.col xlmain.asm xltrans.asm \
 game.asm windows.asm defspr.asm data\gfx\night.col \
 data\gfx\red.col data\gfx\blue.col coltab.asm light.asm \
-coltabs.asm bgs.asm sound.asm obj.asm \
-sprites.asm mother.asm world.asm debug.asm \
-stratrou.asm draw.asm endseq.asm data\f-1.pcr \
-cont.asm 
+coltabs.asm obj.asm \
+mother.asm world.asm debug.asm \
+stratrou.asm draw.asm endseq.asm data\f-1.pcr 
 
 
 ## Bank 4
@@ -67,7 +72,7 @@ $(STDFILES) $(STRATFILES)
 
 ## Bank 5, bank 13
 bank5.sob: bank5.asm mapmacs.inc istrats.asm \
-$(STDFILES) mdynmacs.mc dynstruct.inc maps\test1.asm \
+$(STDFILES) mdynmacs.mc dynstruc.inc maps\test1.asm \
 maps\test2.asm maps\test3.asm maps\test4.asm maps\maplist.asm \
 data\and.ccr maps\MAPP.asm maps\maplist2.asm 
 
@@ -80,7 +85,7 @@ mhofs.mc
 bank7.sob: bank7.asm  \
 $(STDFILES) $(STRATFILES) xldata\font.bmp xlstart.asm \
 xltitle.asm xlinit.asm xlsound.asm xlmes.asm \
-mmacs.mc mmessage.mc xldata\hand.pcg xldata\title.pcg \
+mmacs.mc mmessage.mc xldata\title.pcg \
 xldata\title.pco xldata\title.psc xldata\game.pco xldata\game2.pco \
 xldata\game3.pco xldata\game4.pco xldata\obj.pcg xldata\bgpanel.pcg \
 xldata\back1.pcg xldata\back1.psc 
@@ -103,21 +108,17 @@ $(STDFILES) $(STRATFILES) pstrats.asm
 
 ## Banks 12, 13, 14, 15, 16, 17, 22
 shbanks.sob: shbanks.asm shmacs.inc stratequ.inc \
-$(STDFILES) mdynmacs.mc dynstructs.inc shapes.asm \
+$(STDFILES) mdynmacs.mc dynstruc.inc shapes.asm \
 rshapes.asm ashapes.asm snd\sgbgmm.bin a2shapes.asm \
 rshapes2.asm data\m.pcr snd\sgbgm2.bin afshapes.asm \
 snd\sgbgmn.bin a1shapes.asm awshapes.asm shapes2.asm \
-snd\sgbgmj.bin ajshapes.asm aushapes.asm af2shapes.asm \
+snd\sgbgmj.bin ajshapes.asm aushapes.asm af2shape.asm \
 data\dog.ccr snd\sgbgm7.bin snd\sgbgm3.bin acshapes.asm \
 
 ## Banks 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29, 30, 31
 incbins.sob: incbins.asm \
 $(STDFILES) msprites\sprites1.dat msprites\sprites2.dat data\moji_2.fon \
-mdata.mc data\demo.ccr data\demo.pcr data\hole-a.ccr \
-data\b.ccr data\b.pcr data\obj-1.ccr data\e-test.ccr \
-data\e-test.pcr data\e-test2.ccr data\e-test2.pcr data\fox.ccr \
-data\fox.pcr data\b-m.ccr data\st-p.ccr data\2-3h.pcr \
-data\st-p.pcr data\2-2.ccr data\2-3.ccr data\2-3b.ccr \
+mdata.mc data\st-p.pcr data\2-2.ccr data\2-3.ccr data\2-3b.ccr \
 data\stars.ccr data\1-3-b.ccr data\space.ccr data\last.pcr \
 data\3-2.ccr data\fs-bg3.ccr data\3-3.ccr data\map.ccr \
 data\fs-ni.pcr data\t-ss.pcr data\3-4.ccr data\dog.pcr \

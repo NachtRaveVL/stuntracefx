@@ -3,7 +3,7 @@
 
 
 	incfile	mdynmacs.mc
-	incfile	dynstruct.inc	
+	incfile	dynstruc.inc	
 
 	include	stratmac.inc
 	include	stratlib.inc
@@ -57,7 +57,7 @@ default_group_num	=	0
 	incfile	ashapes.asm
 	incfile	a2shapes.asm
 	incfile	afshapes.asm
-	incfile	af2shapes.asm
+	incfile	af2shape.asm
 	incfile	a1shapes.asm
 	incfile	ajshapes.asm
 	incfile	aushapes.asm
@@ -78,6 +78,10 @@ Do_HDR	=	0
 	inccru	bgandpcr,data\and.pcr
 
 ResetEntry
+	sei
+	clc
+	xce
+	cld
 	jmp.l	ProgramEntry
 
 cop_ve
@@ -96,13 +100,13 @@ abort_vn
 
 	IFEQ	JANGLISH
 
-	db	"STAR FOX             "
-	db	$20,$13,$a,$0,$1,$1,$0,$ff,$ff,$0,$0
+	db	"Stunt Race FX        "
+	db	$20,$1a,$a,$0,$1,$1,$0,$ff,$ff,$0,$0
 
 	ELSEIF
 
-	db	"STAR FOX             "
-	db	$20,$13,$a,$0,$0,$1,$0,$ff,$ff,$0,$0
+	db	"Stunt Race FX        "
+	db	$20,$1a,$a,$0,$0,$1,$0,$ff,$ff,$0,$0
 
 	ENDC
 

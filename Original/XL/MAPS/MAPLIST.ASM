@@ -94,10 +94,12 @@ armsstart
 	endc
 
 
+; TEST2/3/4 reference missing CES/prototype map sources in this snapshot.
+; Keep their exported entry points valid by redirecting them to TEST1.
 testmap1	incmap	test1
-testmap2	incmap	test2
-testmap3	incmap	test3
-testmap4	incmap	test4
+testmap2	mapgoto	testmap1
+testmap3	mapgoto	testmap1
+testmap4	mapgoto	testmap1
 
 maps	=	*-mapbase
 	?maps

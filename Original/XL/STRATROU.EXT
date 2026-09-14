@@ -44,6 +44,7 @@
 	global	Xanglexy_l  
 	global	Xanglexabs_l  
 	global	Yanglexabs_l  
+	global	Xanglexabs16_l,Yanglexabs16_l,xzdist_abs_l
 	global	xzdiffs_l
 	global	xzdiffs_diffabs_l
 	global	xydiffs_l

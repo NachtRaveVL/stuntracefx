@@ -1,7 +1,7 @@
 	include	header.inc
 	include	stratequ.inc
 	incfile	mdynmacs.mc
-	incfile	dynstructs.inc
+	incfile	dynstruc.inc
 	
 	
 	include	shmacs.inc
@@ -58,7 +58,7 @@ bgmjlen	equ	*-bgmj
 default_group_num	=	1
 	incshapes	ajshapes.asm
 	incshapes	aushapes.asm
-	incshapes	af2shapes.asm
+	incshapes	af2shape.asm
 	
 	public	dogccr
 	inccru	dogccr,data\dog.ccr
