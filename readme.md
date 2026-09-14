@@ -125,16 +125,16 @@ Additional contributors will be added as the project progresses.
 
 ## Helpful Links / Tools
 
-[sp00nznet/stuntrace — Stunt Race FX Static Recompilation](https://github.com/sp00nznet/stuntrace)
-[sp00nznet/snesrecomp — SNES Static Recompilation Framework](https://github.com/sp00nznet/snesrecomp)
-[Sunlitspace542/ultrastarfox — UltraStarFox](https://github.com/Sunlitspace542/ultrastarfox)
-[Argonaut 65816/Super FX Assembly Extension for VS Code](https://github.com/Sunlitspace542/65816-superfx-asm-argonaut-vscode)
-[ArgSfx/SASM Assembler Documentation](https://github.com/Sunlitspace542/ArgSfx-SASM-Docs)
-[SNES Development Manual](https://archive.org/details/SNESDevManual)
-[fullsnes — SNES Hardware Specifications](https://problemkaputt.de/fullsnes.htm)
-[65C816 Opcodes](https://undisbeliever.net/snesdev/65816-opcodes.html)
-[65C816 Reference](https://wiki.superfamicom.org/65816-reference)
-[Super FX Programming Reference](https://en.wikibooks.org/wiki/Super_NES_Programming/Super_FX_tutorial)
+[sp00nznet/stuntrace — Stunt Race FX Static Recompilation](https://github.com/sp00nznet/stuntrace)  
+[sp00nznet/snesrecomp — SNES Static Recompilation Framework](https://github.com/sp00nznet/snesrecomp)  
+[Sunlitspace542/ultrastarfox — UltraStarFox](https://github.com/Sunlitspace542/ultrastarfox)  
+[Argonaut 65816/Super FX Assembly Extension for VS Code](https://github.com/Sunlitspace542/65816-superfx-asm-argonaut-vscode)  
+[ArgSfx/SASM Assembler Documentation](https://github.com/Sunlitspace542/ArgSfx-SASM-Docs)  
+[SNES Development Manual](https://archive.org/details/SNESDevManual)  
+[fullsnes — SNES Hardware Specifications](https://problemkaputt.de/fullsnes.htm)  
+[65C816 Opcodes](https://undisbeliever.net/snesdev/65816-opcodes.html)  
+[65C816 Reference](https://wiki.superfamicom.org/65816-reference)  
+[Super FX Programming Reference](https://en.wikibooks.org/wiki/Super_NES_Programming/Super_FX_tutorial)  
 
 ---
 

@@ -35,6 +35,28 @@ mwmatrotp16
 	nop
 
 
+; Rotate by the transpose of the world matrix, US retail $01:82ce.
+; Entry name reconstructed; inputs/results match mwmatrotp16.
+; This takes rows where mwmatrotp16 takes columns.
+
+mwmatrotp16t
+	mcache
+
+	lms	rx,[m_x1]
+	lms	ry,[m_y1]
+	lms	rz,[m_z1]
+
+	mdotprod16mq	m_wmat11,m_wmat12,m_wmat13
+	sms	[m_bigx],rsumhi
+	mdotprod16mq	m_wmat21,m_wmat22,m_wmat23
+	sms	[m_bigy],rsumhi
+	mdotprod16mq	m_wmat31,m_wmat32,m_wmat33
+	sms	[m_bigz],rsumhi
+
+	stop
+	nop
+
+
 	ifeq	1
 
 rsumhi	equr	0
