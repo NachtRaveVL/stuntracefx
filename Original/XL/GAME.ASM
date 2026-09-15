@@ -8,6 +8,49 @@ getview_l
 	pha
 	plb
 
+; Use the prepared retail record for the early build's driving view.
+; This joins the recovered routines to the existing display entry; it is
+; an early-build adaptation, not a byte-for-byte retail frame controller.
+; Other view modes and the early game-over camera retain the path below.
+	a8
+	lda	viewtype
+	cmp	#viewtype_mia
+	bne	.earlyview
+	ai16
+	ldx	viewpt
+	lda	al_viewpt,x
+	cmp	#viewcamera1
+	beq	.record
+	cmp	#viewcamera2
+	bne	.earlyview
+.record
+	tay
+	lda.w	vc_target,y
+	cmp	viewtoobj
+	bne	.earlyview
+	tay
+	a8
+	s_jmp_alsflag	y,sflag2,.earlyview
+; Keep the early draw list's world-Z range test tied to the target.
+	lda.w	al_worldzh,y
+	sta	viewmapz
+; Adaptive yaw lag reads the selected dynamics car before publication.
+	a16
+	lda.w	al_collobjptr,y
+	sta.l	m_testcar1
+	a8
+; One animation step per displayed frame, followed by position/angles.
+; The original behind-view strategy still owns car reset and game-over.
+	jsl	updateviewanim_l
+	jsl	updateviewcamera_l
+	ldy	al_viewpt,x
+	tyx
+	jsl	setviewrecord_l
+	jsl	getviewmat_l
+	plb
+	rtl
+
+.earlyview
 	a8
 
 	ifeq	1
@@ -500,7 +543,7 @@ setviewrecord_l
 ; With world-offset plus position-lag flags, the retail path leaves Y to
 ; the caller: it must already identify the target object in that case.
 ; Matrix and angle temporaries, A/Y and the viewpos* work words are scratch.
-; This consumes a prepared retail record; the early alien camera is separate.
+; The driving path in getview_l supplies the prepared record.
 getviewpos_l
 	phx
 	ai16

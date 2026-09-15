@@ -98,8 +98,10 @@ stratsfrozen
 	lda.l	alx_viewpt,x
 	sta	viewpt	
 	stx	viewtoobj
-	jsl	calcbgscroll_l
 	jsl	getview_l
+	ai16
+; Scroll uses this frame's camera angles, after the view is calculated.
+	jsl	calcbgscroll_l
 	jsl	showview_l
 	ai16
 	jsl	do_3d_display_l
