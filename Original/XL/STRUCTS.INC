@@ -156,9 +156,9 @@ cl_sizeof	=	cl_size-collisttemp
 ;----------------------------------
 
 ;----------------------------------
-; Retail camera fields used by getviewangles_l ($02:de45).
-; Names reconstructed. Offsets $04/$06 and fields beyond $12 are
-; not defined here yet; this is not the complete camera record size.
+; Retail camera fields used by the angle and offset-animation routines.
+; Names reconstructed. Only recovered fields are named here; this is
+; not the complete camera record size.
 ; The record is indexed from direct page zero, in low Work RAM.
 
 vc_flags	equ	$00
@@ -169,6 +169,14 @@ vc_worldz	equ	$0c
 vc_rotx	equ	$0e	; 16 bit pitch
 vc_roty	equ	$10	; 16 bit yaw
 vc_rotz	equ	$12	; 16 bit roll
+
+; Current local offset and the destination followed by the animation.
+vc_offx	equ	$1a
+vc_offy	equ	$1c
+vc_offz	equ	$1e
+vc_destx	equ	$20
+vc_desty	equ	$22
+vc_destz	equ	$24
 
 vcf_lookat	equ	$0001	; face the target object
 vcf_pitchlag	equ	$0040	; quarter-step toward target pitch

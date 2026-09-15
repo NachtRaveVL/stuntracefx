@@ -12,5 +12,12 @@
 	global	whitetyres_Istrat,redtyres_Istrat
 	global	bush1_Istrat,truck1_Istrat
 	global	objcar1_Istrat
-
 
+
+	global	setviewanim_l,nextviewanim_l,updateviewanim_l
+	global	viewanimtab
+	global	viewanim00,viewanim01,viewanim02,viewanim03,viewanim04
+	global	viewanim05,viewanim06,viewanim07,viewanim08,viewanim09
+	global	viewanim10,viewanim11,viewanim12,viewanim13,viewanim14
+	global	viewanim15,viewanim16,viewanim17,viewanim18
+

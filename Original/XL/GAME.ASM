@@ -317,24 +317,7 @@ getview_l
 
 .dviewrot
 
-	a16
-	lda viewrotxw
-	sta matxw
-	lda viewrotyw
-	sta matyw
-	lda viewrotzw
-	sta matzw
-
-
-.DoneMatAngles
-	ai8
-	jsl crotmat16_l
-
-	a16
-	copymat16 mat,wmat
-	a8
-
-
+	jsl	getviewmat_l
 
 
 	ifeq	1
@@ -440,6 +423,29 @@ getview_l
 
 
 
+
+
+; Build the world-view matrix from the 16 bit view angles.
+; US retail $02:df24. Shared with the early getview_l camera path.
+; D = 0, DB = $7e. Returns A8/I8; matrix-helper temporaries scratch.
+
+getviewmat_l
+	a16
+	lda viewrotxw
+	sta matxw
+	lda viewrotyw
+	sta matyw
+	lda viewrotzw
+	sta matzw
+
+
+	ai8
+	jsl crotmat16_l
+
+	a16
+	copymat16 mat,wmat
+	a8
+	rtl
 
 
 ; Update the angles of a retail camera record, US retail $02:de45.

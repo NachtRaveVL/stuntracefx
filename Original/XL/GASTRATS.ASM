@@ -1035,6 +1035,358 @@ viewposition_behind_l
 	a8
 	bra	.endview
 
+;****************************************************************************
+; Retail camera offset animation, US $08:85b9-$08:8a58.
+; Names reconstructed. X is a camera-controller object, whose al_viewpt
+; points at a vc_ record, not another alien. D = 0, DB = $7e, I16.
+; al_sword1 = frames left, al_sword2 = offset in viewanimtab,
+; al_vx/vy/vz = per-frame changes to the destination offset.
+; These entries are for retail camera callers; the early view alien uses
+; a different layout. No camera records are allocated by these routines.
+;
+; Command words: 0 end; 1 duration/rate/XYZ; 2 flags; 3 set XYZ.
+; Rate is the number of signed divisions by two, rounded toward zero.
+
+viewanim_end	MACRO
+	dw	0
+	ENDM
+viewanim_move	MACRO	frames,rate,x,y,z
+	dw	1
+	db	\1,\2
+	dw	\3,\4,\5
+	ENDM
+viewanim_flags	MACRO	flags
+	dw	2,\1
+	ENDM
+viewanim_set	MACRO	x,y,z
+	dw	3,\1,\2,\3
+	ENDM
+
+viewanimtab
+
+viewanim00		; US retail $08:85b9
+	viewanim_set	0,-500,-1000
+	viewanim_end
+
+viewanim01		; US retail $08:85c3
+	viewanim_set	0,-500,0
+	viewanim_flags	$0001
+	viewanim_move	32,5,0,-1000,-200
+	viewanim_move	32,5,0,-2000,-300
+	viewanim_move	32,5,0,-3000,-400
+	viewanim_move	32,5,0,-4000,-500
+	viewanim_move	32,5,0,-5000,-600
+	viewanim_end
+
+viewanim02		; US retail $08:8603
+	viewanim_set	-500,-500,1000
+	viewanim_flags	$0001
+	viewanim_move	32,5,-200,-300,500
+	viewanim_move	32,5,0,-200,500
+	viewanim_move	32,5,200,-200,500
+	viewanim_move	32,5,500,-200,500
+	viewanim_move	32,5,1000,-200,0
+	viewanim_end
+
+viewanim03		; US retail $08:8643
+	viewanim_set	-1000,-1000,0
+	viewanim_flags	$0011
+	viewanim_move	32,5,-1000,-800,0
+	viewanim_move	32,5,-1000,-600,0
+	viewanim_move	32,5,-1000,-400,0
+	viewanim_move	32,5,-1000,-200,0
+	viewanim_end
+
+viewanim04		; US retail $08:8679
+	viewanim_set	2000,-500,0
+	viewanim_flags	$0011
+	viewanim_move	32,5,2000,-500,0
+	viewanim_move	32,5,2000,-500,0
+	viewanim_end
+
+viewanim05		; US retail $08:869b
+	viewanim_set	0,-500,-500
+	viewanim_flags	$0011
+	viewanim_move	32,5,-500,-300,-500
+	viewanim_end
+
+viewanim06		; US retail $08:86b3
+	viewanim_set	0,-250,-700
+	viewanim_flags	$0011
+	viewanim_move	32,5,0,-250,-700
+	viewanim_end
+
+viewanim07		; US retail $08:86cb
+	viewanim_set	-500,-100,0
+	viewanim_flags	$0011
+	viewanim_move	32,5,-300,-100,-500
+	viewanim_end
+
+viewanim08		; US retail $08:86e3
+	viewanim_set	0,-500,-1000
+	viewanim_flags	$0011
+	viewanim_move	32,5,-500,-300,-1000
+	viewanim_end
+
+viewanim09		; US retail $08:86fb
+	viewanim_set	0,-300,-600
+	viewanim_flags	$1001
+	viewanim_end
+
+viewanim10		; US retail $08:8709
+	viewanim_set	-500,-100,0
+	viewanim_flags	$0011
+	viewanim_move	32,5,-300,-100,-500
+	viewanim_move	16,4,0,-100,-500
+	viewanim_flags	$8001
+	viewanim_move	8,3,0,-50,-200
+	viewanim_move	8,3,0,0,400
+	viewanim_flags	$c080
+	viewanim_move	32,5,0,0,0
+	viewanim_end
+
+viewanim11		; US retail $08:8751
+	viewanim_set	0,-1000,-3000
+	viewanim_end
+
+viewanim12		; US retail $08:875b
+	viewanim_set	0,-500,-1500
+	viewanim_flags	$8801
+	viewanim_move	32,5,0,-500,-1500
+	viewanim_move	32,5,0,-500,-1500
+	viewanim_move	16,4,0,-500,-1500
+	viewanim_flags	$8001
+	viewanim_move	16,4,0,-500,-1000
+	viewanim_move	16,4,0,-400,-800
+	viewanim_move	8,3,0,0,-200
+	viewanim_move	8,3,0,0,400
+	viewanim_flags	$c080
+	viewanim_end
+
+viewanim13		; US retail $08:87b7
+	viewanim_set	0,-500,-1500
+	viewanim_flags	$8001
+	viewanim_move	16,4,0,-500,-1000
+	viewanim_move	16,4,0,-400,-800
+	viewanim_move	8,3,0,0,-200
+	viewanim_move	8,3,0,0,400
+	viewanim_flags	$c080
+	viewanim_end
+
+viewanim14		; US retail $08:87f1
+	viewanim_set	2000,-1000,6000
+	viewanim_move	16,4,-2000,-100,2000
+	viewanim_move	16,4,-2000,0,-1000
+	viewanim_move	16,4,-1000,-400,-2000
+	viewanim_move	32,5,0,-600,-2000
+	viewanim_move	8,3,0,-900,-1500
+	viewanim_end
+
+viewanim15		; US retail $08:882d
+	viewanim_set	-500,-2000,6000
+	viewanim_move	16,4,-300,0,2000
+	viewanim_move	16,4,-500,0,-500
+	viewanim_move	16,4,0,0,-500
+	viewanim_move	16,4,0,-90,-500
+	viewanim_end
+
+viewanim16		; US retail $08:885f
+	viewanim_set	0,-2000,-4000
+	viewanim_move	16,4,0,-200,-1000
+	viewanim_move	16,4,0,-90,-500
+	viewanim_end
+
+viewanim17		; US retail $08:887d
+	viewanim_move	8,3,0,-90,-500
+	viewanim_move	8,3,-300,-150,-500
+	viewanim_move	4,2,-500,-100,0
+	viewanim_move	4,2,-300,-50,500
+	viewanim_move	8,3,0,0,700
+	viewanim_move	8,3,0,0,700
+	viewanim_end
+
+viewanim18		; US retail $08:88bb
+	viewanim_move	8,3,0,-90,-500
+	viewanim_end
+
+; Y = low word of an animation in viewanimtab's bank.
+; Load the first command immediately. X preserved, Y/A scratch.
+; Returns A8/I16, carry set at end, clear after a command.
+setviewanim_l
+	a16
+	tya
+	sec
+	sbc	#viewanimtab&$ffff
+	sta	al_sword2,x
+	a8
+	jsl	nextviewanim_l
+	rtl
+
+nextviewanim_l
+	phx
+	a16
+	txy
+	lda	al_sword2,x
+	tax
+	lda.l	viewanimtab,x
+	cmp	#3
+	beq	.set
+	cmp	#1
+	beq	.move
+	cmp	#2
+	beq	.flags
+	tyx
+	sec
+	jmp	.done
+.set
+	phy
+	phx
+	tyx
+	ldy	al_viewpt,x
+	plx
+	lda.l	viewanimtab+2,x
+	sta.w	vc_destx,y
+	sta.w	vc_offx,y
+	lda.l	viewanimtab+4,x
+	sta.w	vc_desty,y
+	sta.w	vc_offy,y
+	lda.l	viewanimtab+6,x
+	sta.w	vc_destz,y
+	sta.w	vc_offz,y
+	ply
+	lda	#0
+	sta.w	al_vx,y
+	sta.w	al_vy,y
+	sta.w	al_vz,y
+	sta.w	al_sword1,y
+	lda.w	al_sword2,y
+	clc
+	adc	#8
+	sta.w	al_sword2,y
+	jmp	.commanddone
+.flags
+	lda.l	viewanimtab+2,x
+	tyx
+	ldy	al_viewpt,x
+	sta.w	vc_flags,y
+	lda	al_sword2,x
+	clc
+	adc	#4
+	sta	al_sword2,x
+	jmp	.commanddone
+.move
+	phy
+	lda.l	viewanimtab+2,x
+	and	#$ff
+	sta.w	al_sword1,y
+	phx
+	tyx
+	ldy	al_viewpt,x
+	plx
+	lda.l	viewanimtab+3,x
+	and	#$ff
+	sta	svar_word1
+	lda.l	viewanimtab+4,x
+	sec
+	sbc.w	vc_destx,y
+	sta	svar_word2
+	lda.l	viewanimtab+6,x
+	sec
+	sbc.w	vc_desty,y
+	sta	svar_word3
+	lda.l	viewanimtab+8,x
+	sec
+	sbc.w	vc_destz,y
+	sta	svar_word4
+	plx
+	ldy	svar_word1
+	iny
+.divide
+	dey
+	beq	.divided
+	lda	svar_word2
+	adiv2
+	sta	svar_word2
+	lda	svar_word3
+	adiv2
+	sta	svar_word3
+	lda	svar_word4
+	adiv2
+	sta	svar_word4
+	bra	.divide
+.divided
+	lda	svar_word2
+	sta	al_vx,x
+	lda	svar_word3
+	sta	al_vy,x
+	lda	svar_word4
+	sta	al_vz,x
+	lda	al_sword2,x
+	clc
+	adc	#10
+	sta	al_sword2,x
+.commanddone
+	clc
+.done
+	a8
+	plx
+	rtl
+
+; Approach the current destination, then advance its motion/script.
+; Uses the existing original sr16_achase_alvar3 (US retail $03:ce30).
+; The destination changes after the chase, preserving the one-frame delay.
+updateviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda.w	vc_offx,y
+	sta	tpx
+	lda.w	vc_destx,y
+	jsl	sr16_achase_alvar3
+	sta.w	vc_offx,y
+	a8
+	a16
+	lda.w	vc_offy,y
+	sta	tpx
+	lda.w	vc_desty,y
+	jsl	sr16_achase_alvar3
+	sta.w	vc_offy,y
+	a8
+	a16
+	lda.w	vc_offz,y
+	sta	tpx
+	lda.w	vc_destz,y
+	jsl	sr16_achase_alvar3
+	sta.w	vc_offz,y
+	a8
+	a16
+	lda	al_sword1,x
+	beq	.next
+	dec	a
+	sta	al_sword1,x
+	lda	al_vx,x
+	clc
+	adc.w	vc_destx,y
+	sta.w	vc_destx,y
+	lda	al_vy,x
+	clc
+	adc.w	vc_desty,y
+	sta.w	vc_desty,y
+	lda	al_vz,x
+	clc
+	adc.w	vc_destz,y
+	sta.w	vc_destz,y
+	a8
+	bra	.running
+.next
+	a8
+	jsl	nextviewanim_l
+	bcs	.done
+.running
+	clc
+.done
+	rtl
+
+
 viewlag	=	6
 copyviewpos_l	
 	phx
