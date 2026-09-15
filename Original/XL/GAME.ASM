@@ -39,9 +39,10 @@ getview_l
 	lda.w	al_collobjptr,y
 	sta.l	m_testcar1
 	a8
-; One animation step per displayed frame, followed by position/angles.
+; Apply the driving preset using the preceding frame's speed offsets,
+; then calculate position/angles and the next frame's speed offsets.
 ; The original behind-view strategy still owns car reset and game-over.
-	jsl	updateviewanim_l
+	jsl	updateviewpreset_l
 	jsl	updateviewcamera_l
 	ldy	al_viewpt,x
 	tyx

@@ -792,8 +792,8 @@ makeshadow_l
 ; X = car, Y = low-WRAM camera record, A8/I16, D = 0, DB = $7e.
 ; Return X unchanged, Y = new camera object and carry set on success.
 ; Allocation failure leaves the record untouched and returns carry clear.
-; The early display still reads the camera object; its al_viewpt now also
-; reaches the retail record, whose vc_target points back to the car.
+; al_viewpt reaches the retail record, whose vc_target points back to
+; the car; the early camera object also retains its game-over state.
 makeviewobj_l
 	phy
 	s_make_obj	#nullshape,.bad1
@@ -816,10 +816,13 @@ makeviewobj_l
 	phy
 	tyx
 	a8
-; Default early-build preset. Retail's mode/car configuration selection
-; is separate; do not treat this fixed choice as the retail initializer.
-	ldy	#viewanim00&$ffff
-	jsl	setviewanim_l
+; The zeroed record selects retail fallback group 00, index zero.
+; Vehicle/mode selection of the other groups is not recovered yet.
+	a16
+	stz	al_sword1,x
+	stz	al_sword2,x
+	a8
+	jsl	updateviewpreset_l
 	jsl	snapview_l
 	ply
 	plx
@@ -1447,6 +1450,185 @@ updateviewanim_l
 .running
 	clc
 .done
+	rtl
+
+
+; Retail driving presets, US $09:8090-$09:8133 (six groups).
+; Each header gives normal/alternate view counts; each entry has flags
+; and XYZ offsets. Group offsets remain relative to viewpresettab when
+; the table is relocated. Group 00 is the retail forced fallback view.
+viewpreset_group MACRO normal,alternate
+	db	\1,\2
+	ENDM
+viewpreset_entry MACRO flags,x,y,z
+	dw	\1,\2,\3,\4
+	ENDM
+
+viewpresettab
+viewpreset00
+	viewpreset_group	1,0
+	viewpreset_entry	$8655,0,-160,-900
+
+viewpreset01
+	viewpreset_group	3,1
+	viewpreset_entry	$8655,0,-170,-900
+	viewpreset_entry	$8655,0,-400,-1400
+	viewpreset_entry	$8080,0,-140,0
+	viewpreset_entry	$1255,0,-340,-1200
+
+viewpreset02
+	viewpreset_group	3,1
+	viewpreset_entry	$8655,0,-160,-500
+	viewpreset_entry	$8655,0,-360,-1000
+	viewpreset_entry	$8080,0,-130,0
+	viewpreset_entry	$1255,0,-500,-1200
+
+viewpreset03
+	viewpreset_group	3,1
+	viewpreset_entry	$1255,0,-300,-700
+	viewpreset_entry	$1255,0,-500,-1000
+	viewpreset_entry	$1255,0,-1600,-1200
+	viewpreset_entry	$8655,0,-240,-560
+
+viewpreset04
+	viewpreset_group	2,1
+	viewpreset_entry	$1255,0,-1200,-2000
+	viewpreset_entry	$1255,400,-400,-1800
+	viewpreset_entry	$1255,0,-2800,-2000
+
+viewpreset05
+	viewpreset_group	2,1
+	viewpreset_entry	$8a55,0,-300,-800
+	viewpreset_entry	$8655,0,-120,-400
+	viewpreset_entry	$1255,0,-440,-1200
+
+; X = controller, al_viewpt = record, A8/I16, D = 0, DB = $7e.
+; Apply vc_presetbase/index; al_sword1 holds the cockpit transition count
+; (the retail selection path loads seven when changing views).
+; The added long entry supplies Y. The body at applyviewpreset is the
+; recovered US $08:9af0-$08:9bd8 path, with symbol operands relocated.
+; X preserved, Y returns the record; A/x1/y1/z1/tpx scratch, A8/I16 out.
+; This does not select/cycle presets or play the view-change sound.
+updateviewpreset_l
+	ldy	al_viewpt,x
+applyviewpreset
+	phx
+	a16
+	lda.w	vc_presetindex,y
+	and	#$00ff
+	asl	a
+	asl	a
+	asl	a
+	clc
+	adc.w	vc_presetbase,y
+	tax
+	inx
+	inx
+	lda.l	viewpresettab,x
+	sta.w	vc_flags,y
+	lda.l	viewpresettab+2,x
+	sta	x1
+	lda.l	viewpresettab+4,x
+	sta	y1
+	lda.l	viewpresettab+6,x
+	sta	z1
+	plx
+	phx
+	tyx
+	ply
+	lda	vc_flags,x
+	bit	#vcf_cockpit
+	beq	.offset
+	lda.w	al_sword1,y
+	beq	.follow
+	dec	a
+	sta.w	al_sword1,y
+	lda	vc_flags,x
+	ora	#vcf_roll!vcf_nosteerlag!vcf_lookat
+	sta	vc_flags,x
+	stz	x1
+	stz	y1
+	lda	#-50
+	sta	z1
+	bra	.offset
+.follow
+	lda	vc_flags,x
+	ora	#vcf_followrot
+	sta	vc_flags,x
+.offset
+	a8
+	a16
+	lda	x1
+	clc
+	adc	vc_speedx,x
+	sta	x1
+	a8
+	a16
+	lda	y1
+	clc
+	adc	vc_speedy,x
+	sta	y1
+	a8
+	a16
+	lda	z1
+	clc
+	adc	vc_speedz,x
+	sta	z1
+	a8
+	a16
+	lda	x1
+	clc
+	adc	vc_shakex,x
+	sta	x1
+	a8
+	a16
+	lda	y1
+	clc
+	adc	vc_shakey,x
+	sta	y1
+	a8
+	a16
+	lda	z1
+	clc
+	adc	vc_shakez,x
+	sta	z1
+	a8
+	a16
+	lda	vc_offx,x
+	sta	tpx
+	lda	x1
+	jsl	sr16_achase_alvar2
+	sta	vc_offx,x
+	a8
+	a16
+	lda	vc_offy,x
+	sta	tpx
+	lda	y1
+	jsl	sr16_achase_alvar2
+	sta	vc_offy,x
+	a8
+	a16
+	lda	vc_offz,x
+	sta	tpx
+	lda	z1
+	jsl	sr16_achase_alvar2
+	sta	vc_offz,x
+	a8
+	a16
+	lda	x1
+	sta	vc_destx,x
+	a8
+	a16
+	lda	y1
+	sta	vc_desty,x
+	a8
+	a16
+	lda	z1
+	sta	vc_destz,x
+	a8
+	phx
+	tyx
+	ply
 	rtl
 
 

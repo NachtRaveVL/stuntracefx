@@ -186,11 +186,14 @@ vc_speedz	equ	$2a
 vc_shakex	equ	$2c
 vc_shakey	equ	$2e
 vc_shakez	equ	$30
+vc_presetbase	equ	$32	; byte offset of a group in viewpresettab
+vc_presetindex	equ	$34	; byte index within that group
 vc_biasx	equ	$35	; extra orbit rotation
 vc_biasy	equ	$37
 vc_biasz	equ	$39
 vc_sizeof	equ	$3b	; spacing of the two retail camera records
 
+vcf_cockpit	equ	$0080	; seven-frame look-at transition, then follow rotation
 vcf_fixedpos	equ	$0002
 vcf_speedoff	equ	$0004
 vcf_poslag	equ	$0008	; X/Z quarter-step, Y eighth-step
