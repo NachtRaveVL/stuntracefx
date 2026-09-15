@@ -37,6 +37,14 @@ viewpostablen	=	6*10
 ; Separate low-WRAM records, reached through each camera object.
 	alc	viewcamera1,vc_sizeof
 	alc	viewcamera2,vc_sizeof
+; Retail map references: byte index, column byte offset, row byte offset.
+; These are independent of the early renderer's viewmapz range byte.
+	alc	viewmapindex,2
+	alc	viewmapcol,2
+	alc	viewmaprow,2
+	alc	targetmapindex,2
+	alc	targetmapcol,2
+	alc	targetmaprow,2
 	alc	viewpos_offx,2
 	alc	viewpos_offy,2
 	alc	viewpos_offz,2

@@ -1450,6 +1450,48 @@ updateviewanim_l
 	rtl
 
 
+; Map a signed world X/Z position to a 32 by 32 grid of word entries.
+; US $08:83e8 long wrapper, $08:83ec object entry, $08:83f8 core.
+; A16, D = 0. getobjmapindex additionally needs I16 and X = object.
+; Input x1/z1 (or al_worldx/z); output A = byte offset into the map,
+; x1 = column byte offset (0..62), z1 = row byte offset (0..1984).
+; Cells are 2048 world units, with the origin in cell (16,16).
+; X/Y, DB and register widths preserved; arithmetic flags are scratch.
+	longa
+getmapindex_l
+	jsr	getmapindex
+	rtl
+getobjmapindex
+	lda.l	alx_worldx,x
+	sta	x1
+	lda.l	alx_worldz,x
+	sta	z1
+getmapindex
+	lda	x1
+	asra
+	asra
+	xba
+	sexa
+	clc
+	adc	#$0020
+	and	#$fffe
+	sta	x1
+	lda	z1
+	and	#$f800
+	asra
+	asra
+	asra
+	asra
+	asra
+	clc
+	adc	#$0400
+	sta	z1
+	clc
+	adc	x1
+	rts
+	shorta
+
+
 ; Update a prepared retail camera-controller object (US $08:958f).
 ; X = controller; al_viewpt points to its camera record. A8/I16,
 ; D = 0, DB = $7e. X preserved, A/Y and camera work words scratch.

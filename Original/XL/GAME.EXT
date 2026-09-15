@@ -1,3 +1,4 @@
 	global	random_l,MULS816LOG16_L
+	global	setviewrecord_l
 	global	getview_l,arctan16_l,getviewangles_l,getviewmat_l,getviewpos_l
 

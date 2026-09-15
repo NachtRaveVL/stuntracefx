@@ -157,8 +157,8 @@ cl_sizeof	=	cl_size-collisttemp
 
 ;----------------------------------
 ; Retail camera fields used by the angle and offset-animation routines.
-; Names reconstructed. Only recovered fields are named here; this is
-; not the complete camera record size.
+; Names reconstructed. Only recovered fields are named here; the full
+; record extent is vc_sizeof.
 ; The record is indexed from direct page zero, in low Work RAM.
 
 vc_flags	equ	$00
@@ -197,6 +197,7 @@ vcf_poslag	equ	$0008	; X/Z quarter-step, Y eighth-step
 vcf_heightlag	equ	$0010	; X/Z direct; asymmetric Y lag
 vcf_worldoff	equ	$0100	; local offset without object rotation
 vcf_nosteerlag	equ	$0200	; suppress the hard-steering override
+vcf_cameramap	equ	$2000	; use camera cell for the target map reference
 vcf_yawlagmask	equ	$1c00
 vcf_yawlagauto	equ	$0400	; half or quarter, by velocity alignment
 vcf_yawlag4	equ	$0800

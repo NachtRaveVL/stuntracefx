@@ -425,6 +425,75 @@ getview_l
 
 
 
+; Publish a prepared camera record to the retail display state.
+; US $02:dad6-$02:db58. X = low-WRAM vc_ record, D = 0, DB = $7e.
+; Returns A16/I16, X/Y preserved.
+; A, x1/z1 and arithmetic flags are scratch. Position and angles must
+; already be current; this entry does not advance the camera or matrix.
+; The two map references normally describe camera and target separately;
+; vcf_cameramap makes both use the camera cell. The early renderer still
+; has its own viewmapz range byte, which is not a retail map reference.
+setviewrecord_l
+	ai16
+	lda	vc_worldx,x
+	sta	viewposx
+	lda	vc_worldy,x
+	sta	viewposy
+	lda	vc_worldz,x
+	sta	viewposz
+	lda	vc_rotx,x
+	sta	viewrotxw
+	lda	vc_roty,x
+	sta	viewrotyw
+	lda	vc_rotz,x
+	sta	viewrotzw
+	phx
+	lda	vc_target,x
+	tax
+	lda.l	alx_collobjptr,x
+	sta.l	m_testcar1
+	plx
+	phx
+	lda	viewposx
+	sta	x1
+	lda	viewposz
+	sta	z1
+	jsl	getmapindex_l
+	sta	viewmapindex
+	lda	x1
+	sta	viewmapcol
+	lda	z1
+	sta	viewmaprow
+	plx
+	lda	vc_flags,x
+	and	#vcf_cameramap
+	beq	.target
+	lda	viewmapindex
+	sta	targetmapindex
+	lda	viewmapcol
+	sta	targetmapcol
+	lda	viewmaprow
+	sta	targetmaprow
+	bra	.done
+.target
+	phx
+	lda	vc_target,x
+	tax
+	lda.l	alx_worldx,x
+	sta	x1
+	lda.l	alx_worldz,x
+	sta	z1
+	jsl	getmapindex_l
+	sta	targetmapindex
+	lda	x1
+	sta	targetmapcol
+	lda	z1
+	sta	targetmaprow
+	plx
+.done
+	rtl
+
+
 ; Retail camera position update, US $02:db71-$02:de44.
 ; X = vc_ record, I16, D = 0, DB = $7e; returns A16/I16, X preserved.
 ; Uses the selected car in m_testcar1 for steering/velocity alignment.

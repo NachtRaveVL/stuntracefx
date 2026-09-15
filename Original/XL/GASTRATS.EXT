@@ -21,5 +21,6 @@
 	global	viewanim10,viewanim11,viewanim12,viewanim13,viewanim14
 	global	viewanim15,viewanim16,viewanim17,viewanim18
 	global	initviewrecord_l
+	global	getmapindex_l,getobjmapindex,getmapindex
 	global	updateviewcamera_l,snapview_l,snapview
 
