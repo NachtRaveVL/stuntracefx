@@ -463,6 +463,7 @@ car1_Istrat			; player car.
 	s_set_var	W,outvz,#0
 
 
+	ldy	#viewcamera1
 	jsl	makeviewobj_l
 	s_set_alvar	W,y,al_viewpostab,#0
 ;	s_set_var	B,viewtype,#viewtype_fpos!viewtype_toobj
@@ -531,6 +532,7 @@ car2_Istrat			; enemy car.
 	s_set_alvar2rnd	x,al_sbyte1,#15
 	s_add_alvar	B,x,al_sbyte1,#50
 
+	ldy	#viewcamera2
 	jsl	makeviewobj_l
 	s_set_alvar	W,y,al_viewpostab,#viewpostablen
 
@@ -787,17 +789,78 @@ makeshadow_l
 .bad1	rtl
 
 ;*****************************************************************************
+; X = car, Y = low-WRAM camera record, A8/I16, D = 0, DB = $7e.
+; Return X unchanged, Y = new camera object and carry set on success.
+; Allocation failure leaves the record untouched and returns carry clear.
+; The early display still reads the camera object; its al_viewpt now also
+; reaches the retail record, whose vc_target points back to the car.
 makeviewobj_l
+	phy
 	s_make_obj	#nullshape,.bad1
 	s_clr_alsflag		y,realobj
-	s_clr_altype	y,zremove	
+	s_clr_altype	y,zremove
 	a16
 	tya
 	sta	al_viewpt,x
 	lda	viewpos_offz
 	sta.w	al_worldz,y
+	pla
+	sta.w	al_viewpt,y
+	phx
+	phy
+	pha
+	txa
+	plx
+	jsl	initviewrecord_l
+	ply
+	phy
+	tyx
 	a8
-.bad1	rtl
+; Default early-build preset. Retail's mode/car configuration selection
+; is separate; do not treat this fixed choice as the retail initializer.
+	ldy	#viewanim00&$ffff
+	jsl	setviewanim_l
+	jsl	snapview_l
+	ply
+	plx
+	a8
+	sec
+	rtl
+.bad1
+	a16
+	pla
+	a8
+	clc
+	rtl
+
+; Prepare a freshly allocated record. A16 = target car, X = record,
+; I16, D = 0, DB = $7e. P/X/Y preserved; A scratch.
+; Bias, speed and shake start at zero, flags at look-at plus speed offset
+; as in US $08:8525. Clear the remaining state too for early-build reuse.
+; The record is an odd 59 bytes: use byte stores to preserve its neighbour.
+	longa
+initviewrecord_l
+	php
+	phx
+	phy
+	pha
+	ldy	#vc_sizeof
+	a8
+.clear
+	stz	0,x
+	inx
+	dey
+	bne	.clear
+	a16
+	pla
+	ply
+	plx
+	sta	vc_target,x
+	lda	#vcf_lookat!vcf_speedoff
+	sta	vc_flags,x
+	plp
+	rtl
+	shorta
 
 
 ;*****************************************************************************

@@ -20,5 +20,6 @@
 	global	viewanim05,viewanim06,viewanim07,viewanim08,viewanim09
 	global	viewanim10,viewanim11,viewanim12,viewanim13,viewanim14
 	global	viewanim15,viewanim16,viewanim17,viewanim18
+	global	initviewrecord_l
 	global	updateviewcamera_l,snapview_l,snapview
 

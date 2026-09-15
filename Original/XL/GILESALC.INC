@@ -34,6 +34,9 @@ viewpostablen	=	6*10
 	alc	viewposflags,2
 	alc	viewpostarget,2
 	alc	viewposdelta,2
+; Separate low-WRAM records, reached through each camera object.
+	alc	viewcamera1,vc_sizeof
+	alc	viewcamera2,vc_sizeof
 	alc	viewpos_offx,2
 	alc	viewpos_offy,2
 	alc	viewpos_offz,2
