@@ -799,9 +799,14 @@ makeviewobj_l
 	s_make_obj	#nullshape,.bad1
 	s_clr_alsflag		y,realobj
 	s_clr_altype	y,zremove
+	stz	al_viewflags,x
+	lda	#0
+	sta.w	al_viewflags,y
 	a16
 	tya
 	sta	al_viewpt,x
+	txa
+	sta.w	al_ptr,y
 	lda	viewpos_offz
 	sta.w	al_worldz,y
 	pla
@@ -812,12 +817,15 @@ makeviewobj_l
 	txa
 	plx
 	jsl	initviewrecord_l
+; All nine recovered retail vehicle definitions select group 02 for
+; normal driving (first word of each five-mode camera choice table).
+	lda	#viewpreset02-viewpresettab
+	sta	vc_presetbase,x
 	ply
 	phy
 	tyx
 	a8
-; The zeroed record selects retail fallback group 00, index zero.
-; Vehicle/mode selection of the other groups is not recovered yet.
+; Normal driving starts at view zero. Special-mode selection is separate.
 	a16
 	stz	al_sword1,x
 	stz	al_sword2,x
@@ -1502,15 +1510,83 @@ viewpreset05
 	viewpreset_entry	$8655,0,-120,-400
 	viewpreset_entry	$1255,0,-440,-1200
 
-; X = controller, al_viewpt = record, A8/I16, D = 0, DB = $7e.
-; Apply vc_presetbase/index; al_sword1 holds the cockpit transition count
-; (the retail selection path loads seven when changing views).
-; The added long entry supplies Y. The body at applyviewpreset is the
-; recovered US $08:9af0-$08:9bd8 path, with symbol operands relocated.
-; X preserved, Y returns the record; A/x1/y1/z1/tpx scratch, A8/I16 out.
-; This does not select/cycle presets or play the view-change sound.
+; X = controller, al_viewpt = record, al_ptr = owner, A8/I16,
+; D = 0, DB = $7e. US $08:9a4f-$08:9bd8, adapted to al_viewflags.
+; Consume normal/alternate requests unless the current view is locked;
+; the owner can force group 00 while retaining the selected view index.
+; View changes load seven into al_sword1 for the cockpit transition.
+; X preserved, Y returns record, A8/I16 out; A/x1/y1/z1/tpx and the low
+; bytes of svar_word1/2 are scratch. The early sound-ID mapping remains
+; separate; the retail view-change sound call is omitted here.
 updateviewpreset_l
 	ldy	al_viewpt,x
+	a16
+	lda.w	vc_flags,y
+	and	#vcf_viewlock
+	a8
+	bne	.selected
+	lda	al_viewflags,x
+	and	#avf_nextview
+	rlbeq	.selected
+	lda	al_viewflags,x
+	and	#~avf_nextview
+	sta	al_viewflags,x
+; Retail emits sound $24 here ($04:d656).
+	phx
+	a16
+	lda.w	vc_presetbase,y
+	tax
+	a8
+	lda.l	viewpresettab,x
+	sta	svar_word1
+	lda.l	viewpresettab+1,x
+	sta	svar_word2
+	plx
+	lda	al_viewflags,x
+	and	#avf_altview
+	rlbeq	.next
+	lda	al_viewflags,x
+	and	#~avf_altview
+	sta	al_viewflags,x
+	lda	svar_word2
+	beq	.next
+	clc
+	adc	svar_word1
+	dec	a
+	cmp.w	vc_presetindex,y
+	bne	.store
+	lda	#0
+	bra	.store
+.next
+	lda.w	vc_presetindex,y
+	inc	a
+	cmp	svar_word1
+	bmi	.store
+	lda	#0
+.store
+	sta.w	vc_presetindex,y
+	a16
+	lda	#7
+	sta	al_sword1,x
+	a8
+.selected
+	phy
+	ldy	al_ptr,x
+	lda.w	al_viewflags,y
+	and	#avf_forceview
+	rlbeq	.normal
+	ply
+	a16
+	lda	#7
+	sta	al_sword1,x
+	a8
+	a16
+	phx
+	ldx	#0
+	bra	fetchviewpreset
+.normal
+	ply
+; US $08:9af0 entry, also usable with Y already pointing to the record.
 applyviewpreset
 	phx
 	a16
@@ -1522,6 +1598,7 @@ applyviewpreset
 	clc
 	adc.w	vc_presetbase,y
 	tax
+fetchviewpreset
 	inx
 	inx
 	lda.l	viewpresettab,x
@@ -1928,9 +2005,17 @@ copyviewpos_l
 viewcontrol_l
 	a8
 	
-	s_jmp_keyup	start,.nview
-	s_jmp_lastkeydown	start,.nview
-;	s_not_alsflag	x,sflag5
+; Retail Select changes view on a rising edge ($08:c663-$08:c68d).
+	s_jmp_keyup	select,.nview
+	s_jmp_lastkeydown	select,.nview
+	phy
+	ldy	al_viewpt,x
+	beq	.ncamera
+	lda.w	al_viewflags,y
+	ora	#avf_nextview
+	sta.w	al_viewflags,y
+.ncamera
+	ply
 .nview
 
 
@@ -2376,9 +2461,10 @@ dodynamics_l
 ;*****************************************************************************
 carposition_l
 	a8
-	s_jmp_keyup	select,.nhand
-	jsl	makehand_l
-.nhand
+; Select now changes view; this was the early manual-rescue debug hook.
+;	s_jmp_keyup	select,.nhand
+;	jsl	makehand_l
+;.nhand
 
 
 	lda	al_offroadtime,x

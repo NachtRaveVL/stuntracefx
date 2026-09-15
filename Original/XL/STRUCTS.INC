@@ -47,6 +47,9 @@ alcon	=	1
 	defalx	coltab,2
 	defalx	tx,1
 	defalx	ty,1
+; Separate camera requests from the early build's occupied strategy flags.
+; Appended so every existing alien field retains its offset.
+	defalx	viewflags,1
 	struct	alx_end,0
 
 alx_size	=	alx_end-alx_start
@@ -192,6 +195,11 @@ vc_biasx	equ	$35	; extra orbit rotation
 vc_biasy	equ	$37
 vc_biasz	equ	$39
 vc_sizeof	equ	$3b	; spacing of the two retail camera records
+
+avf_nextview	equ	$01	; controller: pending view change
+avf_altview	equ	$02	; controller: choose alternate view on that change
+avf_forceview	equ	$04	; owner: temporarily use fallback group 00
+vcf_viewlock	equ	$0020	; defer a pending view change
 
 vcf_cockpit	equ	$0080	; seven-frame look-at transition, then follow rotation
 vcf_fixedpos	equ	$0002
