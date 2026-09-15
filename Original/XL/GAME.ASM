@@ -425,6 +425,318 @@ getview_l
 
 
 
+; Retail camera position update, US $02:db71-$02:de44.
+; X = vc_ record, I16, D = 0, DB = $7e; returns A16/I16, X preserved.
+; Uses the selected car in m_testcar1 for steering/velocity alignment.
+; With world-offset plus position-lag flags, the retail path leaves Y to
+; the caller: it must already identify the target object in that case.
+; Matrix and angle temporaries, A/Y and the viewpos* work words are scratch.
+; This consumes a prepared retail record; the early alien camera is separate.
+getviewpos_l
+	phx
+	ai16
+	phx
+	lda	vc_target,x
+	tax
+	stx	viewpostarget
+	plx
+	lda	vc_flags,x
+	sta	viewposflags
+	lda	viewposflags
+	and	#vcf_fixedpos
+	beq	.speedcheck
+	brl	.done
+.speedcheck
+	a16
+	lda	viewposflags
+	and	#vcf_speedoff
+	bne	.speed
+	brl	.nospeed
+.speed
+	phx
+	ldx	viewpostarget
+	lda.l	alx_collobjptr,x
+	tax
+	lda.l	mrambank+car_gndspeed,x
+	bpl	.speedabs
+	nega
+.speedabs
+	plx
+	asra
+	bpl	.speedhalf
+	adc	#$0000
+.speedhalf
+	sta	z1
+	asra
+	asra
+	bpl	.speedquarter
+	adc	#$0000
+.speedquarter
+	sta	y1
+	stz	x1
+	lda	x1
+	nega
+	sta	vc_speedx,x
+	lda	y1
+	nega
+	sta	vc_speedy,x
+	lda	z1
+	nega
+	sta	vc_speedz,x
+	bra	.offset
+.nospeed
+	stz	vc_speedx,x
+	stz	vc_speedy,x
+	stz	vc_speedz,x
+.offset
+	lda	vc_offx,x
+	sta	x1
+	lda	vc_offy,x
+	sta	y1
+	lda	vc_offz,x
+	sta	z1
+	lda	viewposflags
+	bit	#vcf_worldoff
+	beq	.orbit
+	stz	matxw
+	stz	matyw
+	stz	matzw
+	jmp	.rotate
+.orbit
+	bit	#vcf_yawlagmask
+	bne	.lag
+	ldy	viewpostarget
+	lda.w	al_roty,y
+	xba
+	and	#$ff00
+	nega
+	sta	vc_orbity,x
+	sta	matyw
+	lda.w	al_rotx,y
+	xba
+	and	#$ff00
+	asra
+	asra
+	sta	vc_orbitx,x
+	sta	matxw
+	stz	matzw
+	jmp	.rotate
+.lag
+	ldy	viewpostarget
+	phx
+	lda.l	m_testcar1
+	tax
+	lda.l	mrambank+car_flags,x
+	plx
+	and	#$000c
+	beq	.yawdelta
+	lda	viewposflags
+	and	#vcf_nosteerlag
+	bne	.yawdelta
+	lda.w	al_roty,y
+	xba
+	and	#$ff00
+	nega
+	sec
+	sbc	vc_orbity,x
+	asra
+	clc
+	adc	vc_orbity,x
+	sta	vc_orbity,x
+	sta	matyw
+	jmp	.pitch
+.yawdelta
+	lda.w	al_roty,y
+	xba
+	and	#$ff00
+	nega
+	sec
+	sbc	vc_orbity,x
+	sta	viewposdelta
+	lda	viewposflags
+	and	#vcf_yawlagmask
+	cmp	#$0000
+	beq	.directyaw
+	cmp	#vcf_yawlagauto
+	beq	.autolag
+	cmp	#vcf_yawlag4
+	beq	.quarter
+	cmp	#vcf_yawlag12
+	beq	.lag12
+	cmp	#vcf_yawlag25
+	beq	.lag25
+.directyaw
+	lda	viewposdelta
+	bra	.addyaw
+.autolag
+	phx
+	lda.l	m_testcar1
+	tax
+	lda.l	mrambank+car_velalign,x
+	bpl	.alignabs
+	nega
+.alignabs
+	plx
+	cmp	#$7ef4
+	bpl	.half
+	lda	viewposdelta
+	asra
+	asra
+	bpl	.autoquarter
+	adc	#$0000
+.autoquarter
+	bra	.addyaw
+.half
+	lda	viewposdelta
+	asra
+	bpl	.halfdone
+	adc	#$0000
+.halfdone
+	bra	.addyaw
+.quarter
+	lda	viewposdelta
+	asra
+	asra
+	bpl	.quarterdone
+	adc	#$0000
+.quarterdone
+	bra	.addyaw
+.lag12
+	lda	viewposdelta
+	jsl	perc15a_l
+	asra
+	bpl	.lag12done
+	adc	#$0000
+.lag12done
+	bra	.addyaw
+.lag25
+	lda	viewposdelta
+	jsl	perc15a_l
+	asra
+	asra
+	bpl	.addyaw
+	adc	#$0000
+.addyaw
+	clc
+	adc	vc_orbity,x
+	sta	vc_orbity,x
+	sta	matyw
+.pitch
+	lda.w	al_rotx,y
+	xba
+	and	#$ff00
+	asra
+	asra
+	bpl	.pitchdone
+	adc	#$0000
+.pitchdone
+	sta	vc_orbitx,x
+	sta	matxw
+	stz	matzw
+.rotate
+	phx
+	lda	matxw
+	clc
+	adc	vc_biasx,x
+	nega
+	sta	matxw
+	lda	matyw
+	clc
+	adc	vc_biasy,x
+	sta	matyw
+	lda	matzw
+	clc
+	adc	vc_biasz,x
+	sta	matzw
+	a8
+	jsl	crotmat16_l
+	a16
+	copymat16	mat,wmat
+	a8
+	jsl	wmatrotp16t_l
+	ai16
+	plx
+	lda	viewposflags
+	bit	#vcf_poslag
+	beq	.heightcheck
+	brl	.poslag
+.heightcheck
+	bit	#vcf_heightlag
+	bne	.heightlag
+	ldy	viewpostarget
+	lda.w	al_worldx,y
+	clc
+	adc	bigx
+	sta	vc_worldx,x
+	lda.w	al_worldy,y
+	clc
+	adc	bigy
+	sta	vc_worldy,x
+	lda.w	al_worldz,y
+	clc
+	adc	bigz
+	sta	vc_worldz,x
+	bra	.done
+.heightlag
+	ldy	viewpostarget
+	lda.w	al_worldx,y
+	clc
+	adc	bigx
+	sta	vc_worldx,x
+	lda.w	al_worldy,y
+	clc
+	adc	bigy
+	sec
+	sbc	vc_worldy,x
+	bmi	.heightstep
+	asra
+.heightstep
+	asra
+	clc
+	adc	vc_worldy,x
+	sta	vc_worldy,x
+	lda.w	al_worldz,y
+	clc
+	adc	bigz
+	sta	vc_worldz,x
+	bra	.done
+.poslag
+	lda.w	al_worldx,y
+	clc
+	adc	bigx
+	sec
+	sbc	vc_worldx,x
+	asra
+	asra
+	clc
+	adc	vc_worldx,x
+	sta	vc_worldx,x
+	lda.w	al_worldy,y
+	clc
+	adc	bigy
+	sec
+	sbc	vc_worldy,x
+	asra
+	asra
+	asra
+	clc
+	adc	vc_worldy,x
+	sta	vc_worldy,x
+	lda.w	al_worldz,y
+	clc
+	adc	bigz
+	sec
+	sbc	vc_worldz,x
+	asra
+	asra
+	clc
+	adc	vc_worldz,x
+	sta	vc_worldz,x
+	bra	.done
+.done
+	plx
+	rtl
+
 ; Build the world-view matrix from the 16 bit view angles.
 ; US retail $02:df24. Shared with the early getview_l camera path.
 ; D = 0, DB = $7e. Returns A8/I8; matrix-helper temporaries scratch.

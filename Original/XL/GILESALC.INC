@@ -30,6 +30,10 @@ viewpostablen	=	6*10
 	zalc	mariotimer,2
 	alc	dyntimer,2	
 	alc	disptimer,2
+; Working state for the retail camera position update (all words).
+	alc	viewposflags,2
+	alc	viewpostarget,2
+	alc	viewposdelta,2
 	alc	viewpos_offx,2
 	alc	viewpos_offy,2
 	alc	viewpos_offz,2

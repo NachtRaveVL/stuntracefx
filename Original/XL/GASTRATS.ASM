@@ -1387,6 +1387,84 @@ updateviewanim_l
 	rtl
 
 
+; Update a prepared retail camera-controller object (US $08:958f).
+; X = controller; al_viewpt points to its camera record. A8/I16,
+; D = 0, DB = $7e. X preserved, A/Y and camera work words scratch.
+updateviewcamera_l
+	phx
+	ldy	al_viewpt,x
+	tyx
+	jsl	getviewpos_l
+	jsl	getviewangles_l
+	plx
+	a8
+	rtl
+
+; Snap to the preset offsets, clear speed/shake offsets, calculate the
+; position and look-at angles, then restore the original camera flags.
+; US $08:8f03 is an RTS entry; the added long-call wrapper follows the
+; original source convention. Same inputs as updateviewcamera_l.
+snapview_l
+	jsr	snapview
+	rtl
+snapview
+	ldy	al_viewpt,x
+	a16
+	lda.w	vc_flags,y
+	pha
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_speedx,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_speedy,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_speedz,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_shakex,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_shakey,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_shakez,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda.w	vc_destx,y
+	sta.w	vc_offx,y
+	a8
+	a16
+	lda.w	vc_desty,y
+	sta.w	vc_offy,y
+	a8
+	a16
+	lda.w	vc_destz,y
+	sta.w	vc_offz,y
+	a8
+	jsl	updateviewcamera_l
+	ldy	al_viewpt,x
+	a16
+	pla
+	sta.w	vc_flags,y
+	a8
+	rts
+
 viewlag	=	6
 copyviewpos_l	
 	phx

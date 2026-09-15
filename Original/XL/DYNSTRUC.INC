@@ -152,6 +152,10 @@ CARflag_makestop	equ	32768
 	
 	struct		CAR_BOOSTTIME,2
 
+; Retail camera turn lag uses the velocity/forward-axis dot product.
+; Appended here to retain all existing early-build car field offsets.
+	struct		CAR_VELALIGN,2
+
  	
 	struct		CAR_LEN,0	
 

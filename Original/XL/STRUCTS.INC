@@ -169,6 +169,8 @@ vc_worldz	equ	$0c
 vc_rotx	equ	$0e	; 16 bit pitch
 vc_roty	equ	$10	; 16 bit yaw
 vc_rotz	equ	$12	; 16 bit roll
+vc_orbitx	equ	$14	; pitch used to rotate the local offset
+vc_orbity	equ	$16	; lagged yaw used to rotate the local offset
 
 ; Current local offset and the destination followed by the animation.
 vc_offx	equ	$1a
@@ -177,6 +179,29 @@ vc_offz	equ	$1e
 vc_destx	equ	$20
 vc_desty	equ	$22
 vc_destz	equ	$24
+
+vc_speedx	equ	$26	; speed-dependent offset for camera callers
+vc_speedy	equ	$28
+vc_speedz	equ	$2a
+vc_shakex	equ	$2c
+vc_shakey	equ	$2e
+vc_shakez	equ	$30
+vc_biasx	equ	$35	; extra orbit rotation
+vc_biasy	equ	$37
+vc_biasz	equ	$39
+vc_sizeof	equ	$3b	; spacing of the two retail camera records
+
+vcf_fixedpos	equ	$0002
+vcf_speedoff	equ	$0004
+vcf_poslag	equ	$0008	; X/Z quarter-step, Y eighth-step
+vcf_heightlag	equ	$0010	; X/Z direct; asymmetric Y lag
+vcf_worldoff	equ	$0100	; local offset without object rotation
+vcf_nosteerlag	equ	$0200	; suppress the hard-steering override
+vcf_yawlagmask	equ	$1c00
+vcf_yawlagauto	equ	$0400	; half or quarter, by velocity alignment
+vcf_yawlag4	equ	$0800
+vcf_yawlag12	equ	$0c00	; 5/32 then divide by two
+vcf_yawlag25	equ	$1000	; 5/32 then divide by four
 
 vcf_lookat	equ	$0001	; face the target object
 vcf_pitchlag	equ	$0040	; quarter-step toward target pitch

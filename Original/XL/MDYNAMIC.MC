@@ -616,6 +616,10 @@ mmake_car
 	mcall	minit_car
 	nop	
 
+; Initialise the new camera alignment field before the first dynamics tick.
+	iwt	r2,#32767
+	mstorew	r2,CAR_VELALIGN,r1
+
 ; set car flag
 	mloadw	r2,OBJ_TYPE,r1
 	msetreg	r2,OBJTYPE_car
@@ -1123,6 +1127,54 @@ rcosy	equr	5
 rprodlo	equr	7
 rprodhi	equr 	8
 rsiny	equr	9
+
+; Velocity alignment used by the retail camera's adaptive yaw lag.
+; US retail $04:bcba-$04:bd1f. r8 = car, current car matrix in m_wmat.
+; Normalise velocity, then accumulate its dot product with the forward row
+; at full product precision. At absolute ground speed below ten use $7fff.
+; r8 and return link preserved; r0-r7/r9/r12/r13 scratch.
+mcalcvelalign
+	mpush	r11
+	mpush	r8
+	mloadw	r1,OBJ_VELX,r8
+	mloadw	r2,OBJ_VELY,r8
+	mloadw	r3,OBJ_VELZ,r8
+	mcall	mnormalise16
+	nop
+	lms	r6,[m_wmat31]
+	from	r1
+	lmult
+	move	r7,r4
+	lms	r6,[m_wmat32]
+	from	r2
+	to	r5
+	lmult
+	with	r7
+	add	r4
+	adc	r5
+	lms	r6,[m_wmat33]
+	from	r3
+	to	r5
+	lmult
+	with	r7
+	add	r4
+	adc	r5
+	with	r7
+	add	r7
+	rol
+	move	r1,r0
+	mpop	r8
+	mloadw	r0,CAR_GNDSPEED,r8
+	mabs	r0,r0
+	iwt	r2,#10
+	cmp	r2
+	bpl	.moving
+	nop
+	iwt	r1,#32767
+.moving
+	mstorew	r1,CAR_VELALIGN,r8
+	mpop	pc
+	nop
 
 mdo_car
 	mpush	r11
@@ -2298,6 +2350,12 @@ rounddown	=	64
 	ENDR
 	move	r1,r0
 	mstorew	r1,CAR_GNDSPEED,rcarptr	
+
+	mpush	r9
+	mcall	mcalcvelalign
+	nop
+	mpop	r9
+
 
 ;---------------------------------------------------------------------
 ; save Y acceleration for animation.

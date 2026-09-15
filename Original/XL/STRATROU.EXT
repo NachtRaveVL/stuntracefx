@@ -60,7 +60,7 @@
 	global	set_0collptrsx_l
 	global	set_0collptrsy_l
 	global	add2posobjyfobjx_l
-	global	perc56A_l
+	global	perc15A_l,perc56A_l
 	global	perc62A_l
 	global	perc75A_l
 	global	perc87A_l

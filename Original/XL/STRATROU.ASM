@@ -2605,6 +2605,20 @@ add2posobjyfobjx_l
 	sta.w	al_worldy,y
 	rtl
 ;**********************************************************************************
+; US retail $03:cc0d. Signed floor(A/8) + floor(A/32).
+; A16, D = 0, DB = $7e; viewposdelta is scratch.
+	longa
+perc15A_l
+	asra
+	asra
+	asra
+	sta.w	viewposdelta
+	asra
+	asra
+	clc
+	adc.w	viewposdelta
+	rtl
+
 	longa
 perc56A_l
 	asra
