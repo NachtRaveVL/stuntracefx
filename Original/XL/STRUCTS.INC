@@ -166,6 +166,7 @@ cl_sizeof	=	cl_size-collisttemp
 
 vc_flags	equ	$00
 vc_target	equ	$02	; object offset, as used by al_worldx,x
+vc_trackstate	equ	$04	; tracking/selection state, cleared on return to driving
 vc_worldx	equ	$08
 vc_worldy	equ	$0a
 vc_worldz	equ	$0c

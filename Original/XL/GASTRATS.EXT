@@ -26,4 +26,13 @@
 	global	viewpreset03,viewpreset04,viewpreset05
 	global	getmapindex_l,getobjmapindex,getmapindex
 	global	updateviewcamera_l,snapview_l,snapview
+	global	viewintro_Istrat,viewintro_strat,viewhold_Istrat
+	global	viewhold_strat,viewsnap_Istrat,viewdrive_Istrat
+	global	viewdrive_strat,viewupdate_strat,viewanim01_Istrat
+	global	viewanim01_strat,viewanim02_Istrat,viewanim03_Istrat
+	global	viewanim04_Istrat,viewanim05_Istrat,viewanim06_Istrat
+	global	viewanim07_Istrat,viewanim10_Istrat,viewanim08_Istrat
+	global	viewanim09_Istrat,viewanimloop_Istrat,viewanimloop_strat
+	global	viewcockpit_Istrat,viewanim13_Istrat,viewanim12_Istrat
+	global	viewcockpitanim_Istrat,viewcockpitanim_strat,viewcockpit_strat
 

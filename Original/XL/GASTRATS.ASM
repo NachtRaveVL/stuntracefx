@@ -1531,7 +1531,8 @@ updateviewpreset_l
 	lda	al_viewflags,x
 	and	#~avf_nextview
 	sta	al_viewflags,x
-; Retail emits sound $24 here ($04:d656).
+; Retail emits sound $24 here ($04:d656). Its SPC effect differs from
+; the early XLSND0 $24 (se_liftcar); defer until the sound data is restored.
 	phx
 	a16
 	lda.w	vc_presetbase,y
@@ -1763,6 +1764,294 @@ updateviewcamera_l
 	plx
 	a8
 	rtl
+
+;****************************************************************************
+; Retail camera strategies, US $08:8e2a-$08:8f02 and $08:9861-$08:9a4e.
+; Reconstructed names. X = controller, al_viewpt = vc_ record,
+; D = 0, DB = $7e, A8/I16. Strategies preserve X and return A8/I16.
+; al_sbyte1 holds the camera hold timer (retail $2048); al_sbyte2
+; holds the refreshed camera lifetime (retail $2036). These bytes are
+; private to camera controllers; no alien offsets are changed.
+; The scene dispatcher must select these entries once it is restored.
+; The early driving display currently calls the position routines itself.
+; Intro 14 returns to driving; hold locks the view for 80 update calls.
+; Scripts 02-10 keep their last shot; scripts 12/13 finish in the cockpit.
+; A terminal animation command is polled without restarting its script.
+	shorta
+
+viewintro_Istrat	; US $08:8e2a
+	s_set_strat	x,viewintro_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	ldy	#viewanim14&WM
+	jsl	setviewanim_l
+	jsl	updateviewcamera_l
+
+viewintro_strat	; US $08:8e51
+	jsl	updateviewanim_l
+	bcs	.finished
+	brl	viewupdate_strat
+
+.finished
+	jmp	viewdrive_Istrat
+
+viewhold_Istrat	; US $08:8e5d
+	ldy	al_viewpt,x
+	a16
+	lda	#$0021
+	sta.w	vc_flags,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_destx,y
+	a8
+	a16
+	lda	#$ff74
+	sta.w	vc_desty,y
+	a8
+	a16
+	lda	#$fe0c
+	sta.w	vc_destz,y
+	a8
+	jsr	snapview
+	s_set_strat	x,viewhold_strat
+	lda	#$50
+	sta	al_sbyte1,x
+
+viewhold_strat	; US $08:8ea2
+	lda	al_sbyte1,x
+	bne	.waiting
+	jml	viewdrive_Istrat
+
+.waiting
+	dec	al_sbyte1,x
+	jmp	viewupdate_strat
+
+viewsnap_Istrat	; US $08:8eb1
+	ldy	al_viewpt,x
+	a16
+	lda	#$0655
+	sta.w	vc_flags,y
+	a8
+	jsr	snapview
+
+viewdrive_Istrat	; US $08:8ec1
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_trackstate,y
+	a8
+	ldy	al_viewpt,x
+	lda	#$00
+	sta.w	vc_presetindex,y
+	lda	al_viewflags,x
+	and	#$fe
+	sta	al_viewflags,x
+	lda	al_viewflags,x
+	and	#$fd
+	sta	al_viewflags,x
+	s_set_strat	x,viewdrive_strat
+
+viewdrive_strat	; US $08:8ef5
+	jsl	updateviewpreset_l
+
+viewupdate_strat	; US $08:8ef9
+	jsl	updateviewcamera_l
+	lda	#$03
+	sta	al_sbyte2,x
+	rtl
+
+viewanim01_Istrat	; US $08:9861
+	ldy	#viewanim01&WM
+	jsl	setviewanim_l
+	s_set_strat	x,viewanim01_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+
+viewanim01_strat	; US $08:9888
+	lda	#$03
+	sta	al_sbyte2,x
+	jsl	updateviewanim_l
+	jsl	updateviewcamera_l
+	rtl
+
+viewanim02_Istrat	; US $08:9896
+	ldy	#viewanim02&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim03_Istrat	; US $08:98b1
+	ldy	#viewanim03&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim04_Istrat	; US $08:98cc
+	ldy	#viewanim04&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim05_Istrat	; US $08:98e7
+	ldy	#viewanim05&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim06_Istrat	; US $08:9902
+	ldy	#viewanim06&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim07_Istrat	; US $08:991d
+	ldy	#viewanim07&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim10_Istrat	; US $08:9938
+	ldy	#viewanim10&WM
+	jsl	setviewanim_l
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim08_Istrat	; US $08:9946
+	ldy	#viewanim08&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim09_Istrat	; US $08:9961
+	ldy	#viewanim09&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanimloop_Istrat	; US $08:997c
+	s_set_strat	x,viewanimloop_strat
+
+viewanimloop_strat	; US $08:998b
+	jsl	updateviewanim_l
+	jmp	viewupdate_strat
+
+viewcockpit_Istrat	; US $08:9992
+	ldy	al_viewpt,x
+	a16
+	lda	#$c080
+	sta.w	vc_flags,y
+	a8
+	s_set_strat	x,viewcockpit_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_offx,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$ff9c
+	sta.w	vc_offy,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_offz,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewcockpit_strat
+
+viewanim13_Istrat	; US $08:99dc
+	ldy	#viewanim13&WM
+	jsl	setviewanim_l
+	jmp	viewcockpitanim_Istrat
+
+viewanim12_Istrat	; US $08:99e6
+	ldy	#viewanim12&WM
+	jsl	setviewanim_l
+
+viewcockpitanim_Istrat	; US $08:99ed
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	s_set_strat	x,viewcockpitanim_strat
+
+viewcockpitanim_strat	; US $08:9a0d
+	jsl	updateviewanim_l
+	bcs	.finished
+	brl	viewupdate_strat
+
+.finished
+	s_set_strat	x,viewcockpit_strat
+
+viewcockpit_strat	; US $08:9a25
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_offx,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$ff9c
+	sta.w	vc_offy,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_offz,y
+	a8
+	jmp	viewupdate_strat
 
 ; Snap to the preset offsets, clear speed/shake offsets, calculate the
 ; position and look-at angles, then restore the original camera flags.
