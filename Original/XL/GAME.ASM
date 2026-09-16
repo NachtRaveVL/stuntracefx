@@ -9,8 +9,8 @@ getview_l
 	plb
 
 ; Use the prepared retail record for the early build's driving view.
-; This joins the recovered routines to the existing display entry; it is
-; an early-build adaptation, not a byte-for-byte retail frame controller.
+; FIXME: This schedules camera strategies at the early display entry.
+; Revisit placement when the retail scene/object scheduler is restored.
 ; Other view modes and the early game-over camera retain the path below.
 	a8
 	lda	viewtype
@@ -28,7 +28,14 @@ getview_l
 	lda.w	vc_target,y
 	cmp	viewtoobj
 	bne	.earlyview
+; Use the same complete binding as the object-loop exclusion.
+	cmp	al_ptr,x
+	bne	.earlyview
 	tay
+	beq	.earlyview
+	txa
+	cmp.w	al_viewpt,y
+	bne	.earlyview
 	a8
 	s_jmp_alsflag	y,sflag2,.earlyview
 ; Keep the early draw list's world-Z range test tied to the target.
@@ -39,11 +46,14 @@ getview_l
 	lda.w	al_collobjptr,y
 	sta.l	m_testcar1
 	a8
-; Apply the driving preset using the preceding frame's speed offsets,
-; then calculate position/angles and the next frame's speed offsets.
+; Run the selected retail camera strategy through the original pointer
+; dispatcher. Driving applies the preset before position/angle updates;
+; cinematic strategies advance their own script and next-strategy pointer.
+; dostrats skips these controllers so scripts advance once per view.
 ; The original behind-view strategy still owns car reset and game-over.
-	jsl	updateviewpreset_l
-	jsl	updateviewcamera_l
+	phx
+	jsl	jmptostratx_jml
+	plx
 	ldy	al_viewpt,x
 	tyx
 	jsl	setviewrecord_l

@@ -699,7 +699,29 @@ dostrats
 	ldx	alxlst			;do all strategies
 
 stratlp	stz	aldead
-	
+
+; FIXME: Until the retail scene/object scheduler is restored, bound
+; camera controllers run at getview_l, after dynamics and
+; selection of m_testcar1. Match both directions of the owner/record
+; binding so another object's al_viewpt cannot suppress its strategy.
+	a16
+	lda	al_viewpt,x
+	cmp	#viewcamera1
+	beq	.viewrecord
+	cmp	#viewcamera2
+	bne	.object
+.viewrecord
+	tay
+	lda.w	vc_target,y
+	cmp	al_ptr,x
+	bne	.object
+	tay
+	beq	.object
+	txa
+	cmp.w	al_viewpt,y
+	beq	.nextobject
+.object
+	a8
 	phx
 	jsl	do_strat_l
 	plx
@@ -707,6 +729,8 @@ stratlp	stz	aldead
 	lda	aldead
 	bne	.killal
 
+.nextobject
+	a8
 	ldy	al_next,x
 .killed	tyx
 	bne	stratlp

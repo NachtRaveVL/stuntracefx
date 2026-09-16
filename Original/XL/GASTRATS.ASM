@@ -799,6 +799,9 @@ makeviewobj_l
 	s_make_obj	#nullshape,.bad1
 	s_clr_alsflag		y,realobj
 	s_clr_altype	y,zremove
+; FIXME: Default to driving until retail scene-selected camera creation
+; is restored. Dispatch after selecting the dynamics car at getview_l.
+	s_set_strat	y,viewdrive_strat
 	stz	al_viewflags,x
 	lda	#0
 	sta.w	al_viewflags,y
@@ -1532,7 +1535,8 @@ updateviewpreset_l
 	and	#~avf_nextview
 	sta	al_viewflags,x
 ; Retail emits sound $24 here ($04:d656). Its SPC effect differs from
-; the early XLSND0 $24 (se_liftcar); defer until the sound data is restored.
+; the early XLSND0 $24 (se_liftcar). TODO: Restore the matching retail
+; sound data/driver before adding this call.
 	phx
 	a16
 	lda.w	vc_presetbase,y
@@ -1772,8 +1776,11 @@ updateviewcamera_l
 ; al_sbyte1 holds the camera hold timer (retail $2048); al_sbyte2
 ; holds the refreshed camera lifetime (retail $2036). These bytes are
 ; private to camera controllers; no alien offsets are changed.
-; The scene dispatcher must select these entries once it is restored.
-; The early driving display currently calls the position routines itself.
+; FIXME: Reconcile the lifetime byte with the retail object scheduler;
+; the early scheduler does not age al_sbyte2.
+; getview_l dispatches the current strategy after selecting the dynamics
+; car. The ordinary object loop skips bound camera controllers.
+; TODO: Restore retail scene selection; newly created cameras start driving.
 ; Intro 14 returns to driving; hold locks the view for 80 update calls.
 ; Scripts 02-10 keep their last shot; scripts 12/13 finish in the cockpit.
 ; A terminal animation command is polled without restarting its script.
