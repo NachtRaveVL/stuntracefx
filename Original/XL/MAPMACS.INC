@@ -71,7 +71,24 @@ ctrlmqnobj		equ	136
 ctrlmapwait2		equ	138
 ctrlmapsetpath		equ	140
 
+; Retail camera commands use $16/$18; those values already mean nodots/
+; gnddots in this source. Keep existing maps compatible with new slots.
+ctrlmapview1	equ	142
+ctrlmapview2	equ	144
+
 ;-----------------------------------------------------------------------------
+; Camera command payload: 24-bit initial strategy, as in US $08:81f8/8233.
+mapview1	macro
+	db	ctrlmapview1
+	dw	(\1)&WM
+	db	(\1)>>16
+	endm
+mapview2	macro
+	db	ctrlmapview2
+	dw	(\1)&WM
+	db	(\1)>>16
+	endm
+
 mapdef	macro
 	dw	((\1)&$7fff)
 	db	(\1)>>16

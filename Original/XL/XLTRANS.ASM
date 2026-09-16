@@ -700,6 +700,14 @@ dostrats
 
 stratlp	stz	aldead
 
+; A scene may prepare a camera before its car runs its initializer.
+; FIXME: The early object order needs this explicit pending wait; the
+; retail scene/lifetime scheduler has not yet been restored.
+	cpx	viewpending1
+	beq	.nextobject
+	cpx	viewpending2
+	beq	.nextobject
+
 ; FIXME: Until the retail scene/object scheduler is restored, bound
 ; camera controllers run at getview_l, after dynamics and
 ; selection of m_testcar1. Match both directions of the owner/record

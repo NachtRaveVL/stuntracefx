@@ -365,6 +365,11 @@ kf_LRkeydown	equ	2
 
 	alc	trotx,1
 	alc	troty,1
+
+; Scene-created cameras waiting for their car initializer.
+; FIXME: Early ownership handoff; retail keeps permanent controller slots.
+	alc	viewpending1,2
+	alc	viewpending2,2
 		      
 
 

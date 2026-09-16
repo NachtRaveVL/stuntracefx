@@ -181,6 +181,59 @@ mapjmp	dw	mapobjdo&WM	;0
 	dw	notneededyet&WM		;136
 	dw	mapwait2do&WM		;138
 	dw	mapsetpathdo&WM		;140
+	dw	mapview1do&WM		;142
+	dw	mapview2do&WM		;144
+
+; US $08:81f8/8233: allocate a camera, retain its record, read the three
+; strategy bytes and continue at the next four-byte command.
+; FIXME: Pending slots bridge the early car-owned creation order. An
+; occupied slot, bound record or allocation failure skips this command,
+; retaining the previous camera. Retail calls its error handler instead.
+; TODO: Restore retail controller lifetime/replacement and scene ordering.
+	longa
+	longi
+mapview1do
+	ldx	#0
+	bra	mapviewdo
+mapview2do
+	ldx	#2
+mapviewdo
+	lda	viewpending1,x
+	bne	.advance
+	lda.l	mapviewrecords,x
+	phx
+	tax
+	lda.w	vc_target,x
+	plx
+	cmp	#0
+	bne	.advance
+	phy
+	phx
+	lda.l	mapviewrecords,x
+	tay
+	a8
+	jsl	makeviewpending_l
+	a16
+	ply
+	bcc	.failed
+	txa
+	sta.w	viewpending1,y
+	ply
+	lda	mapbase&WM+1,y
+	sta.l	alx_stratptr,x
+	lda	mapbase&WM+2,y
+	sta.l	alx_stratptr+1,x
+	bra	.advance
+.failed
+	ply
+.advance
+	tya
+	clc
+	adc	#4
+	tax
+	jmp	newobjex
+mapviewrecords
+	dw	viewcamera1,viewcamera2
 
 
 	longa

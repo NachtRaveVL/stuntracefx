@@ -743,6 +743,10 @@ kill_list_l	php
 	plb
 
 	ai16
+	stz	viewpending1
+	stz	viewpending2
+	stz	viewcamera1+vc_target
+	stz	viewcamera2+vc_target
 	stz	alxlst	;clear XAlien list
 	FmtFreeLst	alxfreelst,alxblks,number_al,alx_size
 

@@ -790,18 +790,41 @@ makeshadow_l
 
 ;*****************************************************************************
 ; X = car, Y = low-WRAM camera record, A8/I16, D = 0, DB = $7e.
-; Return X unchanged, Y = new camera object and carry set on success.
+; Return X unchanged, Y = bound camera object and carry set on success.
+; A pending scene controller is consumed first; otherwise allocate one.
 ; Allocation failure leaves the record untouched and returns carry clear.
 ; al_viewpt reaches the retail record, whose vc_target points back to
 ; the car; the early camera object also retains its game-over state.
 makeviewobj_l
 	phy
+	a16
+	cpy	#viewcamera1
+	bne	.second
+	lda	viewpending1
+	stz	viewpending1
+	bra	.pending
+.second
+	cpy	#viewcamera2
+	bne	.allocate
+	lda	viewpending2
+	stz	viewpending2
+.pending
+	cmp	#0
+	beq	.allocate
+	tay
+	a8
+; Match the early allocator's inherited world-range byte on handoff.
+	lda	al_worldzh,x
+	sta.w	al_worldzh,y
+	bra	.prepared
+.allocate
+	a8
 	s_make_obj	#nullshape,.bad1
 	s_clr_alsflag		y,realobj
 	s_clr_altype	y,zremove
-; FIXME: Default to driving until retail scene-selected camera creation
-; is restored. Dispatch after selecting the dynamics car at getview_l.
+; FIXME: Maps without a camera command retain the early driving default.
 	s_set_strat	y,viewdrive_strat
+.prepared
 	stz	al_viewflags,x
 	lda	#0
 	sta.w	al_viewflags,y
@@ -931,6 +954,46 @@ bindviewobj_l
 	a8
 	lda	#0
 	sta.w	vc_presetindex,y
+	rtl
+
+; Allocate an unbound scene camera, as in US $08:81f8/8233.
+; Y = unbound low-WRAM record, A8/I16, D = 0; DB preserved (map ROM).
+; Success: C set, X = controller, Y = record. Failure: C clear,
+; Y unchanged, record untouched, X scratch. Caller installs the strategy.
+; FIXME: Early render flags and explicit record clearing supplement retail
+; object initialization. Pending cameras must wait for car binding.
+makeviewpending_l
+	phy
+	jsl	makeobj_l
+	bcc	.failed
+	txy
+	jsl	init_objvars_l
+	ply
+	phb
+	lda	#$7e
+	pha
+	plb
+	s_clr_alsflag	x,realobj
+	s_clr_altype	x,zremove
+	lda	#3
+	sta	al_sbyte2,x
+	a16
+	lda	#nullshape&WM
+	sta	al_shape,x
+	tya
+	sta	al_viewpt,x
+	phx
+	tyx
+	lda	#0
+	jsl	initviewrecord_l
+	plx
+	a8
+	plb
+	sec
+	rtl
+.failed
+	ply
+	clc
 	rtl
 
 ; Prepare a freshly allocated record. A16 = target car, X = record,
@@ -1880,7 +1943,7 @@ updateviewcamera_l
 ; the early scheduler does not age al_sbyte2.
 ; getview_l dispatches the current strategy after selecting the dynamics
 ; car. The ordinary object loop skips bound camera controllers.
-; TODO: Restore retail scene selection; newly created cameras start driving.
+; TODO: Restore the remaining retail scene streams and mode selection.
 ; Intro 14 returns to driving; hold locks the view for 80 update calls.
 ; Scripts 02-10 keep their last shot; scripts 12/13 finish in the cockpit.
 ; A terminal animation command is polled without restarting its script.

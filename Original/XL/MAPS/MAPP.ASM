@@ -1,4 +1,7 @@
 mapp
+; Explicit normal-driving camera for this early player map.
+; TODO: Restore the retail scene-specific strategy selections.
+	mapview1	viewdrive_strat
 	mapobj	100,0,-10,0,nullshape,car1_Istrat
 ;	setalxvar.w	worldz,0
 ;	mapobj	0,0,0,0,nullshape,pBody_Istrat
