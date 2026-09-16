@@ -806,10 +806,6 @@ makeviewobj_l
 	lda	#0
 	sta.w	al_viewflags,y
 	a16
-	tya
-	sta	al_viewpt,x
-	txa
-	sta.w	al_ptr,y
 	lda	viewpos_offz
 	sta.w	al_worldz,y
 	pla
@@ -820,14 +816,20 @@ makeviewobj_l
 	txa
 	plx
 	jsl	initviewrecord_l
-; All nine recovered retail vehicle definitions select group 02 for
-; normal driving (first word of each five-mode camera choice table).
-	lda	#viewpreset02-viewpresettab
-	sta	vc_presetbase,x
 	ply
+	plx
+; FIXME: The early car callers supply normal mode and the shared vehicle
+; choices. TODO: Supply these from retail scene mode and vehicle data.
+	lda	#viewchoice_standard-viewpresettab
+	sta	svar_word1
+	stz	svar_word2
+	phy
+	a8
+	jsl	bindviewobj_l
+	ply
+	phx
 	phy
 	tyx
-	a8
 ; Normal driving starts at view zero. Special-mode selection is separate.
 	a16
 	stz	al_sword1,x
@@ -845,6 +847,90 @@ makeviewobj_l
 	pla
 	a8
 	clc
+	rtl
+
+; Attach an existing camera controller to its car, US $08:8525-$08:85b8.
+; X = car, Y = controller, A8/I16, D = 0, DB = $7e.
+; Controller al_viewpt must already point to an allocated camera record.
+; svar_word1 = vehicle choice-table offset relative to viewpresettab;
+; svar_word2 low byte = retail mode. Its high byte is ignored.
+; FIXME: These two inputs replace retail globals $702396 and $0d2b until
+; their vehicle/scene producers are restored. Mode meanings remain TODO.
+; X preserved, Y returns record, A8/I16 out; tpx/tpy are scratch.
+; Rebinding resets only the retail fields: flags, target, preset/index,
+; bias, speed and shake. It preserves position, angles and animation state.
+; Fresh allocation uses initviewrecord_l separately to clear stale storage.
+bindviewobj_l
+	a16
+	tya
+	sta	al_viewpt,x
+	lda.w	al_viewpt,y
+	sta	tpx
+	lda.w	al_stratptr,y
+	sta	tpy
+	txa
+	sta.w	al_ptr,y
+	ldy	tpx
+	txa
+	sta.w	vc_target,y
+	phx
+	lda	svar_word1
+	tax
+	lda	tpy
+; Retail compares only the strategy's low word; keep that behaviour.
+	cmp	#viewintro_Istrat&WM
+	beq	.intro
+	lda	svar_word2
+	and	#$ff
+	cmp	#1
+	beq	.mode1
+	cmp	#2
+	beq	.mode2
+	cmp	#3
+	beq	.mode3
+	bra	.select
+.mode2
+	txa
+	clc
+	adc	#8
+	tax
+	bra	.select
+.mode3
+	txa
+	clc
+	adc	#6
+	tax
+	bra	.select
+.mode1
+	txa
+	clc
+	adc	#4
+	tax
+	bra	.select
+.intro
+	txa
+	clc
+	adc	#2
+	tax
+.select
+	lda.l	viewpresettab,x
+	sta.w	vc_presetbase,y
+	plx
+	lda	#0
+	sta.w	vc_biasx,y
+	sta.w	vc_biasy,y
+	sta.w	vc_biasz,y
+	sta.w	vc_speedx,y
+	sta.w	vc_speedy,y
+	sta.w	vc_speedz,y
+	sta.w	vc_shakex,y
+	sta.w	vc_shakey,y
+	sta.w	vc_shakez,y
+	lda	#vcf_lookat!vcf_speedoff
+	sta.w	vc_flags,y
+	a8
+	lda	#0
+	sta.w	vc_presetindex,y
 	rtl
 
 ; Prepare a freshly allocated record. A16 = target car, X = record,
@@ -1512,6 +1598,20 @@ viewpreset05
 	viewpreset_entry	$8a55,0,-300,-800
 	viewpreset_entry	$8655,0,-120,-400
 	viewpreset_entry	$1255,0,-440,-1200
+
+; Five-word vehicle camera choices, offsets relative to viewpresettab.
+; Order: default, intro strategy, mode 1, mode 3, mode 2.
+; Eight retail definitions share the standard choices ($09:81d0, $82fc,
+; $8428, $8554, $8785, $889d, $89a7, $8abf); $09:8680 uses the large set.
+; Names reconstructed; identical sequences share one label here.
+viewchoice_standard
+	dw	viewpreset02-viewpresettab,viewpreset03-viewpresettab
+	dw	viewpreset05-viewpresettab,viewpreset02-viewpresettab
+	dw	viewpreset01-viewpresettab
+viewchoice_large
+	dw	viewpreset02-viewpresettab,viewpreset04-viewpresettab
+	dw	viewpreset05-viewpresettab,viewpreset02-viewpresettab
+	dw	viewpreset01-viewpresettab
 
 ; X = controller, al_viewpt = record, al_ptr = owner, A8/I16,
 ; D = 0, DB = $7e. US $08:9a4f-$08:9bd8, adapted to al_viewflags.
