@@ -9,8 +9,8 @@ getview_l
 	plb
 
 ; Use the prepared retail record for the early build's driving view.
-; FIXME: This schedules camera strategies at the early display entry.
-; Revisit placement when the retail scene/object scheduler is restored.
+; docamerastrats has already advanced the record after dynamics.
+; Publishing it again must not advance its strategy or activity counter.
 ; Other view modes and the early game-over camera retain the path below.
 	a8
 	lda	viewtype
@@ -41,17 +41,11 @@ getview_l
 ; Keep the early draw list's world-Z range test tied to the target.
 	lda.w	al_worldzh,y
 	sta	viewmapz
-; Adaptive yaw lag reads the selected dynamics car before publication.
+; Retain the selected dynamics car for the early display path.
 	a16
 	lda.w	al_collobjptr,y
 	sta.l	m_testcar1
 	a8
-; Age the selected camera's activity counter and dispatch its strategy.
-; Driving applies the preset before position/angle updates;
-; cinematic strategies advance their own script and next-strategy pointer.
-; dostrats skips these controllers so scripts advance once per view.
-; The original behind-view strategy still owns car reset and game-over.
-	jsl	stepviewstrat_l
 	ldy	al_viewpt,x
 	tyx
 	jsl	setviewrecord_l
@@ -552,7 +546,7 @@ setviewrecord_l
 ; With world-offset plus position-lag flags, the retail path leaves Y to
 ; the caller: it must already identify the target object in that case.
 ; Matrix and angle temporaries, A/Y and the viewpos* work words are scratch.
-; The driving path in getview_l supplies the prepared record.
+; The controller strategy supplies its prepared record.
 getviewpos_l
 	phx
 	ai16

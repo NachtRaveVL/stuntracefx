@@ -1939,13 +1939,12 @@ updateviewcamera_l
 ; Reconstructed names. X = controller, al_viewpt = vc_ record,
 ; D = 0, DB = $7e, A8/I16. Strategies preserve X and return A8/I16.
 ; al_sbyte1 holds the camera hold timer (retail $2048); al_sbyte2
-; holds the refreshed camera lifetime (retail $2036). These bytes are
+; holds the refreshed camera activity count (retail $2036). These bytes are
 ; private to camera controllers; no alien offsets are changed.
 ; stepviewstrat_l ages the activity byte before dispatch, as in retail.
-; FIXME: It still runs only for the selected view in the early display
-; schedule; offscreen cameras wait until selected, rather than aging.
-; getview_l dispatches the current strategy after selecting the dynamics
-; car. The ordinary object loop skips bound camera controllers.
+; docamerastrats runs bound controllers once after dynamics, selecting
+; each owner's dynamics car. getview_l only publishes the selected record.
+; The ordinary object loop skips bound camera controllers.
 ; TODO: Restore the remaining retail scene streams and mode selection.
 ; Intro 14 returns to driving; hold locks the view for 80 update calls.
 ; Scripts 02-10 keep their last shot; scripts 12/13 finish in the cockpit.
