@@ -2277,6 +2277,81 @@ do_coll_l
 ;*
 ;*
 
+; Direct primary-strategy call, US $03:cab8-$03:caea.
+; X = object, A8/I16, D = 0, DB = $7e. Preserve P and X across the
+; callback (which must return I16); A/Y are scratch. Set al1pt to the
+; current object and tjmp to the full 24-bit target, as in retail.
+; Unlike the collision-aware do_strat_l entry, this always selects the
+; primary pointer. A zero low word returns, regardless of its bank byte.
+call_strat_l
+	php
+	phx
+	lda	al_stratptr+2,x
+	sta	tjmp+2
+	a16
+	lda	al_stratptr,x
+	beq	.return
+	sta	tjmp
+	stx	al1pt
+	a8
+	lda	#(.return>>16)&255
+	pha
+	a16
+	lda	#(.return-1)&WM
+	pha
+	a8
+	lda	tjmp+2
+	pha
+	a16
+	lda	tjmp
+	dec	a
+	pha
+	a8
+	rtl
+.return
+	plx
+	plp
+	rtl
+
+; Secondary-strategy call, US $03:caeb-$03:cb24. Same contract as above.
+; Only dispatch when the low pointer word is nonzero and no collision/
+; dynamics object is attached. Camera controllers use al_tempstratptr for it.
+; FIXME: This reuses the early controller's otherwise-unused temporary
+; strategy pointer for the retail secondary pointer; general object
+; activation still needs its own field mapping and producers restored.
+call_tempstrat_l
+	php
+	phx
+	lda	al_tempstratptr+2,x
+	sta	tjmp+2
+	a16
+	lda	al_tempstratptr,x
+	beq	.return
+	sta	tjmp
+	lda	al_collobjptr,x
+	bne	.return
+	stx	al1pt
+	a8
+	lda	#(.return>>16)&255
+	pha
+	a16
+	lda	#(.return-1)&WM
+	pha
+	a8
+	lda	tjmp+2
+	pha
+	a16
+	lda	tjmp
+	dec	a
+	pha
+	a8
+	rtl
+.return
+	a8
+	plx
+	plp
+	rtl
+
 Do_strat_l
 	php
 	ai16

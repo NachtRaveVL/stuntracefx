@@ -20,6 +20,7 @@
 	global	viewanim05,viewanim06,viewanim07,viewanim08,viewanim09
 	global	viewanim10,viewanim11,viewanim12,viewanim13,viewanim14
 	global	viewanim15,viewanim16,viewanim17,viewanim18
+	global	stepviewstrat_l
 	global	makeviewpending_l
 	global	bindviewobj_l,viewchoice_standard,viewchoice_large
 	global	initviewrecord_l

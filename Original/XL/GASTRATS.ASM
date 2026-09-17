@@ -825,6 +825,8 @@ makeviewobj_l
 ; FIXME: Maps without a camera command retain the early driving default.
 	s_set_strat	y,viewdrive_strat
 .prepared
+	lda	#3
+	sta.w	al_sbyte2,y
 	stz	al_viewflags,x
 	lda	#0
 	sta.w	al_viewflags,y
@@ -1939,8 +1941,9 @@ updateviewcamera_l
 ; al_sbyte1 holds the camera hold timer (retail $2048); al_sbyte2
 ; holds the refreshed camera lifetime (retail $2036). These bytes are
 ; private to camera controllers; no alien offsets are changed.
-; FIXME: Reconcile the lifetime byte with the retail object scheduler;
-; the early scheduler does not age al_sbyte2.
+; stepviewstrat_l ages the activity byte before dispatch, as in retail.
+; FIXME: It still runs only for the selected view in the early display
+; schedule; offscreen cameras wait until selected, rather than aging.
 ; getview_l dispatches the current strategy after selecting the dynamics
 ; car. The ordinary object loop skips bound camera controllers.
 ; TODO: Restore the remaining retail scene streams and mode selection.
@@ -1948,6 +1951,36 @@ updateviewcamera_l
 ; Scripts 02-10 keep their last shot; scripts 12/13 finish in the cockpit.
 ; A terminal animation command is polled without restarting its script.
 	shorta
+
+; Camera activity gate from the object loop at US $03:d39c-$03:d3c6.
+; X = controller, A8/I16, D = 0, DB = $7e. X preserved; A/Y and tjmp
+; scratch. Zero sleeps; one clears the collision/dynamics reference and
+; sleeps; positive values decrement before the primary strategy runs.
+; Strategies refresh this byte to three. Expiry does not free the object.
+; Negative values reset to three and try the secondary callback, stored
+; in al_tempstratptr for these early camera controllers. The restored
+; scene allocator and camera strategies currently leave that pointer zero.
+; TODO: Restore general object activation and the scheduler's removal
+; path. The current camera strategies do not request removal via aldead.
+stepviewstrat_l
+	stz	aldead
+	lda	al_sbyte2,x
+	beq	.done
+	bmi	.rearm
+	dec	a
+	beq	.expire
+	sta	al_sbyte2,x
+	jml	call_strat_l
+.rearm
+	lda	#3
+	sta	al_sbyte2,x
+	jml	call_tempstrat_l
+.expire
+	stz	al_collobjptr,x
+	stz	al_collobjptr+1,x
+	stz	al_sbyte2,x
+.done
+	rtl
 
 viewintro_Istrat	; US $08:8e2a
 	s_set_strat	x,viewintro_strat

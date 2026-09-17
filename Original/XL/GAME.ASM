@@ -46,14 +46,12 @@ getview_l
 	lda.w	al_collobjptr,y
 	sta.l	m_testcar1
 	a8
-; Run the selected retail camera strategy through the original pointer
-; dispatcher. Driving applies the preset before position/angle updates;
+; Age the selected camera's activity counter and dispatch its strategy.
+; Driving applies the preset before position/angle updates;
 ; cinematic strategies advance their own script and next-strategy pointer.
 ; dostrats skips these controllers so scripts advance once per view.
 ; The original behind-view strategy still owns car reset and game-over.
-	phx
-	jsl	jmptostratx_jml
-	plx
+	jsl	stepviewstrat_l
 	ldy	al_viewpt,x
 	tyx
 	jsl	setviewrecord_l

@@ -1,3 +1,4 @@
+	global	call_strat_l,call_tempstrat_l
 	global	Removedeadal_l
 	global	generate_collist_l
 	global	alvelvecs_l
