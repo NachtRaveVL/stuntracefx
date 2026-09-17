@@ -2320,6 +2320,78 @@ snapview
 	a8
 	rts
 
+; Preset tracking entry, US $08:90d9-$08:917c. Names reconstructed.
+; X = controller, al_viewpt = record, A8/I16, D = 0, DB = $7e.
+; Clear transient speed/shake, snap to the destination offsets, then
+; enter preset tracking with $0755 flags and a cleared track-state word.
+; Unlike viewdrive_Istrat, retain the preset index and pending requests;
+; updateviewpreset_l consumes them through the normal lock/forced rules.
+; X preserved; A/Y and camera work words scratch. Refresh activity to
+; three through viewupdate_strat, including the initialization frame.
+; TODO: Identify this entry's retail callers and restore their routing.
+; It is available to mapview1/2; the early driving default is unchanged.
+viewtrack_Istrat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_speedx,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_speedy,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_speedz,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_shakex,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_shakey,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_shakez,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda.w	vc_destx,y
+	sta.w	vc_offx,y
+	a8
+	a16
+	lda.w	vc_desty,y
+	sta.w	vc_offy,y
+	a8
+	a16
+	lda.w	vc_destz,y
+	sta.w	vc_offz,y
+	a8
+	jsl	updateviewcamera_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_trackstate,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0755
+	sta.w	vc_flags,y
+	a8
+	s_set_strat	x,viewtrack_strat
+viewtrack_strat
+	jsl	updateviewpreset_l
+	jmp	viewupdate_strat
+
+
 viewlag	=	6
 copyviewpos_l	
 	phx
