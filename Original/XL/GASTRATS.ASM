@@ -2392,6 +2392,121 @@ viewtrack_strat
 	jmp	viewupdate_strat
 
 
+; Copy dynamics velocity into an object's motion words, US $08:dc6d.
+; X = destination object, Y = car owner, A8/I16, D = 0, DB = $7e.
+; X/Y preserved, A scratch, returns A8/I16. The three arithmetic shifts
+; divide by eight with negative values rounded down, not toward zero.
+; Use the early dynamics layout's named OBJ_VEL fields (dynshift = 3).
+copycarvelocity_l
+	phx
+	phy
+	a16
+	lda.w	al_collobjptr,y
+	txy
+	tax
+	lda.l	mrambank+OBJ_VELX,x
+	asra
+	asra
+	asra
+	sta.w	al_vx,y
+	lda.l	mrambank+OBJ_VELY,x
+	asra
+	asra
+	asra
+	sta.w	al_vy,y
+	lda.l	mrambank+OBJ_VELZ,x
+	asra
+	asra
+	asra
+	sta.w	al_vz,y
+	a8
+	ply
+	plx
+	rtl
+
+; Drifting camera and fixed-position pitch transition, US $08:93d7-94a0.
+; Names reconstructed. X = controller, al_ptr = car, al_viewpt = record;
+; A8/I16, D = 0, DB = $7e. X preserved, A/Y/tpx and camera words scratch.
+; Integrate inherited velocity, chase X/Z motion toward zero and Y toward
+; -10, then check the 40-count delay. The transition call still integrates
+; motion before switching to the fixed-position pitch strategy.
+; Both paths refresh activity via viewupdate_strat. Position remains fixed
+; in the record while the pitch approaches $1000 using the rate-5 chase.
+; TODO: Identify and restore scene/strategy routing for these camera shots.
+; The entries are available to mapview1/2; default driving is unchanged.
+viewdrift_Istrat
+	s_set_strat	x,viewdrift_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0003
+	sta.w	vc_flags,y
+	a8
+	lda	#$28
+	sta	al_sbyte1,x
+	ldy	al_ptr,x
+	jsl	copycarvelocity_l
+viewdrift_strat
+	a16
+	ldy	al_viewpt,x
+	lda	al_vx,x
+	clc
+	adc.w	vc_worldx,y
+	sta.w	vc_worldx,y
+	lda	al_vy,x
+	clc
+	adc.w	vc_worldy,y
+	sta.w	vc_worldy,y
+	lda	al_vz,x
+	clc
+	adc.w	vc_worldz,y
+	sta.w	vc_worldz,y
+	a8
+	a16
+	lda	al_vx,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vx,x
+	a8
+	a16
+	lda	al_vy,x
+	sta	tpx
+	lda	#$fff6
+	jsl	sr16_achase_alvar3
+	sta	al_vy,x
+	a8
+	a16
+	lda	al_vz,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vz,x
+	a8
+	lda	al_sbyte1,x
+	bne	.wait
+	jml	viewtilt_Istrat
+.wait
+	dec	al_sbyte1,x
+	jmp	viewupdate_strat
+viewtilt_Istrat
+	s_set_strat	x,viewtilt_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0002
+	sta.w	vc_flags,y
+	a8
+viewtilt_strat
+	ldy	al_viewpt,x
+	a16
+	lda.w	vc_rotx,y
+	sta	tpx
+	lda	#$1000
+	jsl	sr16_achase_alvar5
+	sta.w	vc_rotx,y
+	a8
+	jmp	viewupdate_strat
+
+
 viewlag	=	6
 copyviewpos_l	
 	phx

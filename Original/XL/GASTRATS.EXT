@@ -33,6 +33,8 @@
 	global	viewhold_strat,viewsnap_Istrat,viewdrive_Istrat
 	global	viewdrive_strat,viewupdate_strat,viewanim01_Istrat
 	global	viewtrack_Istrat,viewtrack_strat
+	global	copycarvelocity_l,viewdrift_Istrat,viewdrift_strat
+	global	viewtilt_Istrat,viewtilt_strat
 	global	viewanim01_strat,viewanim02_Istrat,viewanim03_Istrat
 	global	viewanim04_Istrat,viewanim05_Istrat,viewanim06_Istrat
 	global	viewanim07_Istrat,viewanim10_Istrat,viewanim08_Istrat
