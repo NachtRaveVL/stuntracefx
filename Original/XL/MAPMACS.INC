@@ -76,6 +76,9 @@ ctrlmapsetpath		equ	140
 ctrlmapview1	equ	142
 ctrlmapview2	equ	144
 
+; Retail $04 is the terminal packed-route command; early $04 is maploop.
+ctrlmaproute	equ	146
+
 ;-----------------------------------------------------------------------------
 ; Camera command payload: 24-bit initial strategy, as in US $08:81f8/8233.
 mapview1	macro
@@ -88,6 +91,18 @@ mapview2	macro
 	dw	(\1)&WM
 	db	(\1)>>16
 	endm
+
+; Terminal scene command followed by a count and eight-byte route points.
+; This binds the inline table and returns without executing its data.
+; Count must match the following points; it is not a level-finished flag.
+maproute	macro	[count]
+	db	ctrlmaproute
+	dw	\1
+	endm
+routepoint	macro	[x,y,z,word]
+	dw	\1,\2,\3,\4
+	endm
+; TODO: Recover the fourth word's meaning when porting the GSU consumer.
 
 mapdef	macro
 	dw	((\1)&$7fff)

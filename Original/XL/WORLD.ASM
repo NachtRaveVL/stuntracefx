@@ -183,6 +183,7 @@ mapjmp	dw	mapobjdo&WM	;0
 	dw	mapsetpathdo&WM		;140
 	dw	mapview1do&WM		;142
 	dw	mapview2do&WM		;144
+	dw	maproutedo&WM		;146
 
 ; US $08:81f8/8233: allocate a camera, retain its record, read the three
 ; strategy bytes and continue at the next four-byte command.
@@ -234,6 +235,32 @@ mapviewdo
 	jmp	newobjex
 mapviewrecords
 	dw	viewcamera1,viewcamera2
+
+; Terminal route binding, US $08:802c-$08:8048. Y is the command offset,
+; DB is the scene bank. The inline count word begins one byte later.
+; Keep the early cursor at the terminal opcode, as mapenddo does; later
+; map updates must not interpret packed point data as object commands.
+; The outer newobjs_l restores DB; this local dispatcher returns by RTS.
+; FIXME: Store the native address/bank pair in early viewrouteptr rather
+; than the retail GSU globals. Route data must fit within its scene bank.
+maproutedo
+	tyx
+	stx	mapptr
+	iny
+	a16
+	tya
+	clc
+	adc	#mapbase&WM
+	sta.l	viewrouteptr
+	a8
+	phb
+	pla
+	a16
+	and	#$00ff
+	sta.l	viewrouteptr+2
+	a8
+	rts
+
 
 
 	longa

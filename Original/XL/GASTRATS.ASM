@@ -2393,22 +2393,22 @@ viewtrack_strat
 
 
 ; Packed route-point access, US $08:dc13-$08:dc6c. Names reconstructed.
-; A = one-based point index, A16/I16, D = 0. tpx = table address,
-; low byte of tpy = table bank. The bank must expose low Work RAM, as
-; the retail LoROM table banks do. X/Y/DB and tpx/tpy are preserved.
+; A = one-based point index, A16/I16, D = 0, DB exposes low Work RAM.
+; maproute must first bind a valid inline table in viewrouteptr. Its bank
+; must also expose low Work RAM, as the retail LoROM table banks do.
+; X/Y/DB and viewrouteptr are preserved; A and x1/y1/z1 are scratch.
 ; Table: count word, then eight bytes per point (XYZ words and one word
 ; not read here). getroutepos_l returns XYZ in x1/y1/z1, A = Z.
-; nextroutepoint_l returns the next index in A, with the input in x1.
-; Only equality with the count wraps to one; neither entry bounds-checks
-; indices or clamps the retail 16-bit table-offset arithmetic.
-; FIXME: Explicit tpx/tpy inputs stand in for retail $701092/$701094.
-; The early CAR_NEARMARKER is an object pointer, not this point index.
-; TODO: Restore the packed-route producer and camera callers before
-; selecting these helpers from the early marker-based driving path.
+; nextroutepoint_l returns the next index in A, with the input in x1;
+; y1/z1 are unchanged. Only equality with the count wraps to one.
+; Neither entry bounds-checks indices or clamps the retail 16-bit offset.
+; FIXME: viewrouteptr replaces retail $701092/$701094 until GSU route
+; tracking is restored. Early CAR_NEARMARKER is an object pointer, not
+; the retail point index. TODO: Restore that index producer and callers.
 getroutepos_l
 	sta.w	x1
 	phx
-	lda.l	tpy
+	lda.l	viewrouteptr+2
 	a8
 	and	#$ff
 	phb
@@ -2421,7 +2421,7 @@ getroutepos_l
 	asl	a
 	asl	a
 	clc
-	adc.l	tpx
+	adc.l	viewrouteptr
 	inc	a
 	inc	a
 	tax
@@ -2438,14 +2438,14 @@ getroutepos_l
 nextroutepoint_l
 	sta.w	x1
 	phx
-	lda.l	tpy
+	lda.l	viewrouteptr+2
 	a8
 	and	#$ff
 	phb
 	pha
 	plb
 	a16
-	lda.l	tpx
+	lda.l	viewrouteptr
 	tax
 	lda.w	x1
 	cmp.w	0,x

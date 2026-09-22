@@ -743,6 +743,10 @@ kill_list_l	php
 	plb
 
 	ai16
+; FIXME: The early list reset is also the scene boundary for route data.
+; A new maproute command must bind the next scene before route lookup.
+	stz	viewrouteptr
+	stz	viewrouteptr+2
 	stz	viewpending1
 	stz	viewpending2
 	stz	viewcamera1+vc_target
