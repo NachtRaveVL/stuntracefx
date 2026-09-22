@@ -241,8 +241,8 @@ mapviewrecords
 ; Keep the early cursor at the terminal opcode, as mapenddo does; later
 ; map updates must not interpret packed point data as object commands.
 ; The outer newobjs_l restores DB; this local dispatcher returns by RTS.
-; FIXME: Store the native address/bank pair in early viewrouteptr rather
-; than the retail GSU globals. Route data must fit within its scene bank.
+; viewrouteptr addresses the shared GSU m_routeptr/m_routebank pair.
+; Route data must fit within its scene bank.
 maproutedo
 	tyx
 	stx	mapptr

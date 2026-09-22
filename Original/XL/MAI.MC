@@ -422,3 +422,162 @@ mfind_nearobj
 	msetreg	rcarflags,CARflag_Accel
 .naccel
 	endc
+
+;*******************************************************************
+; Packed-route access, reconstructed from US $04:cc06 and $04:cd56.
+; These use the terminal maproute table, not early linked marker objects.
+; r10 = GSU stack, r11 = return address; RAM bank 0 on entry.
+; ROM bank is left at m_routebank. Names reconstructed.
+;
+; TODO: Restore retail car $58 index storage/update and the route-driving
+; callers. CAR_NEARMARKER must remain an early object pointer. The query
+; below does not replace mdo_carAI or change the current driving path.
+
+; US $04:c3b5-$04:c3d4. r8 = car, returns mfind_nearroute's result.
+; Preserve r8/r10; r11 and the search scratch registers are destroyed.
+mfind_carroute
+	mpush	r11
+	mloadw	r1,OBJ_WORLDX,r8
+	mloadw	r2,OBJ_WORLDY,r8
+	mloadw	r3,OBJ_WORLDZ,r8
+	mcall	mfind_nearroute
+	nop
+	mpop	pc
+	nop
+
+; US $04:cc06-$04:cca3. r1/r2/r3 = query XYZ words.
+; r0 = one-based nearest point index, zero if no point was selected.
+; On success: r1/r2/r3 = point XYZ, r5 = its ROM address, r6 = distance.
+; r4/r7/r9/r12/r13/r14 and flags are scratch; r8/r10/r11 preserved.
+; Metric is |dx| + 4*|dy| + |dz|, with the retail 16-bit arithmetic and
+; overflow skips retained. Strictly smaller distance wins (first tie).
+; Only r0 is meaningful on failure: the no-candidate scan still reads
+; XYZ through the retail wrapped $fffa address. Do not fabricate a point.
+mfind_nearroute
+	lm	r0,[m_routebank]
+	romb
+	lm	r0,[m_routeptr]
+	moves	r14,r0
+	bne	.table
+	nop
+	miwt	pc,.none&$ffff
+	nop
+.table
+	mgetwi	r0
+	moves	r12,r0
+	bne	.scan
+	nop
+	miwt	pc,.none&$ffff
+	nop
+.scan
+	ibt	r5,#0
+	iwt	r6,#$7fff
+	ibt	r4,#0
+	ibt	r7,#0
+	cache
+	move	r13,pc
+.loop
+	inc	r4
+	mgetwi	r0
+	sub	r1
+	bvs	.skipyz
+	nop
+	bpl	.xpos
+	nop
+	not
+	inc	r0
+.xpos
+	move	r9,r0
+	mgetwi	r0
+	sub	r2
+	bpl	.ypos
+	nop
+	not
+	inc	r0
+.ypos
+	add	r0
+	add	r0
+	with	r9
+	add	r0
+	bvs	.skipz
+	nop
+	mgetwi	r0
+	sub	r3
+	bvs	.next
+	nop
+	bpl	.zpos
+	nop
+	not
+	inc	r0
+.zpos
+	add	r9
+	bvs	.next
+	nop
+	cmp	r6
+	bcs	.next
+	nop
+	move	r6,r0
+	move	r5,r14
+	move	r7,r4
+	bra	.next
+	nop
+.skipz
+	inc	r14
+	bra	.next
+	inc	r14
+.skipyz
+	with	r14
+	add	#4
+.next
+	inc	r14
+	loop
+	inc	r14
+	move	r0,r7
+	from	r5
+	to	r5
+	sub	#6
+	move	r14,r5
+	mgetwi	r1
+	mgetwi	r2
+	mgetwi	r3
+	move	pc,r11
+	nop
+.none
+	sub	r0
+	move	pc,r11
+	nop
+
+; US $04:cd56-$04:cd82. r5 = point ROM address, r0 preserved.
+; r1/r2/r3 = XYZ, r4 = opaque fourth word; r5/r6-r13 preserved.
+; r14 ends eight bytes past the point (word wrap). No bounds checks.
+; TODO: Identify the fourth word's meaning in retail steering consumers.
+mreadroutepoint
+	mpush	r0
+	lm	r0,[m_routebank]
+	romb
+	move	r14,r5
+	mgetwi	r1
+	mgetwi	r2
+	mgetwi	r3
+	mgetwi	r4
+	mpop	r0
+	move	pc,r11
+	nop
+
+; US $04:cd83-$04:cd97. r0 = one-based index, preserved on return.
+; r5 = m_routeptr + 2 + (index-1)*8, all arithmetic modulo 65536.
+; r1/r4/r6 and flags scratch; does not select a ROM bank or read data.
+; Pass the result to mreadroutepoint. No range/zero checks in retail.
+mroutepointptr
+	move	r1,r0
+	dec	r0
+	iwt	r6,#8
+	lmult
+	lm	r0,[m_routeptr]
+	add	#2
+	to	r5
+	add	r4
+	move	r0,r1
+	move	pc,r11
+	nop
+

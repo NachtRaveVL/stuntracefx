@@ -110,6 +110,8 @@
 	global	rtest5
 
 	global	mcalcvelalign
+	global	m_routeptr,m_routebank,viewrouteptr
+	global	mfind_nearroute,mfind_carroute,mroutepointptr,mreadroutepoint
 
 
 

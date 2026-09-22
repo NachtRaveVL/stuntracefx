@@ -371,10 +371,6 @@ kf_LRkeydown	equ	2
 	alc	viewpending1,2
 	alc	viewpending2,2
 
-; Packed route bound by the terminal scene command: address and bank word.
-; FIXME: Low Work RAM replaces retail $701092/$701094 until the GSU
-; packed-route consumers are restored. The bank word's high byte is zero.
-	alc	viewrouteptr,4
 		      
 
 

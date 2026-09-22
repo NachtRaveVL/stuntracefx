@@ -2402,9 +2402,9 @@ viewtrack_strat
 ; nextroutepoint_l returns the next index in A, with the input in x1;
 ; y1/z1 are unchanged. Only equality with the count wraps to one.
 ; Neither entry bounds-checks indices or clamps the retail 16-bit offset.
-; FIXME: viewrouteptr replaces retail $701092/$701094 until GSU route
-; tracking is restored. Early CAR_NEARMARKER is an object pointer, not
-; the retail point index. TODO: Restore that index producer and callers.
+; viewrouteptr is the CPU address of shared GSU m_routeptr/m_routebank.
+; Early CAR_NEARMARKER is an object pointer, not the retail point index.
+; TODO: Restore that index field/update path and the camera callers.
 getroutepos_l
 	sta.w	x1
 	phx

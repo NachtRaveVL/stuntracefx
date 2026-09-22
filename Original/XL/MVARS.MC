@@ -458,6 +458,13 @@ part_len	equ	14
 
 	Zmalc	m_particlerand,2
 	malc	m_particles,part_len*(maxparticles+1)
+
+; Packed route shared by the scene parser, GSU and CPU cameras.
+; Retail $1092/$1094: ROM address followed by a zero-extended bank word.
+; Appended after existing MVARS allocations; m_aitest1 follows in MAI.
+	malc	m_routeptr,2
+	malc	m_routebank,2
+viewrouteptr	=	m_routeptr
 ;	malc	m_particlerand2,2
 ;	malc	m_drawparticles,(8+6)*(maxparticles+1)
 		  
