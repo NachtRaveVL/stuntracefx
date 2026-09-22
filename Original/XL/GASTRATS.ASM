@@ -2392,6 +2392,71 @@ viewtrack_strat
 	jmp	viewupdate_strat
 
 
+; Packed route-point access, US $08:dc13-$08:dc6c. Names reconstructed.
+; A = one-based point index, A16/I16, D = 0. tpx = table address,
+; low byte of tpy = table bank. The bank must expose low Work RAM, as
+; the retail LoROM table banks do. X/Y/DB and tpx/tpy are preserved.
+; Table: count word, then eight bytes per point (XYZ words and one word
+; not read here). getroutepos_l returns XYZ in x1/y1/z1, A = Z.
+; nextroutepoint_l returns the next index in A, with the input in x1.
+; Only equality with the count wraps to one; neither entry bounds-checks
+; indices or clamps the retail 16-bit table-offset arithmetic.
+; FIXME: Explicit tpx/tpy inputs stand in for retail $701092/$701094.
+; The early CAR_NEARMARKER is an object pointer, not this point index.
+; TODO: Restore the packed-route producer and camera callers before
+; selecting these helpers from the early marker-based driving path.
+getroutepos_l
+	sta.w	x1
+	phx
+	lda.l	tpy
+	a8
+	and	#$ff
+	phb
+	pha
+	plb
+	a16
+	lda.w	x1
+	dec	a
+	asl	a
+	asl	a
+	asl	a
+	clc
+	adc.l	tpx
+	inc	a
+	inc	a
+	tax
+	lda.w	0,x
+	sta.w	x1
+	lda.w	2,x
+	sta.w	y1
+	lda.w	4,x
+	sta.w	z1
+	plb
+	plx
+	rtl
+
+nextroutepoint_l
+	sta.w	x1
+	phx
+	lda.l	tpy
+	a8
+	and	#$ff
+	phb
+	pha
+	plb
+	a16
+	lda.l	tpx
+	tax
+	lda.w	x1
+	cmp.w	0,x
+	bne	.next
+	lda	#$0000
+.next
+	inc	a
+	plb
+	plx
+	rtl
+
 ; Copy dynamics velocity into an object's motion words, US $08:dc6d.
 ; X = destination object, Y = car owner, A8/I16, D = 0, DB = $7e.
 ; X/Y preserved, A scratch, returns A8/I16. The three arithmetic shifts
