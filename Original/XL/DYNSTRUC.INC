@@ -156,6 +156,11 @@ CARflag_makestop	equ	32768
 ; Appended here to retain all existing early-build car field offsets.
 	struct		CAR_VELALIGN,2
 
+; Last route query index (retail car $58), one-based; zero = no result.
+; Keep the early CAR_NEARMARKER object pointer and all old offsets intact.
+; mmake_obj clears the complete enlarged block, including this field.
+	struct		CAR_ROUTEINDEX,2
+
  	
 	struct		CAR_LEN,0	
 

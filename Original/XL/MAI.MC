@@ -429,9 +429,9 @@ mfind_nearobj
 ; r10 = GSU stack, r11 = return address; RAM bank 0 on entry.
 ; ROM bank is left at m_routebank. Names reconstructed.
 ;
-; TODO: Restore retail car $58 index storage/update and the route-driving
-; callers. CAR_NEARMARKER must remain an early object pointer. The query
-; below does not replace mdo_carAI or change the current driving path.
+; CAR_ROUTEINDEX stores the retail point index separately from the early
+; CAR_NEARMARKER object pointer. The early AI still uses linked markers.
+; TODO: Restore the retail mode flags, steering and automatic route motion.
 
 ; US $04:c3b5-$04:c3d4. r8 = car, returns mfind_nearroute's result.
 ; Preserve r8/r10; r11 and the search scratch registers are destroyed.
@@ -581,3 +581,20 @@ mroutepointptr
 	move	pc,r11
 	nop
 
+
+; Query-only route update, US $04:c4be-$04:c4d0. Retail reaches this
+; branch when car $70 bit 2 (mask $0004) selects index-only tracking.
+; r8 = car; r10 = stack; r11 = return address; RAM bank 0.
+; Store the search result even when zero, replacing a stale index.
+; r0 returns one as in retail; this is NOT a valid-index indicator.
+; r8/r10 preserved; search scratch registers and r11 destroyed.
+; The added entry push supplies the enclosing retail routine's stack frame.
+mupdate_carroute
+	mpush	r11
+	mcall	mfind_carroute
+	nop
+	move	r7,r0
+	mstorew	r7,CAR_ROUTEINDEX,r8
+	ibt	r0,#1
+	mpop	pc
+	nop

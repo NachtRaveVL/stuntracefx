@@ -2404,7 +2404,8 @@ viewtrack_strat
 ; Neither entry bounds-checks indices or clamps the retail 16-bit offset.
 ; viewrouteptr is the CPU address of shared GSU m_routeptr/m_routebank.
 ; Early CAR_NEARMARKER is an object pointer, not the retail point index.
-; TODO: Restore that index field/update path and the camera callers.
+; CAR_ROUTEINDEX holds the GSU query-only result. TODO: Restore the
+; remaining retail update modes and road-camera callers.
 getroutepos_l
 	sta.w	x1
 	phx

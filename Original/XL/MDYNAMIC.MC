@@ -2482,6 +2482,17 @@ rounddown	=	64
 
 .end
 
+; FIXME: The early car tick has no retail $70 route-mode flags yet.
+; Use the restored query-only path when maproute has bound a table, after
+; movement and before the CPU camera pass. This includes dynoff cars.
+; Steering/automatic advancement remain TODO in the retail mode dispatcher.
+	lm	r0,[m_routeptr]
+	mtest	r0
+	beq	.nroute
+	nop
+	mcall	mupdate_carroute
+	nop
+.nroute
 	mpop	pc
 	nop
 
