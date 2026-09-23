@@ -255,6 +255,8 @@ minit_dynamics	; INITIALISE DYNAMICS.
 	sm	[m_dynframe],r0
 	sm	[m_testcar1],r0
 	sm	[m_test1],r0
+; FIXME: Early dynamics initialization is the retail GSU reset boundary.
+	sm	[m_viewroadflags],r0
 
 	minit_mem	m_dynmem,totaldynmem,r1
 ;	minit_mem	m_dynmem,1000,r1

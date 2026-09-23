@@ -2392,6 +2392,171 @@ viewtrack_strat
 	jmp	viewupdate_strat
 
 
+; Moving road camera, US $08:8c99-$08:8e29. Names reconstructed.
+; X = bound controller, A8/I16, D = 0, DB = $7e. A/Y/svar_word1
+; and route-helper scratch destroyed. Requires a bound packed route.
+; Start two points ahead at (+1000,-500,+1000). Each changed index
+; divisible by four chooses the next point at (+1000,-1500,+1000),
+; aims X/Z velocity at the following point with signed floor /32,
+; and raises world Y by 25 for 24 ticks. vc_trackstate is not reset.
+; Retail computes Y velocity but discards its integration result.
+; Preserve another retail edge case: index zero bypasses the record
+; load. With a zero counter, the X/Z stores use Y = owner instead.
+; FIXME: The early query-only car bridge can produce zero indices;
+; restore retail normal-mode index retention before scene activation.
+; The shared flag's bit 0 is cleared without disturbing other bits.
+; TODO: Restore retail scene selection and the flag's GSU draw consumer.
+viewroad_Istrat
+	phx
+	ldy	al_ptr,x
+	a16
+	lda.w	al_collobjptr,y
+	tax
+	lda.l	mrambank+CAR_ROUTEINDEX,x
+	plx
+	jsl	nextroutepoint_l
+	jsl	nextroutepoint_l
+	sta.w	svar_word1
+	jsl	getroutepos_l
+	ldy	al_viewpt,x
+	lda.w	x1
+	clc
+	adc	#$03e8
+	sta.w	vc_worldx,y
+	lda.w	y1
+	clc
+	adc	#$fe0c
+	sta.w	vc_worldy,y
+	lda.w	z1
+	clc
+	adc	#$03e8
+	sta.w	vc_worldz,y
+	a8
+	s_set_strat	x,viewroad_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0003
+	sta.w	vc_flags,y
+	a8
+	a16
+	lda.l	m_viewroadflags
+	and	#$fffe
+	sta.l	m_viewroadflags
+	a8
+	a16
+	lda	#$0000
+	sta	al_sword1,x
+	a8
+	a16
+	lda	#$0000
+	sta	al_vx,x
+	a8
+	a16
+	lda	#$0000
+	sta	al_vy,x
+	a8
+	a16
+	lda	#$0000
+	sta	al_vz,x
+	a8
+viewroad_strat
+	phx
+	ldy	al_ptr,x
+	a16
+	lda.w	al_collobjptr,y
+	tax
+	lda.l	mrambank+CAR_ROUTEINDEX,x
+	plx
+	cmp	#$0000
+	bne	.nonzero
+	brl	.move
+.nonzero
+	ldy	al_viewpt,x
+	cmp.w	vc_trackstate,y
+	bne	.changed
+	brl	.move
+.changed
+	bit	#$0003
+	beq	.reposition
+	brl	.move
+.reposition
+	sta.w	vc_trackstate,y
+	jsl	nextroutepoint_l
+	sta.w	svar_word1
+	jsl	getroutepos_l
+	ldy	al_viewpt,x
+	lda.w	x1
+	clc
+	adc	#$03e8
+	sta.w	vc_worldx,y
+	lda.w	y1
+	clc
+	adc	#$fa24
+	sta.w	vc_worldy,y
+	lda.w	z1
+	clc
+	adc	#$03e8
+	sta.w	vc_worldz,y
+	lda	#$0018
+	sta	al_sword1,x
+	lda.w	svar_word1
+	jsl	nextroutepoint_l
+	jsl	getroutepos_l
+	ldy	al_viewpt,x
+	lda.w	x1
+	sec
+	sbc.w	vc_worldx,y
+	asra
+	asra
+	asra
+	asra
+	asra
+	sta	al_vx,x
+	lda.w	y1
+	sec
+	sbc.w	vc_worldy,y
+	asra
+	asra
+	asra
+	asra
+	asra
+	sta	al_vy,x
+	lda.w	z1
+	sec
+	sbc.w	vc_worldz,y
+	asra
+	asra
+	asra
+	asra
+	asra
+	sta	al_vz,x
+.move
+	lda	al_sword1,x
+	beq	.integrate
+	dec	a
+	sta	al_sword1,x
+	ldy	al_viewpt,x
+	lda.w	vc_worldy,y
+	clc
+	adc	#$0019
+	sta.w	vc_worldy,y
+.integrate
+	lda.w	vc_worldx,y
+	clc
+	adc	al_vx,x
+	sta.w	vc_worldx,y
+	lda.w	vc_worldy,y
+	clc
+	adc	al_vy,x
+; No store here in retail: only the countdown changes world Y.
+	lda.w	vc_worldz,y
+	clc
+	adc	al_vz,x
+	sta.w	vc_worldz,y
+	a8
+	jmp	viewupdate_strat
+
+
 ; Fixed road cameras, US $08:928a-$08:92de and $08:937e-$08:93d6.
 ; X = bound controller, al_ptr = car owner, al_viewpt = camera record.
 ; A8/I16, D = 0, DB = $7e. maproute must have bound a valid table and
@@ -2400,7 +2565,7 @@ viewtrack_strat
 ; The initializer chooses its anchor once; later ticks only update the
 ; look-at camera and refresh activity. They do not chase new route indices.
 ; Retail performs no index/binding checks here; retain its wrap behaviour.
-; TODO: Restore retail scene selection for these shots and moving road views.
+; TODO: Restore retail scene selection for these shots.
 viewrouteahead_Istrat
 	s_set_strat	x,viewrouteahead_strat
 	ldy	al_viewpt,x
@@ -2478,7 +2643,7 @@ viewrouteside_strat
 ; viewrouteptr is the CPU address of shared GSU m_routeptr/m_routebank.
 ; Early CAR_NEARMARKER is an object pointer, not the retail point index.
 ; CAR_ROUTEINDEX holds the GSU query-only result. TODO: Restore the
-; remaining retail update modes and moving road-camera callers.
+; remaining retail update modes.
 getroutepos_l
 	sta.w	x1
 	phx
