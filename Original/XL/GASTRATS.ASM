@@ -2392,6 +2392,79 @@ viewtrack_strat
 	jmp	viewupdate_strat
 
 
+; Fixed road cameras, US $08:928a-$08:92de and $08:937e-$08:93d6.
+; X = bound controller, al_ptr = car owner, al_viewpt = camera record.
+; A8/I16, D = 0, DB = $7e. maproute must have bound a valid table and
+; the owner's dynamics car must hold CAR_ROUTEINDEX. Names reconstructed.
+; Flags 3 keep world position fixed while looking toward the target car.
+; The initializer chooses its anchor once; later ticks only update the
+; look-at camera and refresh activity. They do not chase new route indices.
+; Retail performs no index/binding checks here; retain its wrap behaviour.
+; TODO: Restore retail scene selection for these shots and moving road views.
+viewrouteahead_Istrat
+	s_set_strat	x,viewrouteahead_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0003
+	sta.w	vc_flags,y
+	a8
+	phx
+	ldy	al_ptr,x
+	a16
+	lda.w	al_collobjptr,y
+	tax
+	lda.l	mrambank+CAR_ROUTEINDEX,x
+	plx
+	jsl	nextroutepoint_l
+	jsl	nextroutepoint_l
+	jsl	getroutepos_l
+	ldy	al_viewpt,x
+	lda.w	x1
+	sta.w	vc_worldx,y
+	lda.w	y1
+	clc
+	adc	#$ff9c
+	sta.w	vc_worldy,y
+	lda.w	z1
+	sta.w	vc_worldz,y
+	a8
+viewrouteahead_strat
+	jmp	viewupdate_strat
+
+viewrouteside_Istrat
+	s_set_strat	x,viewrouteside_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0003
+	sta.w	vc_flags,y
+	a8
+	phx
+	ldy	al_ptr,x
+	a16
+	lda.w	al_collobjptr,y
+	tax
+	lda.l	mrambank+CAR_ROUTEINDEX,x
+	plx
+	jsl	nextroutepoint_l
+	jsl	getroutepos_l
+	ldy	al_viewpt,x
+	lda.w	x1
+	clc
+	adc	#$03e8
+	sta.w	vc_worldx,y
+	lda.w	y1
+	clc
+	adc	#$ff9c
+	sta.w	vc_worldy,y
+	lda.w	z1
+	clc
+	adc	#$03e8
+	sta.w	vc_worldz,y
+	a8
+viewrouteside_strat
+	jmp	viewupdate_strat
+
+
 ; Packed route-point access, US $08:dc13-$08:dc6c. Names reconstructed.
 ; A = one-based point index, A16/I16, D = 0, DB exposes low Work RAM.
 ; maproute must first bind a valid inline table in viewrouteptr. Its bank
@@ -2405,7 +2478,7 @@ viewtrack_strat
 ; viewrouteptr is the CPU address of shared GSU m_routeptr/m_routebank.
 ; Early CAR_NEARMARKER is an object pointer, not the retail point index.
 ; CAR_ROUTEINDEX holds the GSU query-only result. TODO: Restore the
-; remaining retail update modes and road-camera callers.
+; remaining retail update modes and moving road-camera callers.
 getroutepos_l
 	sta.w	x1
 	phx
