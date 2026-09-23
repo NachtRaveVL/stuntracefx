@@ -37,6 +37,8 @@
 	global	copycarvelocity_l,viewdrift_Istrat,viewdrift_strat
 	global	viewtilt_Istrat,viewtilt_strat
 	global	viewroad_Istrat,viewroad_strat
+	global	viewroaddrift30_Istrat,viewroaddrift30_strat
+	global	viewroaddrift40_Istrat,viewroaddrift40_strat
 	global	viewrouteahead_Istrat,viewrouteahead_strat
 	global	viewrouteside_Istrat,viewrouteside_strat
 	global	viewanim01_strat,viewanim02_Istrat,viewanim03_Istrat

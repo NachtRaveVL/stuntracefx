@@ -2728,6 +2728,137 @@ copycarvelocity_l
 	plx
 	rtl
 
+; Drifting approaches to the moving road camera, US $08:91eb-$08:9289
+; and $08:92df-$08:937d. Names reconstructed. X = bound controller,
+; A8/I16, D = 0, DB = $7e. Copy the owner's velocity with signed floor
+; /8, then clear Y velocity. Integrate before chasing all three axes
+; toward zero with the original rate-3 chase. Preserve the two bodies.
+; The initializer also executes the first tick. Test the timer after
+; integration: delays 30/40 hand off on calls 31/41, respectively.
+; The handoff executes viewroad_Istrat and its tick in the same call,
+; selecting an anchor from the then-current car index and route table.
+; No route reads or shared-flag changes occur during the drift phase.
+; TODO: Restore retail scene selection. The viewroad_Istrat route-index
+; FIXME and its pending GSU drawing dependency also apply at handoff.
+viewroaddrift30_Istrat
+	s_set_strat	x,viewroaddrift30_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0003
+	sta.w	vc_flags,y
+	a8
+	lda	#$1e
+	sta	al_sbyte1,x
+	ldy	al_ptr,x
+	jsl	copycarvelocity_l
+	a16
+	lda	#$0000
+	sta	al_vy,x
+	a8
+viewroaddrift30_strat
+	a16
+	ldy	al_viewpt,x
+	lda	al_vx,x
+	clc
+	adc.w	vc_worldx,y
+	sta.w	vc_worldx,y
+	lda	al_vy,x
+	clc
+	adc.w	vc_worldy,y
+	sta.w	vc_worldy,y
+	lda	al_vz,x
+	clc
+	adc.w	vc_worldz,y
+	sta.w	vc_worldz,y
+	a8
+	a16
+	lda	al_vx,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vx,x
+	a8
+	a16
+	lda	al_vy,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vy,x
+	a8
+	a16
+	lda	al_vz,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vz,x
+	a8
+	lda	al_sbyte1,x
+	bne	.wait
+	jml	viewroad_Istrat
+.wait
+	dec	al_sbyte1,x
+	jmp	viewupdate_strat
+
+viewroaddrift40_Istrat
+	s_set_strat	x,viewroaddrift40_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0003
+	sta.w	vc_flags,y
+	a8
+	lda	#$28
+	sta	al_sbyte1,x
+	ldy	al_ptr,x
+	jsl	copycarvelocity_l
+	a16
+	lda	#$0000
+	sta	al_vy,x
+	a8
+viewroaddrift40_strat
+	a16
+	ldy	al_viewpt,x
+	lda	al_vx,x
+	clc
+	adc.w	vc_worldx,y
+	sta.w	vc_worldx,y
+	lda	al_vy,x
+	clc
+	adc.w	vc_worldy,y
+	sta.w	vc_worldy,y
+	lda	al_vz,x
+	clc
+	adc.w	vc_worldz,y
+	sta.w	vc_worldz,y
+	a8
+	a16
+	lda	al_vx,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vx,x
+	a8
+	a16
+	lda	al_vy,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vy,x
+	a8
+	a16
+	lda	al_vz,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vz,x
+	a8
+	lda	al_sbyte1,x
+	bne	.wait
+	jml	viewroad_Istrat
+.wait
+	dec	al_sbyte1,x
+	jmp	viewupdate_strat
+
+
 ; Drifting camera and fixed-position pitch transition, US $08:93d7-94a0.
 ; Names reconstructed. X = controller, al_ptr = car, al_viewpt = record;
 ; A8/I16, D = 0, DB = $7e. X preserved, A/Y/tpx and camera words scratch.
