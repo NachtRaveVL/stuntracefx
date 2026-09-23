@@ -469,7 +469,8 @@ viewrouteptr	=	m_routeptr
 ; Retail $273c: bit 0 gates the GSU draw entry at $01:d12f.
 ; Cleared by $08:8c99, set by $08:91db, reset by GSU $04:887b.
 ; Names reconstructed; higher bits are preserved by camera changes.
-; TODO: Restore the draw consumer and animation-completion setter.
+; viewanimdrive_strat restores the animation-completion setter.
+; TODO: Restore the GSU draw consumer.
 	malc	m_viewroadflags,2
 ;	malc	m_particlerand2,2
 ;	malc	m_drawparticles,(8+6)*(maxparticles+1)

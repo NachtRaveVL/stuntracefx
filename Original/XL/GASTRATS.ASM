@@ -2392,6 +2392,42 @@ viewtrack_strat
 	jmp	viewupdate_strat
 
 
+; Animation 16 returns to driving, US $08:917d-$08:919e followed by
+; the shared $08:91c8-$08:91ea path. Names reconstructed.
+; X = bound controller, A8/I16, D = 0, DB = $7e. The initializer
+; starts the script, updates the camera, then executes its first tick.
+; At the terminal command, set bit 0 of the shared GSU draw flag,
+; preserving all other bits, and enter viewdrive_Istrat in the same call.
+; TODO: Restore scene selection and the GSU draw consumer at $01:d12f.
+; TODO: Restore the adjacent animation-15 initializer at $08:919f once
+; retail scene mode $0d2b has a producer. That entry chooses animation
+; 00 for mode 3, otherwise 15, then joins viewanimdrive_start below.
+; bindviewobj_l's temporary svar_word2 input is not persistent scene state.
+viewanim16_Istrat
+	s_set_strat	x,viewanimdrive_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	ldy	#viewanim16&WM
+	jmp	viewanimdrive_start
+viewanimdrive_start
+	jsl	setviewanim_l
+	jsl	updateviewcamera_l
+viewanimdrive_strat
+	jsl	updateviewanim_l
+	bcs	.finished
+	brl	viewupdate_strat
+.finished
+	a16
+	lda.l	m_viewroadflags
+	ora	#$0001
+	sta.l	m_viewroadflags
+	a8
+	jmp	viewdrive_Istrat
+
+
 ; Moving road camera, US $08:8c99-$08:8e29. Names reconstructed.
 ; X = bound controller, A8/I16, D = 0, DB = $7e. A/Y/svar_word1
 ; and route-helper scratch destroyed. Requires a bound packed route.
