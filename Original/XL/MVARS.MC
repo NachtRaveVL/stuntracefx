@@ -472,6 +472,10 @@ viewrouteptr	=	m_routeptr
 ; viewanimdrive_strat restores the animation-completion setter.
 ; TODO: Restore the GSU draw consumer.
 	malc	m_viewroadflags,2
+
+; Current map number for retail route-speed and AI tables.
+; Retail copies CPU $0e3d to GSU RAM $26f4 while loading the scene.
+	malc	m_mapnumber,2
 ;	malc	m_particlerand2,2
 ;	malc	m_drawparticles,(8+6)*(maxparticles+1)
 		  

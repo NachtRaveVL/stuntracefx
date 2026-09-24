@@ -258,6 +258,11 @@ maproutedo
 	a16
 	and	#$00ff
 	sta.l	viewrouteptr+2
+; FIXME: The early parser lacks retail's scene setup at $08:80ef.
+; Synchronize the map selector here when its packed route becomes active.
+	lda	map_number
+	and	#$00ff
+	sta.l	m_mapnumber
 	a8
 	rts
 

@@ -545,6 +545,43 @@ mcarheadingvelocity
 	nop
 
 
+; Map-specific route-speed multipliers, US $04:c781-$04:c7d4.
+; One signed 1.15 value per retail map number (0-41). The CPU scene
+; loader copies map_number to m_mapnumber when binding the route.
+mroute_speedscales
+	dw	$4ca4,$4ca4,$4ca4,$4ca4
+	dw	$72f6,$72f6,$72f6,$72f6
+	dw	$7d2e,$7d2e,$7d2e,$7d2e
+	rept	30
+	dw	$4ca4
+	endr
+
+; Scale a route point's desired speed, US $04:c74a-$04:c763.
+; r4 = desired speed; returns r4 = high word of
+; (2 * desired speed) * signed 1.15 map multiplier.
+; m_mapnumber supplies the original low-byte table index. No range
+; guard is added: values above 41 retain retail's unchecked ROM read.
+; r0/r6/r14 and flags scratch; r1-r3/r5/r7-r13 preserved, RAM bank 0.
+; Selects ROM bank 4 in retail and this routine's linked bank here.
+; r14 ends at the selected multiplier's high byte.
+mroute_speedscale
+	ibt	r0,#mroute_speedscales>>16
+	romb
+	lm	r0,[m_mapnumber]
+	lob
+	add	r0
+	miwt	r14,mroute_speedscales
+	with	r14
+	add	r0
+	mgetw	r6
+	from	r4
+	add	r4
+	fmult
+	move	r4,r0
+	move	pc,r11
+	nop
+
+
 ; US $04:cc06-$04:cca3. r1/r2/r3 = query XYZ words.
 ; r0 = one-based nearest point index, zero if no point was selected.
 ; On success: r1/r2/r3 = point XYZ, r5 = its ROM address, r6 = distance.
