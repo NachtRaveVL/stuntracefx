@@ -431,7 +431,7 @@ mfind_nearobj
 ;
 ; CAR_ROUTEINDEX stores the retail point index separately from the early
 ; CAR_NEARMARKER object pointer. The early AI still uses linked markers.
-; TODO: Restore the retail mode flags, steering and automatic route motion.
+; TODO: Restore the route-mode producers, steering and dispatch paths.
 
 ; US $04:c3b5-$04:c3d4. r8 = car, returns mfind_nearroute's result.
 ; Preserve r8/r10; r11 and the search scratch registers are destroyed.
@@ -728,11 +728,26 @@ mfind_nearroute
 ; Reverse wraps only when decrementing the input index produces zero.
 ; Other indices use r5 +/- 8, not a pointer recalculated from the index.
 ; All arithmetic wraps at 16 bits; no null/count/range guards in retail.
-; TODO: Restore the $04:cca4 car-$70 bit-1 direction selector and its
-; steering/automatic-motion callers. Do not alias that field to early AI.
+; The retail car-$70 direction selector is restored as mselect_routepoint.
+; CAR_ROUTEMODE is appended to the early car, not aliased to CAR_FLAGS.
+; TODO: Restore its producer and the steering/automatic-motion callers.
+mselect_routepoint
+	move	r6,r0
+	lm	r0,[m_routebank]
+	romb
+	mloadw	r1,CAR_ROUTEMODE,r8
+	iwt	r0,#CARroutemode_reverse
+	and	r1
+	move	r0,r6
+	beq	.forward
+	nop
+	miwt	pc,mprev_routepoint&$ffff
+	nop
+.forward
 mnext_routepoint
 ; FIXME: Reuse retail's bank-selection prologue without its unmapped
-; car-mode read. The following forward body is the retail $04:ccbf entry.
+; car-mode read. mselect_routepoint supplies that read; direct callers
+; still need this wrapper. The following body is the retail $04:ccbf entry.
 	move	r6,r0
 	lm	r0,[m_routebank]
 	romb
@@ -813,8 +828,8 @@ mprev_routepoint
 ; US $04:cd56-$04:cd82. r5 = point ROM address, r0 preserved.
 ; r1/r2/r3 = XYZ, r4 = desired speed; r5/r6-r13 preserved.
 ; r14 ends eight bytes past the point (word wrap). No bounds checks.
-; Retail $04:c7d5 scales this speed for car-$70 bit 5, then compares it
-; with car speed at $04:c81c to select acceleration/braking requests.
+; Retail $04:c7d5 scales this speed for CAR_ROUTEMODE bit $20, then
+; compares it with car speed at $04:c81c for acceleration/braking.
 mreadroutepoint
 	mpush	r0
 	lm	r0,[m_routebank]

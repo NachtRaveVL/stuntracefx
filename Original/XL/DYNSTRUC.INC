@@ -161,6 +161,12 @@ CARflag_makestop	equ	32768
 ; mmake_obj clears the complete enlarged block, including this field.
 	struct		CAR_ROUTEINDEX,2
 
+; Retail car $70 packed-route control word. Keep it separate from the
+; early CAR_FLAGS word; bit 1 selects reverse route traversal.
+; TODO: Restore the retail producers for this and its remaining bits.
+CARroutemode_reverse	equ	2
+	struct		CAR_ROUTEMODE,2
+
  	
 	struct		CAR_LEN,0	
 
