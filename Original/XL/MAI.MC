@@ -482,8 +482,7 @@ mcar2point_Yangle
 ; r0/r3/r6/r14 and flags scratch; r4/r7-r13 preserved, RAM untouched.
 ; Selects ROM bank 0; r14 ends at costab + angle-high-byte.
 ; No sign/range guard for the scale, just the retail 16-bit arithmetic.
-; TODO: Restore its velocity consumer at $04:c764-$04:c780 once the
-; car heading and component fields are mapped into the early layout.
+; Its velocity consumer is restored below as mcarheadingvelocity.
 mheadingvector
 	hib
 	move	r3,r0
@@ -531,8 +530,8 @@ mheadingvector
 ; r0-r3/r6/r11/r14 scratch; r4/r7-r10/r12/r13 preserved, RAM bank 0.
 ; The original tail pops its caller's return frame. This callable
 ; extraction provides that frame locally while preserving the body.
-; TODO: Restore the route-speed scale at $04:c74a and connect this
-; branch when the retail AI mode and index conditions are known.
+; The route-speed scale and complete indexed route path are restored
+; below; their enclosing AI mode condition remains to be identified.
 mcarheadingvelocity
 	mpush	r11
 	mloadw	r0,OBJ_ROTY,r8
@@ -579,6 +578,41 @@ mroute_speedscale
 	fmult
 	move	r4,r0
 	move	pc,r11
+	nop
+
+
+; Drive a car directly from its current packed-route point,
+; reconstructed from US $04:c72f-$04:c780.
+; r8 = car, CAR_ROUTEINDEX = one-based point index. Index zero returns
+; zero without reading the route or changing velocity. A nonzero index
+; reads XYZ and desired speed, applies the map multiplier, converts the
+; car yaw to a planar vector, then replaces OBJ_VELX/Y/Z.
+; Success returns r0 = r8+OBJ_VELZ, r1/r2/r3 = new velocity,
+; r4 = scaled speed, r5 = point ROM address, r6 = scaled speed and
+; r14 = costab plus the yaw high byte. r7-r10/r12/r13 are preserved;
+; r11 is call scratch, RAM bank 0 and ROM bank 0 on successful return.
+; Point and table arithmetic retains retail's unchecked 16-bit wrap.
+; TODO: Connect this path when the enclosing retail route-mode field
+; and its dispatcher at $04:c65a-$04:c72e have been reconstructed.
+mroute_carvelocity
+	mpush	r11
+	mloadw	r0,CAR_ROUTEINDEX,r8
+	mtest	r0
+	bne	.route
+	nop
+	miwt	pc,.done&$ffff
+	nop
+.route
+	mcall	mroutepointptr
+	nop
+	mcall	mreadroutepoint
+	nop
+	mcall	mroute_speedscale
+	nop
+	mcall	mcarheadingvelocity
+	nop
+.done
+	mpop	pc
 	nop
 
 

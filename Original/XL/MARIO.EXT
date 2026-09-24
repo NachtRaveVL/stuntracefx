@@ -120,6 +120,7 @@
 	global	mheadingvector
 	global	mcarheadingvelocity
 	global	mroute_speedscale
+	global	mroute_carvelocity
 
 
 
