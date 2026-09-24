@@ -474,6 +474,54 @@ mcar2point_Yangle
 	nop
 
 
+; Heading and signed scale to planar vector, US $04:cd98-$04:cdc9.
+; r0 = angle (high byte selects table entry), r4 = signed scale.
+; r1/r3 = X/Z components, r2 = 0. The retail path reads the full
+; 256-byte range following each of the original sine/cosine labels;
+; both ranges match the US ROM. Integer fmult/shift/negation retained.
+; r0/r3/r6/r14 and flags scratch; r4/r7-r13 preserved, RAM untouched.
+; Selects ROM bank 0; r14 ends at costab + angle-high-byte.
+; No sign/range guard for the scale, just the retail 16-bit arithmetic.
+; TODO: Restore its velocity consumer at $04:c764-$04:c780 once the
+; car heading and component fields are mapped into the early layout.
+mheadingvector
+	hib
+	move	r3,r0
+	ibt	r0,#0
+	romb
+	move	r6,r4
+	move	r0,r3
+	lob
+	miwt	r14,sintab
+	to	r14
+	add	r14
+	getb
+	swap
+	fmult
+	mneg	r0
+	add	r0
+	add	r0
+	add	r0
+	add	r0
+	move	r1,r0
+	move	r0,r3
+	lob
+	miwt	r14,costab
+	to	r14
+	add	r14
+	getb
+	swap
+	fmult
+	add	r0
+	add	r0
+	add	r0
+	add	r0
+	move	r3,r0
+	ibt	r2,#0
+	move	pc,r11
+	nop
+
+
 ; US $04:cc06-$04:cca3. r1/r2/r3 = query XYZ words.
 ; r0 = one-based nearest point index, zero if no point was selected.
 ; On success: r1/r2/r3 = point XYZ, r5 = its ROM address, r6 = distance.
