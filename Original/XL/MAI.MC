@@ -547,6 +547,98 @@ mfind_nearroute
 	move	pc,r11
 	nop
 
+; Forward/reverse packed-route readers, US $04:ccbf-$04:cd55.
+; r0 = current one-based index, r5 = current point ROM address.
+; Output r0/r6 = adjacent index, r5 = adjacent point address,
+; r1/r2/r3 = XYZ, r4 = the opaque fourth word. r14 ends at r5+8.
+; RAM bank 0 on entry; ROM bank is selected from m_routebank.
+; r7-r13 preserved; no stack use or car/index writes. Names reconstructed.
+; Forward wraps only when the INPUT index equals the table count.
+; Reverse wraps only when decrementing the input index produces zero.
+; Other indices use r5 +/- 8, not a pointer recalculated from the index.
+; All arithmetic wraps at 16 bits; no null/count/range guards in retail.
+; TODO: Restore the $04:cca4 car-$70 bit-1 direction selector and its
+; steering/automatic-motion callers. Do not alias that field to early AI.
+mnext_routepoint
+; FIXME: Reuse retail's bank-selection prologue without its unmapped
+; car-mode read. The following forward body is the retail $04:ccbf entry.
+	move	r6,r0
+	lm	r0,[m_routebank]
+	romb
+	move	r0,r6
+	move	r6,r0
+	inc	r6
+	lm	r14,[m_routeptr]
+	to	r1
+	getb
+	inc	r14
+	with	r1
+	getbh
+	cmp	r1
+	bne	.next
+	nop
+	lm	r0,[m_routeptr]
+	add	#2
+	move	r14,r0
+	ibt	r6,#1
+	bra	.read
+	nop
+.next
+	from	r5
+	to	r14
+	add	#8
+.read
+	move	r5,r14
+	mgetwi	r1
+	mgetwi	r2
+	mgetwi	r3
+	mgetwi	r4
+	move	r0,r6
+	with	r11
+	to	pc
+	nop
+
+; US $04:cd05. Unlike the interior forward entry, this already selects
+; the bound ROM bank. Input index 1 wraps to the table's count word.
+mprev_routepoint
+	move	r6,r0
+	lm	r0,[m_routebank]
+	romb
+	dec	r6
+	bne	.previous
+	nop
+	lm	r14,[m_routeptr]
+	getb
+	inc	r14
+	getbh
+	move	r1,r0
+	dec	r0
+	iwt	r6,#8
+	lmult
+	lm	r0,[m_routeptr]
+	add	#2
+	from	r4
+	to	r14
+	add	r0
+	move	r6,r1
+	bra	.read
+	nop
+.previous
+	from	r5
+	to	r14
+	sub	#8
+.read
+	move	r5,r14
+	mgetwi	r1
+	mgetwi	r2
+	mgetwi	r3
+	mgetwi	r4
+	move	r0,r6
+	with	r11
+	to	pc
+	nop
+
+
 ; US $04:cd56-$04:cd82. r5 = point ROM address, r0 preserved.
 ; r1/r2/r3 = XYZ, r4 = opaque fourth word; r5/r6-r13 preserved.
 ; r14 ends eight bytes past the point (word wrap). No bounds checks.

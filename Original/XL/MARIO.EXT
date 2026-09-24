@@ -114,6 +114,7 @@
 	global	m_viewroadflags
 	global	mfind_nearroute,mfind_carroute,mroutepointptr,mreadroutepoint
 	global	mupdate_carroute,mtrack_carroute
+	global	mnext_routepoint,mprev_routepoint
 
 
 
