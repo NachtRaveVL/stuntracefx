@@ -616,6 +616,57 @@ mroute_carvelocity
 	nop
 
 
+; Route steering prelude, reconstructed from US $04:c7d5-$04:c819.
+; r8 = car, r1/r3 = target point X/Z and r4 = desired route speed.
+; CAR_ROUTEMODE bit $20 reduces the desired speed to three quarters.
+; Returns r1 = target bearing minus car yaw and r4 = adjusted speed.
+; When CARflag_boost is set, OBJ_ROTZ is replaced by the retail damped
+; value. r0/r2/r3/r5/r6/r11-r14 and flags scratch; r7-r10 preserved.
+; RAM bank 0. mcar2point_Yangle may select ROM bank 0 for its table.
+; FIXME: Extracted with a callable return; retail continues directly
+; into the control-word selection at $04:c81a.
+; TODO: Restore that selection and its $04:c933 common consumer.
+mroute_steerprep
+	mpush	r11
+	mloadw	r0,CAR_ROUTEMODE,r8
+	iwt	r5,#CARroutemode_slowspeed
+	and	r5
+	beq	.speed
+	nop
+	with	r4
+	div2
+	from	r4
+	div2
+	with	r4
+	add	r0
+.speed
+	mpush	r4
+	mcall	mcar2point_Yangle
+	nop
+	move	r1,r0
+	mloadw	r0,OBJ_ROTY,r8
+	with	r1
+	sub	r0
+	mloadw	r0,CAR_FLAGS,r8
+	iwt	r2,#CARflag_boost
+	and	r2
+	beq	.done
+	nop
+	mloadw	r0,OBJ_ROTZ,r8
+	with	r0
+	to	r2
+	div2
+	div2
+	with	r2
+	sub	r0
+	from	r2
+	sbk
+.done
+	mpop	r4
+	mpop	pc
+	nop
+
+
 ; US $04:cc06-$04:cca3. r1/r2/r3 = query XYZ words.
 ; r0 = one-based nearest point index, zero if no point was selected.
 ; On success: r1/r2/r3 = point XYZ, r5 = its ROM address, r6 = distance.

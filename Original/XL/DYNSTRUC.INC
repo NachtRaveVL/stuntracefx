@@ -165,6 +165,7 @@ CARflag_makestop	equ	32768
 ; early CAR_FLAGS word; bit 1 selects reverse route traversal.
 ; TODO: Restore the retail producers for this and its remaining bits.
 CARroutemode_reverse	equ	2
+CARroutemode_slowspeed	equ	32
 	struct		CAR_ROUTEMODE,2
 
  	
