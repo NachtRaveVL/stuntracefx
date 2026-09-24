@@ -445,6 +445,35 @@ mfind_carroute
 	mpop	pc
 	nop
 
+; Bearing from a car to a route point, US $04:cbe8-$04:cc05.
+; r8 = car, r1/r3 = target world X/Z; input r2 (Y) is ignored.
+; r0 = negated marctan16(X delta / Z delta), modulo 65536.
+; Differences wrap as signed words; retain the original zero-vector
+; result ($c000) and the existing arctangent's integer rounding.
+; r1 = X delta, r2/r3 = Z delta on return. r4-r6/r11-r13 scratch;
+; r7-r10/r14 preserved, RAM bank 0. The arctangent selects ROM bank 0
+; when reading its table; axis/equal-magnitude shortcuts retain the bank.
+; The early marctan16, divider and arctangent table match retail.
+; FIXME: A delta of -32768 can make the original marctan16 read
+; beyond its 256-word table. Those results depend on surrounding ROM
+; data and do not match retail until that data/layout is restored.
+; TODO: Restore the steering consumer at $04:c7d5 and its mode fields.
+mcar2point_Yangle
+	mpush	r11
+	mloadw	r0,OBJ_WORLDX,r8
+	with	r1
+	sub	r0
+	mloadw	r0,OBJ_WORLDZ,r8
+	with	r3
+	sub	r0
+	move	r2,r3
+	mcall	marctan16
+	nop
+	mneg	r0
+	mpop	pc
+	nop
+
+
 ; US $04:cc06-$04:cca3. r1/r2/r3 = query XYZ words.
 ; r0 = one-based nearest point index, zero if no point was selected.
 ; On success: r1/r2/r3 = point XYZ, r5 = its ROM address, r6 = distance.
@@ -550,7 +579,7 @@ mfind_nearroute
 ; Forward/reverse packed-route readers, US $04:ccbf-$04:cd55.
 ; r0 = current one-based index, r5 = current point ROM address.
 ; Output r0/r6 = adjacent index, r5 = adjacent point address,
-; r1/r2/r3 = XYZ, r4 = the opaque fourth word. r14 ends at r5+8.
+; r1/r2/r3 = XYZ, r4 = desired speed. r14 ends at r5+8.
 ; RAM bank 0 on entry; ROM bank is selected from m_routebank.
 ; r7-r13 preserved; no stack use or car/index writes. Names reconstructed.
 ; Forward wraps only when the INPUT index equals the table count.
@@ -640,9 +669,10 @@ mprev_routepoint
 
 
 ; US $04:cd56-$04:cd82. r5 = point ROM address, r0 preserved.
-; r1/r2/r3 = XYZ, r4 = opaque fourth word; r5/r6-r13 preserved.
+; r1/r2/r3 = XYZ, r4 = desired speed; r5/r6-r13 preserved.
 ; r14 ends eight bytes past the point (word wrap). No bounds checks.
-; TODO: Identify the fourth word's meaning in retail steering consumers.
+; Retail $04:c7d5 scales this speed for car-$70 bit 5, then compares it
+; with car speed at $04:c81c to select acceleration/braking requests.
 mreadroutepoint
 	mpush	r0
 	lm	r0,[m_routebank]

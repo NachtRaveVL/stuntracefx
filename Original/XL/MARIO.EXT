@@ -115,6 +115,7 @@
 	global	mfind_nearroute,mfind_carroute,mroutepointptr,mreadroutepoint
 	global	mupdate_carroute,mtrack_carroute
 	global	mnext_routepoint,mprev_routepoint
+	global	mcar2point_Yangle
 
 
 

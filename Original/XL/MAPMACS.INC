@@ -99,10 +99,11 @@ maproute	macro	[count]
 	db	ctrlmaproute
 	dw	\1
 	endm
-routepoint	macro	[x,y,z,word]
+routepoint	macro	[x,y,z,speed]
 	dw	\1,\2,\3,\4
 	endm
-; TODO: Recover the fourth word's meaning when porting the GSU consumer.
+; The fourth word is desired speed, compared by retail GSU $04:c7d5.
+; TODO: Restore the steering consumer and its mode-dependent scaling.
 
 mapdef	macro
 	dw	((\1)&$7fff)
