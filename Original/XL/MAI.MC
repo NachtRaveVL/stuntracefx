@@ -522,6 +522,29 @@ mheadingvector
 	nop
 
 
+; Car velocity from heading and supplied scale, US $04:c764-$04:c780.
+; The caller at $04:c74a calculates r4 from the route's speed and a
+; retail table; this entry expects that scale already in r4.
+; r8 = car. Read its yaw and replace X/Y/Z velocity with the vector
+; returned by mheadingvector. The early fields map retail car $24
+; to OBJ_ROTY and car $2e/$30/$32 to OBJ_VELX/Y/Z.
+; r0-r3/r6/r11/r14 scratch; r4/r7-r10/r12/r13 preserved, RAM bank 0.
+; The original tail pops its caller's return frame. This callable
+; extraction provides that frame locally while preserving the body.
+; TODO: Restore the route-speed scale at $04:c74a and connect this
+; branch when the retail AI mode and index conditions are known.
+mcarheadingvelocity
+	mpush	r11
+	mloadw	r0,OBJ_ROTY,r8
+	mcall	mheadingvector
+	nop
+	mstorew	r1,OBJ_VELX,r8
+	mstorew	r2,OBJ_VELY,r8
+	mstorew	r3,OBJ_VELZ,r8
+	mpop	pc
+	nop
+
+
 ; US $04:cc06-$04:cca3. r1/r2/r3 = query XYZ words.
 ; r0 = one-based nearest point index, zero if no point was selected.
 ; On success: r1/r2/r3 = point XYZ, r5 = its ROM address, r6 = distance.

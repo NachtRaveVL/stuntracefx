@@ -117,6 +117,7 @@
 	global	mnext_routepoint,mprev_routepoint
 	global	mcar2point_Yangle
 	global	mheadingvector
+	global	mcarheadingvelocity
 
 
 
