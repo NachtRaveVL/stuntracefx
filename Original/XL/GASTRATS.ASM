@@ -2438,8 +2438,9 @@ viewanimdrive_strat
 ; Retail computes Y velocity but discards its integration result.
 ; Preserve another retail edge case: index zero bypasses the record
 ; load. With a zero counter, the X/Z stores use Y = owner instead.
-; FIXME: The early query-only car bridge can produce zero indices;
-; restore retail normal-mode index retention before scene activation.
+; The early car bridge now retains its last successful route index.
+; TODO: Ensure a valid initial index/table before scene activation;
+; a newly allocated car still has index zero until a search succeeds.
 ; The shared flag's bit 0 is cleared without disturbing other bits.
 ; TODO: Restore retail scene selection and the flag's GSU draw consumer.
 viewroad_Istrat
@@ -2678,8 +2679,8 @@ viewrouteside_strat
 ; Neither entry bounds-checks indices or clamps the retail 16-bit offset.
 ; viewrouteptr is the CPU address of shared GSU m_routeptr/m_routebank.
 ; Early CAR_NEARMARKER is an object pointer, not the retail point index.
-; CAR_ROUTEINDEX holds the GSU query-only result. TODO: Restore the
-; remaining retail update modes.
+; CAR_ROUTEINDEX holds the last successful normal-mode search result.
+; TODO: Restore retail mode selection and the remaining update consumers.
 getroutepos_l
 	sta.w	x1
 	phx
@@ -2774,8 +2775,8 @@ copycarvelocity_l
 ; The handoff executes viewroad_Istrat and its tick in the same call,
 ; selecting an anchor from the then-current car index and route table.
 ; No route reads or shared-flag changes occur during the drift phase.
-; TODO: Restore retail scene selection. The viewroad_Istrat route-index
-; FIXME and its pending GSU drawing dependency also apply at handoff.
+; TODO: Restore retail scene selection. Initial route validity and the
+; pending GSU drawing dependency also apply at the road-camera handoff.
 viewroaddrift30_Istrat
 	s_set_strat	x,viewroaddrift30_strat
 	ldy	al_viewpt,x

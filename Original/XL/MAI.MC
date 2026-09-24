@@ -582,6 +582,36 @@ mroutepointptr
 	nop
 
 
+; Normal-mode nearest-index block, US $04:c478-$04:c4a0.
+; r8 = car; r10 = stack; r11 = return address; RAM bank 0.
+; A successful search replaces CAR_ROUTEINDEX. Failure preserves the
+; old index, including zero if no successful search has occurred yet.
+; r0 returns the new search result (zero on failure), NOT the stored
+; index on failure. r8/r10 preserved; search scratch and r11 destroyed.
+; FIXME: Extracted as a callable block with its own push/return. Retail
+; continues to next-point/steering on success and $04:c933 on both paths.
+; TODO: Restore those consumers and the enclosing retail mode dispatcher.
+mtrack_carroute
+	mpush	r11
+	mloadw	r1,OBJ_WORLDX,r8
+	mloadw	r2,OBJ_WORLDY,r8
+	mloadw	r3,OBJ_WORLDZ,r8
+	mcall	mfind_nearroute
+	nop
+	mtest	r0
+	bne	.found
+	nop
+	miwt	pc,.done&$ffff
+	nop
+.found
+	move	r7,r0
+	mstorew	r7,CAR_ROUTEINDEX,r8
+	move	r0,r7
+.done
+	mpop	pc
+	nop
+
+
 ; Query-only route update, US $04:c4be-$04:c4d0. Retail reaches this
 ; branch when car $70 bit 2 (mask $0004) selects index-only tracking.
 ; r8 = car; r10 = stack; r11 = return address; RAM bank 0.

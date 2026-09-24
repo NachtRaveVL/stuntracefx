@@ -113,7 +113,7 @@
 	global	m_routeptr,m_routebank,viewrouteptr
 	global	m_viewroadflags
 	global	mfind_nearroute,mfind_carroute,mroutepointptr,mreadroutepoint
-	global	mupdate_carroute
+	global	mupdate_carroute,mtrack_carroute
 
 
 
