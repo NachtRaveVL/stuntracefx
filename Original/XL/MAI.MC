@@ -625,7 +625,7 @@ mroute_carvelocity
 ; RAM bank 0. mcar2point_Yangle may select ROM bank 0 for its table.
 ; FIXME: Extracted with a callable return; retail continues directly
 ; into the control-word selection at $04:c81a.
-; TODO: Restore that selection and its $04:c933 common consumer.
+; TODO: Restore its $04:c933 common consumer.
 mroute_steerprep
 	mpush	r11
 	mloadw	r0,CAR_ROUTEMODE,r8
@@ -663,6 +663,189 @@ mroute_steerprep
 	sbk
 .done
 	mpop	r4
+	mpop	pc
+	nop
+
+
+; Route control selection, reconstructed from US $04:c81a-$04:c932.
+; r8 = car, r1 = target bearing minus car yaw and r4 = desired speed.
+; Produces CAR_CONTROL acceleration, brake and steering flags. The two
+; route-AI counters inhibit acceleration and reverse a persistently stuck
+; car. r4-r8 and r11 are preserved; r0-r3/r9 and flags scratch.
+; RAM bank 0. CAR_AIDELAY/CAR_AISTUCK original source names are unknown.
+; FIXME: Extracted as a callable routine; retail enters this directly from
+; mroute_steerprep and returns to the still-missing $04:c933 consumer.
+; TODO: Restore that common route-control consumer.
+mroute_controls
+	mpush	r11
+	ibt	r9,#0
+	mloadw	r0,CAR_GNDSPEED,r8
+	move	r3,r4
+	cmp	r3
+	bpl	.speedok
+	nop
+	iwt	r2,#$227
+	from	r4
+	cmp	r2
+	bmi	.accel
+	nop
+	iwt	r0,#CARflag_dynoff
+	to	r9
+	or	r9
+	bra	.steer
+	nop
+.accel
+	iwt	r0,#CARflag_Accel
+	to	r9
+	or	r9
+	bra	.steer
+	nop
+.speedok
+	iwt	r0,#CARflag_Brake
+	to	r9
+	or	r9
+.steer
+	mloadw	r2,CAR_ENGINEROTY,r8
+	move	r0,r1
+	sub	r2
+	bpl	.right
+	nop
+	iwt	r1,#-910
+	cmp	r1
+	bpl	.steerdone
+	nop
+	iwt	r1,#-4004
+	cmp	r1
+	bpl	.steerright
+	nop
+	iwt	r0,#~CARflag_Accel
+	to	r9
+	and	r9
+.steerright
+	iwt	r0,#CARflag_steerRight
+	to	r9
+	or	r9
+	mloadw	r0,CAR_FLAGS,r8
+	iwt	r1,#CARflag_computer
+	and	r1
+	beq	.steerdone
+	nop
+	iwt	r0,#CARflag_steerHardRight
+	to	r9
+	or	r9
+	bra	.steerdone
+	nop
+.right
+	iwt	r1,#910
+	cmp	r1
+	bmi	.steerdone
+	nop
+	iwt	r1,#4004
+	cmp	r1
+	bmi	.steerleft
+	nop
+	iwt	r0,#~CARflag_Accel
+	to	r9
+	and	r9
+.steerleft
+	iwt	r0,#CARflag_steerLeft
+	to	r9
+	or	r9
+	mloadw	r0,CAR_FLAGS,r8
+	iwt	r1,#CARflag_computer
+	and	r1
+	beq	.steerdone
+	nop
+	iwt	r0,#CARflag_steerHardLeft
+	to	r9
+	or	r9
+	bra	.steerdone
+	nop
+.steerdone
+	mloadw	r0,CAR_GNDSPEED,r8
+	iwt	r3,#200
+	cmp	r3
+	bpl	.fast
+	nop
+	iwt	r0,#CARflag_Accel
+	to	r9
+	or	r9
+.fast
+	iwt	r0,#CAR_AIDELAY
+	add	r8
+	ldw	[r0]
+	with	r1
+	from	r0
+	beq	.delaydone
+	dec	r0
+	sbk
+	iwt	r0,#~(CARflag_Accel!CARflag_dynoff)
+	to	r9
+	and	r9
+.delaydone
+	iwt	r0,#CAR_AISTUCK
+	add	r8
+	ldw	[r0]
+	with	r0
+	from	r0
+	bmi	.stucknegative
+	nop
+	iwt	r1,#20
+	cmp	r1
+	bmi	.stuckcount
+	nop
+	iwt	r0,#-40
+.stucknegative
+	inc	r0
+	sbk
+	iwt	r1,#-20
+	cmp	r1
+	bpl	.stuckdone
+	nop
+	iwt	r0,#~(CARflag_Accel!CARflag_Brake!CARflag_dynoff)
+	to	r9
+	and	r9
+	iwt	r0,#CARflag_Deccel
+	to	r9
+	or	r9
+	iwt	r0,#CARflag_steerLeft!CARflag_steerRight
+	to	r9
+	xor	r9
+	bra	.stuckdone
+	nop
+.stuckcount
+	mloadw	r0,CAR_GNDSPEED,r8
+	iwt	r1,#10
+	cmp	r1
+	bpl	.stuckdecrement
+	nop
+	iwt	r0,#CAR_AISTUCK
+	add	r8
+	ldw	[r0]
+	inc	r0
+	sbk
+	bra	.stuckdone
+	nop
+.stuckdecrement
+	iwt	r0,#CAR_AISTUCK
+	add	r8
+	ldw	[r0]
+	with	r0
+	from	r0
+	beq	.stuckdone
+	dec	r0
+	sbk
+.stuckdone
+	mloadw	r0,CAR_OFFGND,r8
+	with	r0
+	from	r0
+	beq	.store
+	nop
+	iwt	r0,#~(CARflag_Accel!CARflag_dynoff)
+	to	r9
+	and	r9
+.store
+	mstorew	r9,CAR_CONTROL,r8
 	mpop	pc
 	nop
 

@@ -123,6 +123,7 @@
 	global	mroute_speedscale
 	global	mroute_carvelocity
 	global	mroute_steerprep
+	global	mroute_controls
 
 
 

@@ -168,6 +168,15 @@ CARroutemode_reverse	equ	2
 CARroutemode_slowspeed	equ	32
 	struct		CAR_ROUTEMODE,2
 
+; Retail car $42 prepared control word. Route AI writes this before the
+; common car-control consumer applies collision and strategy adjustments.
+	struct		CAR_CONTROL,2
+
+; Retail car $7c/$7e route-AI counters. Appended to preserve every early
+; structure offset. FIXME: Their original source names are not known.
+	struct		CAR_AIDELAY,2
+	struct		CAR_AISTUCK,2
+
  	
 	struct		CAR_LEN,0	
 
