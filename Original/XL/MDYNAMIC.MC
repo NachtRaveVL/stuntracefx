@@ -252,6 +252,8 @@ minit_dynamics	; INITIALISE DYNAMICS.
 	sm	[m_lastroadobj],r0
 	sm	[m_lastmarkobj],r0
 	sm	[m_objects],r0
+; The separate car list shares the early dynamics heap lifetime.
+	sm	[m_avoidcarhead&WM],r0
 	sm	[m_dynframe],r0
 	sm	[m_testcar1],r0
 	sm	[m_test1],r0
@@ -309,6 +311,7 @@ mmake_obj
 
 	mtest	r1
 	beq	.error
+	nop
 
 
 ; clear object block.
@@ -420,6 +423,9 @@ mrem_obj
 mrem_car
 	mpush	r11
 	mpush	r1
+; FIXME: Early cars can be freed; unlink before their heap is reused.
+	mcall	munlink_avoidcar
+	nop
 
 	mloadw	r4,CAR_WHEELS,r1
 .loop
@@ -595,6 +601,14 @@ mmake_car
 	nop
 	sm	[m_dynvar1],r1	
 
+; Do not register or initialise a failed allocation.
+	mtest	r1
+	bne	.allocated
+	nop
+	stop
+	nop
+.allocated
+
 ; car strategy
 	iwt	r2,#mdo_car&WM
 	mstorew	r2,OBJ_STRATPTR,r1
@@ -633,6 +647,8 @@ mmake_car
 	nop
 	sm	[m_testcar1],r1
 .nfc
+	mcall	mlink_avoidcar
+	nop
 
 	stop
 	nop

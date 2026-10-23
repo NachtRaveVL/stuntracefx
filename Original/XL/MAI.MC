@@ -7,7 +7,7 @@
 	malc	m_aitest1,2
 
 ; Retail avoidance state, separate from the early mixed object list.
-; TODO: Bind m_avoidcarhead and CAR_AINEXT from the retail list producer.
+; mlink_avoidcar binds this list; early dynamics reset/removal maintain it.
 	zmalc	m_avoidcarhead,2
 	zmalc	m_avoidcarx,2
 	zmalc	m_avoidcarz,2
@@ -444,7 +444,7 @@ mfind_nearobj
 ;
 ; CAR_ROUTEINDEX stores the retail point index separately from the early
 ; CAR_NEARMARKER object pointer. The early AI still uses linked markers.
-; TODO: Restore the route-mode producers, steering and dispatch paths.
+; TODO: Restore route-mode producers and connect the retail dispatch paths.
 
 ; US $04:c3b5-$04:c3d4. r8 = car, returns mfind_nearroute's result.
 ; Preserve r8/r10; r11 and the search scratch registers are destroyed.
@@ -470,7 +470,7 @@ mfind_carroute
 ; FIXME: A delta of -32768 can make the original marctan16 read
 ; beyond its 256-word table. Those results depend on surrounding ROM
 ; data and do not match retail until that data/layout is restored.
-; TODO: Restore the steering consumer at $04:c7d5 and its mode fields.
+; TODO: Connect the steering consumer through the retail mode dispatcher.
 mcar2point_Yangle
 	mpush	r11
 	mloadw	r0,OBJ_WORLDX,r8
@@ -872,7 +872,7 @@ mroute_controls
 ; r4/r8/r10-r14 and ROM bank preserved; r0-r3/r5-r7/r9 and flags scratch.
 ; RAM bank 0. Only the current car's CAR_CONTROL is written.
 ; FIXME: List/flag names reconstructed; no early mixed-list substitution.
-; TODO: Restore the list producers and enclosing AI dispatcher.
+; TODO: Restore the retail skip-flag producer and enclosing AI dispatcher.
 mroute_avoidcars
 	mpush	r11
 	mloadw	r9,CAR_CONTROL,r8
@@ -1070,6 +1070,78 @@ mroute_avoidcars
 	nop
 .done
 	mpop	pc
+	nop
+
+
+; Car-list insertion, US $04:8e59-$04:8e71. r1 = newly cleared car.
+; Retail leaves CAR_AINEXT unchanged when the old head is null; the
+; allocator supplies the initial zero. r0/r2 scratch; other regs preserved.
+; FIXME: Callable return added to the retail constructor's inline block.
+mlink_avoidcar
+	lm	r0,[m_avoidcarhead]
+	with	r2
+	from	r0
+	bne	.notfirst
+	nop
+	sm	[m_avoidcarhead],r1
+	bra	.done
+	nop
+.notfirst
+	iwt	r0,#CAR_AINEXT
+	add	r1
+	from	r2
+	stw	[r0]
+	sm	[m_avoidcarhead],r1
+.done
+	move	pc,r11
+	nop
+
+
+; FIXME: Early-object lifetime adaptation. Remove a car before mrem_car
+; frees it; retail's insertion block has no corresponding removal here.
+; r1 = car, preserved. r0/r2-r4 and flags scratch.
+munlink_avoidcar
+	lm	r3,[m_avoidcarhead]
+	ibt	r2,#0
+.next
+	mtest	r3
+	beq	.done
+	nop
+	from	r3
+	cmp	r1
+	beq	.found
+	nop
+	move	r2,r3
+	iwt	r0,#CAR_AINEXT
+	add	r3
+	to	r3
+	ldw	[r0]
+	bra	.next
+	nop
+.found
+	iwt	r0,#CAR_AINEXT
+	add	r3
+	to	r4
+	ldw	[r0]
+	mtest	r2
+	beq	.head
+	nop
+	iwt	r0,#CAR_AINEXT
+	add	r2
+	from	r4
+	stw	[r0]
+	bra	.clear
+	nop
+.head
+	sm	[m_avoidcarhead],r4
+.clear
+	ibt	r4,#0
+	iwt	r0,#CAR_AINEXT
+	add	r1
+	from	r4
+	stw	[r0]
+.done
+	move	pc,r11
 	nop
 
 

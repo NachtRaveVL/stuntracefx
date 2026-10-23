@@ -180,7 +180,8 @@ CARroutemode_slowspeed	equ	32
 ; Retail car $74/$16 avoidance-list link and skip flags. Keep these
 ; separate from the early mixed object list and OBJ_TYPE field.
 ; FIXME: Names reconstructed; only flag $0400 is identified here.
-; TODO: Restore the retail car-list and flag producers.
+; mlink_avoidcar restores list insertion; early lifetime hooks maintain it.
+; TODO: Restore the retail skip-flag producer.
 CARaiflag_skipavoid	equ	$0400
 	struct		CAR_AINEXT,2
 	struct		CAR_AIFLAGS,2

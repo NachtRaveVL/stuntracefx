@@ -125,6 +125,7 @@
 	global	mroute_steerprep
 	global	mroute_controls
 	global	mroute_avoidcars,m_avoidcarhead
+	global	mlink_avoidcar,munlink_avoidcar
 
 
 
