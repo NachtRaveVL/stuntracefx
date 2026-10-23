@@ -6,6 +6,19 @@
 
 	malc	m_aitest1,2
 
+; Retail avoidance state, separate from the early mixed object list.
+; TODO: Bind m_avoidcarhead and CAR_AINEXT from the retail list producer.
+	zmalc	m_avoidcarhead,2
+	zmalc	m_avoidcarx,2
+	zmalc	m_avoidcarz,2
+	zmalc	m_avoidcarvx,2
+	zmalc	m_avoidcarvz,2
+	zmalc	m_avoidmargin,2
+	zmalc	m_avoiddot,2
+	zmalc	m_avoiddx,2
+	zmalc	m_avoiddy,2
+	zmalc	m_avoiddz,2
+
 ;*******************************************************************
 ; mdo_carAI - car artificial intelligence
 ;
@@ -625,7 +638,7 @@ mroute_carvelocity
 ; RAM bank 0. mcar2point_Yangle may select ROM bank 0 for its table.
 ; FIXME: Extracted with a callable return; retail continues directly
 ; into the control-word selection at $04:c81a.
-; TODO: Restore its $04:c933 common consumer.
+; TODO: Connect the enclosing dispatcher to mroute_avoidcars.
 mroute_steerprep
 	mpush	r11
 	mloadw	r0,CAR_ROUTEMODE,r8
@@ -674,8 +687,8 @@ mroute_steerprep
 ; car. r4-r8 and r11 are preserved; r0-r3/r9 and flags scratch.
 ; RAM bank 0. CAR_AIDELAY/CAR_AISTUCK original source names are unknown.
 ; FIXME: Extracted as a callable routine; retail enters this directly from
-; mroute_steerprep and returns to the still-missing $04:c933 consumer.
-; TODO: Restore that common route-control consumer.
+; mroute_steerprep and returns to the $04:c933 avoidance pass.
+; TODO: Connect the enclosing dispatcher to mroute_avoidcars.
 mroute_controls
 	mpush	r11
 	ibt	r9,#0
@@ -846,6 +859,216 @@ mroute_controls
 	and	r9
 .store
 	mstorew	r9,CAR_CONTROL,r8
+	mpop	pc
+	nop
+
+
+; Avoid other cars, reconstructed from US $04:c933-$04:ca98.
+; r8 = car, CAR_CONTROL = prepared controls, m_wmat = current car matrix.
+; m_avoidcarhead/CAR_AINEXT form a null-terminated car list. Skip self,
+; CAR_AIFLAGS bit $0400, faster peers and peers outside the retail margin.
+; The first matrix row determines the steering side. Preserve retail
+; 16-bit wrap, truncation and list order; do not normalise the dot products.
+; r4/r8/r10-r14 and ROM bank preserved; r0-r3/r5-r7/r9 and flags scratch.
+; RAM bank 0. Only the current car's CAR_CONTROL is written.
+; FIXME: List/flag names reconstructed; no early mixed-list substitution.
+; TODO: Restore the list producers and enclosing AI dispatcher.
+mroute_avoidcars
+	mpush	r11
+	mloadw	r9,CAR_CONTROL,r8
+	mloadw	r0,OBJ_WORLDX,r8
+	sm	[m_avoidcarx],r0
+	mloadw	r0,OBJ_WORLDZ,r8
+	sm	[m_avoidcarz],r0
+	mloadw	r0,OBJ_VELX,r8
+	sm	[m_avoidcarvx],r0
+	mloadw	r0,OBJ_VELZ,r8
+	sm	[m_avoidcarvz],r0
+	lm	r0,[m_avoidcarhead]
+.next
+	with	r7
+	from	r0
+	bne	.checkself
+	nop
+	miwt	pc,.done&$ffff
+	nop
+.checkself
+	cmp	r8
+	bne	.checkflags
+	nop
+	miwt	pc,.advance&$ffff
+	nop
+.checkflags
+	iwt	r1,#CAR_AIFLAGS
+	with	r1
+	add	r7
+	to	r1
+	ldw	[r1]
+	iwt	r0,#CARaiflag_skipavoid
+	and	r1
+	beq	.checkspeed
+	nop
+	miwt	pc,.advance&$ffff
+	nop
+.checkspeed
+	nop
+	mloadw	r1,CAR_GNDSPEED,r7
+	mloadw	r0,CAR_GNDSPEED,r8
+	sub	r1
+	bpl	.distance
+	nop
+	miwt	pc,.advance&$ffff
+	nop
+.distance
+	mloadw	r0,OBJ_WORLDX,r7
+	lm	r1,[m_avoidcarx]
+	sub	r1
+	sms	[m_avoiddx],r0
+	with	r1
+	from	r0
+	bpl	.absx
+	nop
+	with	r1
+	not
+	inc	r1
+.absx
+	mloadw	r0,OBJ_WORLDZ,r7
+	lm	r3,[m_avoidcarz]
+	sub	r3
+	sms	[m_avoiddz],r0
+	with	r3
+	from	r0
+	bpl	.absz
+	nop
+	with	r3
+	not
+	inc	r3
+.absz
+	sub	r0
+	sms	[m_avoiddy],r0
+	from	r1
+	add	r3
+	div2
+	div2
+	div2
+	div2
+	div2
+	sm	[m_avoiddot],r0
+	mloadw	r0,OBJ_VELX,r7
+	lm	r1,[m_avoidcarvx]
+	with	r1
+	sub	r0
+	mloadw	r0,OBJ_VELZ,r7
+	lm	r3,[m_avoidcarvz]
+	with	r3
+	sub	r0
+	ibt	r2,#0
+	lms	r6,[m_avoiddx]
+	from	r1
+	fmult
+	to	r5
+	rol
+	lms	r6,[m_avoiddy]
+	from	r2
+	fmult
+	rol
+	with	r5
+	add	r0
+	lms	r6,[m_avoiddz]
+	from	r3
+	fmult
+	rol
+	add	r5
+	iwt	r1,#20
+	add	r1
+	sm	[m_avoidmargin],r0
+	lm	r1,[m_avoiddot]
+	cmp	r1
+	bpl	.side
+	nop
+	miwt	pc,.advance&$ffff
+	nop
+.side
+	lms	r1,[m_wmat11]
+	lms	r2,[m_wmat12]
+	lms	r3,[m_wmat13]
+	lms	r6,[m_avoiddx]
+	from	r1
+	fmult
+	to	r5
+	rol
+	lms	r6,[m_avoiddy]
+	from	r2
+	fmult
+	rol
+	with	r5
+	add	r0
+	lms	r6,[m_avoiddz]
+	from	r3
+	fmult
+	rol
+	add	r5
+	sm	[m_avoiddot],r0
+	with	r0
+	to	r1
+	with	r0
+	from	r0
+	bpl	.absside
+	nop
+	not
+	inc	r0
+.absside
+	iwt	r2,#512
+	cmp	r2
+	bmi	.controls
+	nop
+	ibt	r2,#-1
+	sm	[m_avoidmargin],r2
+.controls
+	mloadw	r6,CAR_CONTROL,r8
+	lm	r0,[m_avoidmargin]
+	with	r0
+	from	r0
+	bmi	.store
+	nop
+	with	r1
+	from	r1
+	bpl	.left
+	nop
+	iwt	r0,#CARflag_steerLeft
+	and	r9
+	beq	.right
+	nop
+	iwt	r0,#~CARflag_steerLeft
+	to	r6
+	and	r6
+.right
+	iwt	r0,#CARflag_steerRight
+	to	r6
+	or	r6
+	bra	.store
+	nop
+.left
+	iwt	r0,#CARflag_steerRight
+	and	r9
+	beq	.addleft
+	nop
+	iwt	r0,#~CARflag_steerRight
+	to	r6
+	and	r6
+.addleft
+	iwt	r0,#CARflag_steerLeft
+	to	r6
+	or	r6
+.store
+	mstorew	r6,CAR_CONTROL,r8
+.advance
+	iwt	r0,#CAR_AINEXT
+	add	r7
+	ldw	[r0]
+	miwt	pc,.next&$ffff
+	nop
+.done
 	mpop	pc
 	nop
 

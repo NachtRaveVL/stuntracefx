@@ -124,6 +124,7 @@
 	global	mroute_carvelocity
 	global	mroute_steerprep
 	global	mroute_controls
+	global	mroute_avoidcars,m_avoidcarhead
 
 
 
