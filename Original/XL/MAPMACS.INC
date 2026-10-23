@@ -71,7 +71,40 @@ ctrlmqnobj		equ	136
 ctrlmapwait2		equ	138
 ctrlmapsetpath		equ	140
 
+; Retail camera commands use $16/$18; those values already mean nodots/
+; gnddots in this source. Keep existing maps compatible with new slots.
+ctrlmapview1	equ	142
+ctrlmapview2	equ	144
+
+; Retail $04 is the terminal packed-route command; early $04 is maploop.
+ctrlmaproute	equ	146
+
 ;-----------------------------------------------------------------------------
+; Camera command payload: 24-bit initial strategy, as in US $08:81f8/8233.
+mapview1	macro
+	db	ctrlmapview1
+	dw	(\1)&WM
+	db	(\1)>>16
+	endm
+mapview2	macro
+	db	ctrlmapview2
+	dw	(\1)&WM
+	db	(\1)>>16
+	endm
+
+; Terminal scene command followed by a count and eight-byte route points.
+; This binds the inline table and returns without executing its data.
+; Count must match the following points; it is not a level-finished flag.
+maproute	macro	[count]
+	db	ctrlmaproute
+	dw	\1
+	endm
+routepoint	macro	[x,y,z,speed]
+	dw	\1,\2,\3,\4
+	endm
+; The fourth word is desired speed, compared by retail GSU $04:c7d5.
+; TODO: Restore the steering consumer and its mode-dependent scaling.
+
 mapdef	macro
 	dw	((\1)&$7fff)
 	db	(\1)>>16

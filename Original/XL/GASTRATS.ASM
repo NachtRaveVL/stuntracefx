@@ -463,6 +463,7 @@ car1_Istrat			; player car.
 	s_set_var	W,outvz,#0
 
 
+	ldy	#viewcamera1
 	jsl	makeviewobj_l
 	s_set_alvar	W,y,al_viewpostab,#0
 ;	s_set_var	B,viewtype,#viewtype_fpos!viewtype_toobj
@@ -531,6 +532,7 @@ car2_Istrat			; enemy car.
 	s_set_alvar2rnd	x,al_sbyte1,#15
 	s_add_alvar	B,x,al_sbyte1,#50
 
+	ldy	#viewcamera2
 	jsl	makeviewobj_l
 	s_set_alvar	W,y,al_viewpostab,#viewpostablen
 
@@ -787,17 +789,243 @@ makeshadow_l
 .bad1	rtl
 
 ;*****************************************************************************
+; X = car, Y = low-WRAM camera record, A8/I16, D = 0, DB = $7e.
+; Return X unchanged, Y = bound camera object and carry set on success.
+; A pending scene controller is consumed first; otherwise allocate one.
+; Allocation failure leaves the record untouched and returns carry clear.
+; al_viewpt reaches the retail record, whose vc_target points back to
+; the car; the early camera object also retains its game-over state.
 makeviewobj_l
+	phy
+	a16
+	cpy	#viewcamera1
+	bne	.second
+	lda	viewpending1
+	stz	viewpending1
+	bra	.pending
+.second
+	cpy	#viewcamera2
+	bne	.allocate
+	lda	viewpending2
+	stz	viewpending2
+.pending
+	cmp	#0
+	beq	.allocate
+	tay
+	a8
+; Match the early allocator's inherited world-range byte on handoff.
+	lda	al_worldzh,x
+	sta.w	al_worldzh,y
+	bra	.prepared
+.allocate
+	a8
 	s_make_obj	#nullshape,.bad1
 	s_clr_alsflag		y,realobj
-	s_clr_altype	y,zremove	
+	s_clr_altype	y,zremove
+; FIXME: Maps without a camera command retain the early driving default.
+	s_set_strat	y,viewdrive_strat
+.prepared
+	lda	#3
+	sta.w	al_sbyte2,y
+	stz	al_viewflags,x
+	lda	#0
+	sta.w	al_viewflags,y
+	a16
+	lda	viewpos_offz
+	sta.w	al_worldz,y
+	pla
+	sta.w	al_viewpt,y
+	phx
+	phy
+	pha
+	txa
+	plx
+	jsl	initviewrecord_l
+	ply
+	plx
+; FIXME: The early car callers supply normal mode and the shared vehicle
+; choices. TODO: Supply these from retail scene mode and vehicle data.
+	lda	#viewchoice_standard-viewpresettab
+	sta	svar_word1
+	stz	svar_word2
+	phy
+	a8
+	jsl	bindviewobj_l
+	ply
+	phx
+	phy
+	tyx
+; Normal driving starts at view zero. Special-mode selection is separate.
+	a16
+	stz	al_sword1,x
+	stz	al_sword2,x
+	a8
+	jsl	updateviewpreset_l
+	jsl	snapview_l
+	ply
+	plx
+	a8
+	sec
+	rtl
+.bad1
+	a16
+	pla
+	a8
+	clc
+	rtl
+
+; Attach an existing camera controller to its car, US $08:8525-$08:85b8.
+; X = car, Y = controller, A8/I16, D = 0, DB = $7e.
+; Controller al_viewpt must already point to an allocated camera record.
+; svar_word1 = vehicle choice-table offset relative to viewpresettab;
+; svar_word2 low byte = retail mode. Its high byte is ignored.
+; FIXME: These two inputs replace retail globals $702396 and $0d2b until
+; their vehicle/scene producers are restored. Mode meanings remain TODO.
+; X preserved, Y returns record, A8/I16 out; tpx/tpy are scratch.
+; Rebinding resets only the retail fields: flags, target, preset/index,
+; bias, speed and shake. It preserves position, angles and animation state.
+; Fresh allocation uses initviewrecord_l separately to clear stale storage.
+bindviewobj_l
 	a16
 	tya
 	sta	al_viewpt,x
-	lda	viewpos_offz
-	sta.w	al_worldz,y
+	lda.w	al_viewpt,y
+	sta	tpx
+	lda.w	al_stratptr,y
+	sta	tpy
+	txa
+	sta.w	al_ptr,y
+	ldy	tpx
+	txa
+	sta.w	vc_target,y
+	phx
+	lda	svar_word1
+	tax
+	lda	tpy
+; Retail compares only the strategy's low word; keep that behaviour.
+	cmp	#viewintro_Istrat&WM
+	beq	.intro
+	lda	svar_word2
+	and	#$ff
+	cmp	#1
+	beq	.mode1
+	cmp	#2
+	beq	.mode2
+	cmp	#3
+	beq	.mode3
+	bra	.select
+.mode2
+	txa
+	clc
+	adc	#8
+	tax
+	bra	.select
+.mode3
+	txa
+	clc
+	adc	#6
+	tax
+	bra	.select
+.mode1
+	txa
+	clc
+	adc	#4
+	tax
+	bra	.select
+.intro
+	txa
+	clc
+	adc	#2
+	tax
+.select
+	lda.l	viewpresettab,x
+	sta.w	vc_presetbase,y
+	plx
+	lda	#0
+	sta.w	vc_biasx,y
+	sta.w	vc_biasy,y
+	sta.w	vc_biasz,y
+	sta.w	vc_speedx,y
+	sta.w	vc_speedy,y
+	sta.w	vc_speedz,y
+	sta.w	vc_shakex,y
+	sta.w	vc_shakey,y
+	sta.w	vc_shakez,y
+	lda	#vcf_lookat!vcf_speedoff
+	sta.w	vc_flags,y
 	a8
-.bad1	rtl
+	lda	#0
+	sta.w	vc_presetindex,y
+	rtl
+
+; Allocate an unbound scene camera, as in US $08:81f8/8233.
+; Y = unbound low-WRAM record, A8/I16, D = 0; DB preserved (map ROM).
+; Success: C set, X = controller, Y = record. Failure: C clear,
+; Y unchanged, record untouched, X scratch. Caller installs the strategy.
+; FIXME: Early render flags and explicit record clearing supplement retail
+; object initialization. Pending cameras must wait for car binding.
+makeviewpending_l
+	phy
+	jsl	makeobj_l
+	bcc	.failed
+	txy
+	jsl	init_objvars_l
+	ply
+	phb
+	lda	#$7e
+	pha
+	plb
+	s_clr_alsflag	x,realobj
+	s_clr_altype	x,zremove
+	lda	#3
+	sta	al_sbyte2,x
+	a16
+	lda	#nullshape&WM
+	sta	al_shape,x
+	tya
+	sta	al_viewpt,x
+	phx
+	tyx
+	lda	#0
+	jsl	initviewrecord_l
+	plx
+	a8
+	plb
+	sec
+	rtl
+.failed
+	ply
+	clc
+	rtl
+
+; Prepare a freshly allocated record. A16 = target car, X = record,
+; I16, D = 0, DB = $7e. P/X/Y preserved; A scratch.
+; Bias, speed and shake start at zero, flags at look-at plus speed offset
+; as in US $08:8525. Clear the remaining state too for early-build reuse.
+; The record is an odd 59 bytes: use byte stores to preserve its neighbour.
+	longa
+initviewrecord_l
+	php
+	phx
+	phy
+	pha
+	ldy	#vc_sizeof
+	a8
+.clear
+	stz	0,x
+	inx
+	dey
+	bne	.clear
+	a16
+	pla
+	ply
+	plx
+	sta	vc_target,x
+	lda	#vcf_lookat!vcf_speedoff
+	sta	vc_flags,x
+	plp
+	rtl
+	shorta
 
 
 ;*****************************************************************************
@@ -1035,6 +1263,1722 @@ viewposition_behind_l
 	a8
 	bra	.endview
 
+;****************************************************************************
+; Retail camera offset animation, US $08:85b9-$08:8a58.
+; Names reconstructed. X is a camera-controller object, whose al_viewpt
+; points at a vc_ record, not another alien. D = 0, DB = $7e, I16.
+; al_sword1 = frames left, al_sword2 = offset in viewanimtab,
+; al_vx/vy/vz = per-frame changes to the destination offset.
+; These entries are for retail camera callers; the early view alien uses
+; a different layout. No camera records are allocated by these routines.
+;
+; Command words: 0 end; 1 duration/rate/XYZ; 2 flags; 3 set XYZ.
+; Rate is the number of signed divisions by two, rounded toward zero.
+
+viewanim_end	MACRO
+	dw	0
+	ENDM
+viewanim_move	MACRO	frames,rate,x,y,z
+	dw	1
+	db	\1,\2
+	dw	\3,\4,\5
+	ENDM
+viewanim_flags	MACRO	flags
+	dw	2,\1
+	ENDM
+viewanim_set	MACRO	x,y,z
+	dw	3,\1,\2,\3
+	ENDM
+
+viewanimtab
+
+viewanim00		; US retail $08:85b9
+	viewanim_set	0,-500,-1000
+	viewanim_end
+
+viewanim01		; US retail $08:85c3
+	viewanim_set	0,-500,0
+	viewanim_flags	$0001
+	viewanim_move	32,5,0,-1000,-200
+	viewanim_move	32,5,0,-2000,-300
+	viewanim_move	32,5,0,-3000,-400
+	viewanim_move	32,5,0,-4000,-500
+	viewanim_move	32,5,0,-5000,-600
+	viewanim_end
+
+viewanim02		; US retail $08:8603
+	viewanim_set	-500,-500,1000
+	viewanim_flags	$0001
+	viewanim_move	32,5,-200,-300,500
+	viewanim_move	32,5,0,-200,500
+	viewanim_move	32,5,200,-200,500
+	viewanim_move	32,5,500,-200,500
+	viewanim_move	32,5,1000,-200,0
+	viewanim_end
+
+viewanim03		; US retail $08:8643
+	viewanim_set	-1000,-1000,0
+	viewanim_flags	$0011
+	viewanim_move	32,5,-1000,-800,0
+	viewanim_move	32,5,-1000,-600,0
+	viewanim_move	32,5,-1000,-400,0
+	viewanim_move	32,5,-1000,-200,0
+	viewanim_end
+
+viewanim04		; US retail $08:8679
+	viewanim_set	2000,-500,0
+	viewanim_flags	$0011
+	viewanim_move	32,5,2000,-500,0
+	viewanim_move	32,5,2000,-500,0
+	viewanim_end
+
+viewanim05		; US retail $08:869b
+	viewanim_set	0,-500,-500
+	viewanim_flags	$0011
+	viewanim_move	32,5,-500,-300,-500
+	viewanim_end
+
+viewanim06		; US retail $08:86b3
+	viewanim_set	0,-250,-700
+	viewanim_flags	$0011
+	viewanim_move	32,5,0,-250,-700
+	viewanim_end
+
+viewanim07		; US retail $08:86cb
+	viewanim_set	-500,-100,0
+	viewanim_flags	$0011
+	viewanim_move	32,5,-300,-100,-500
+	viewanim_end
+
+viewanim08		; US retail $08:86e3
+	viewanim_set	0,-500,-1000
+	viewanim_flags	$0011
+	viewanim_move	32,5,-500,-300,-1000
+	viewanim_end
+
+viewanim09		; US retail $08:86fb
+	viewanim_set	0,-300,-600
+	viewanim_flags	$1001
+	viewanim_end
+
+viewanim10		; US retail $08:8709
+	viewanim_set	-500,-100,0
+	viewanim_flags	$0011
+	viewanim_move	32,5,-300,-100,-500
+	viewanim_move	16,4,0,-100,-500
+	viewanim_flags	$8001
+	viewanim_move	8,3,0,-50,-200
+	viewanim_move	8,3,0,0,400
+	viewanim_flags	$c080
+	viewanim_move	32,5,0,0,0
+	viewanim_end
+
+viewanim11		; US retail $08:8751
+	viewanim_set	0,-1000,-3000
+	viewanim_end
+
+viewanim12		; US retail $08:875b
+	viewanim_set	0,-500,-1500
+	viewanim_flags	$8801
+	viewanim_move	32,5,0,-500,-1500
+	viewanim_move	32,5,0,-500,-1500
+	viewanim_move	16,4,0,-500,-1500
+	viewanim_flags	$8001
+	viewanim_move	16,4,0,-500,-1000
+	viewanim_move	16,4,0,-400,-800
+	viewanim_move	8,3,0,0,-200
+	viewanim_move	8,3,0,0,400
+	viewanim_flags	$c080
+	viewanim_end
+
+viewanim13		; US retail $08:87b7
+	viewanim_set	0,-500,-1500
+	viewanim_flags	$8001
+	viewanim_move	16,4,0,-500,-1000
+	viewanim_move	16,4,0,-400,-800
+	viewanim_move	8,3,0,0,-200
+	viewanim_move	8,3,0,0,400
+	viewanim_flags	$c080
+	viewanim_end
+
+viewanim14		; US retail $08:87f1
+	viewanim_set	2000,-1000,6000
+	viewanim_move	16,4,-2000,-100,2000
+	viewanim_move	16,4,-2000,0,-1000
+	viewanim_move	16,4,-1000,-400,-2000
+	viewanim_move	32,5,0,-600,-2000
+	viewanim_move	8,3,0,-900,-1500
+	viewanim_end
+
+viewanim15		; US retail $08:882d
+	viewanim_set	-500,-2000,6000
+	viewanim_move	16,4,-300,0,2000
+	viewanim_move	16,4,-500,0,-500
+	viewanim_move	16,4,0,0,-500
+	viewanim_move	16,4,0,-90,-500
+	viewanim_end
+
+viewanim16		; US retail $08:885f
+	viewanim_set	0,-2000,-4000
+	viewanim_move	16,4,0,-200,-1000
+	viewanim_move	16,4,0,-90,-500
+	viewanim_end
+
+viewanim17		; US retail $08:887d
+	viewanim_move	8,3,0,-90,-500
+	viewanim_move	8,3,-300,-150,-500
+	viewanim_move	4,2,-500,-100,0
+	viewanim_move	4,2,-300,-50,500
+	viewanim_move	8,3,0,0,700
+	viewanim_move	8,3,0,0,700
+	viewanim_end
+
+viewanim18		; US retail $08:88bb
+	viewanim_move	8,3,0,-90,-500
+	viewanim_end
+
+; Y = low word of an animation in viewanimtab's bank.
+; Load the first command immediately. X preserved, Y/A scratch.
+; Returns A8/I16, carry set at end, clear after a command.
+setviewanim_l
+	a16
+	tya
+	sec
+	sbc	#viewanimtab&$ffff
+	sta	al_sword2,x
+	a8
+	jsl	nextviewanim_l
+	rtl
+
+nextviewanim_l
+	phx
+	a16
+	txy
+	lda	al_sword2,x
+	tax
+	lda.l	viewanimtab,x
+	cmp	#3
+	beq	.set
+	cmp	#1
+	beq	.move
+	cmp	#2
+	beq	.flags
+	tyx
+	sec
+	jmp	.done
+.set
+	phy
+	phx
+	tyx
+	ldy	al_viewpt,x
+	plx
+	lda.l	viewanimtab+2,x
+	sta.w	vc_destx,y
+	sta.w	vc_offx,y
+	lda.l	viewanimtab+4,x
+	sta.w	vc_desty,y
+	sta.w	vc_offy,y
+	lda.l	viewanimtab+6,x
+	sta.w	vc_destz,y
+	sta.w	vc_offz,y
+	ply
+	lda	#0
+	sta.w	al_vx,y
+	sta.w	al_vy,y
+	sta.w	al_vz,y
+	sta.w	al_sword1,y
+	lda.w	al_sword2,y
+	clc
+	adc	#8
+	sta.w	al_sword2,y
+	jmp	.commanddone
+.flags
+	lda.l	viewanimtab+2,x
+	tyx
+	ldy	al_viewpt,x
+	sta.w	vc_flags,y
+	lda	al_sword2,x
+	clc
+	adc	#4
+	sta	al_sword2,x
+	jmp	.commanddone
+.move
+	phy
+	lda.l	viewanimtab+2,x
+	and	#$ff
+	sta.w	al_sword1,y
+	phx
+	tyx
+	ldy	al_viewpt,x
+	plx
+	lda.l	viewanimtab+3,x
+	and	#$ff
+	sta	svar_word1
+	lda.l	viewanimtab+4,x
+	sec
+	sbc.w	vc_destx,y
+	sta	svar_word2
+	lda.l	viewanimtab+6,x
+	sec
+	sbc.w	vc_desty,y
+	sta	svar_word3
+	lda.l	viewanimtab+8,x
+	sec
+	sbc.w	vc_destz,y
+	sta	svar_word4
+	plx
+	ldy	svar_word1
+	iny
+.divide
+	dey
+	beq	.divided
+	lda	svar_word2
+	adiv2
+	sta	svar_word2
+	lda	svar_word3
+	adiv2
+	sta	svar_word3
+	lda	svar_word4
+	adiv2
+	sta	svar_word4
+	bra	.divide
+.divided
+	lda	svar_word2
+	sta	al_vx,x
+	lda	svar_word3
+	sta	al_vy,x
+	lda	svar_word4
+	sta	al_vz,x
+	lda	al_sword2,x
+	clc
+	adc	#10
+	sta	al_sword2,x
+.commanddone
+	clc
+.done
+	a8
+	plx
+	rtl
+
+; Approach the current destination, then advance its motion/script.
+; Uses the existing original sr16_achase_alvar3 (US retail $03:ce30).
+; The destination changes after the chase, preserving the one-frame delay.
+updateviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda.w	vc_offx,y
+	sta	tpx
+	lda.w	vc_destx,y
+	jsl	sr16_achase_alvar3
+	sta.w	vc_offx,y
+	a8
+	a16
+	lda.w	vc_offy,y
+	sta	tpx
+	lda.w	vc_desty,y
+	jsl	sr16_achase_alvar3
+	sta.w	vc_offy,y
+	a8
+	a16
+	lda.w	vc_offz,y
+	sta	tpx
+	lda.w	vc_destz,y
+	jsl	sr16_achase_alvar3
+	sta.w	vc_offz,y
+	a8
+	a16
+	lda	al_sword1,x
+	beq	.next
+	dec	a
+	sta	al_sword1,x
+	lda	al_vx,x
+	clc
+	adc.w	vc_destx,y
+	sta.w	vc_destx,y
+	lda	al_vy,x
+	clc
+	adc.w	vc_desty,y
+	sta.w	vc_desty,y
+	lda	al_vz,x
+	clc
+	adc.w	vc_destz,y
+	sta.w	vc_destz,y
+	a8
+	bra	.running
+.next
+	a8
+	jsl	nextviewanim_l
+	bcs	.done
+.running
+	clc
+.done
+	rtl
+
+
+; Retail driving presets, US $09:8090-$09:8133 (six groups).
+; Each header gives normal/alternate view counts; each entry has flags
+; and XYZ offsets. Group offsets remain relative to viewpresettab when
+; the table is relocated. Group 00 is the retail forced fallback view.
+viewpreset_group MACRO normal,alternate
+	db	\1,\2
+	ENDM
+viewpreset_entry MACRO flags,x,y,z
+	dw	\1,\2,\3,\4
+	ENDM
+
+viewpresettab
+viewpreset00
+	viewpreset_group	1,0
+	viewpreset_entry	$8655,0,-160,-900
+
+viewpreset01
+	viewpreset_group	3,1
+	viewpreset_entry	$8655,0,-170,-900
+	viewpreset_entry	$8655,0,-400,-1400
+	viewpreset_entry	$8080,0,-140,0
+	viewpreset_entry	$1255,0,-340,-1200
+
+viewpreset02
+	viewpreset_group	3,1
+	viewpreset_entry	$8655,0,-160,-500
+	viewpreset_entry	$8655,0,-360,-1000
+	viewpreset_entry	$8080,0,-130,0
+	viewpreset_entry	$1255,0,-500,-1200
+
+viewpreset03
+	viewpreset_group	3,1
+	viewpreset_entry	$1255,0,-300,-700
+	viewpreset_entry	$1255,0,-500,-1000
+	viewpreset_entry	$1255,0,-1600,-1200
+	viewpreset_entry	$8655,0,-240,-560
+
+viewpreset04
+	viewpreset_group	2,1
+	viewpreset_entry	$1255,0,-1200,-2000
+	viewpreset_entry	$1255,400,-400,-1800
+	viewpreset_entry	$1255,0,-2800,-2000
+
+viewpreset05
+	viewpreset_group	2,1
+	viewpreset_entry	$8a55,0,-300,-800
+	viewpreset_entry	$8655,0,-120,-400
+	viewpreset_entry	$1255,0,-440,-1200
+
+; Five-word vehicle camera choices, offsets relative to viewpresettab.
+; Order: default, intro strategy, mode 1, mode 3, mode 2.
+; Eight retail definitions share the standard choices ($09:81d0, $82fc,
+; $8428, $8554, $8785, $889d, $89a7, $8abf); $09:8680 uses the large set.
+; Names reconstructed; identical sequences share one label here.
+viewchoice_standard
+	dw	viewpreset02-viewpresettab,viewpreset03-viewpresettab
+	dw	viewpreset05-viewpresettab,viewpreset02-viewpresettab
+	dw	viewpreset01-viewpresettab
+viewchoice_large
+	dw	viewpreset02-viewpresettab,viewpreset04-viewpresettab
+	dw	viewpreset05-viewpresettab,viewpreset02-viewpresettab
+	dw	viewpreset01-viewpresettab
+
+; X = controller, al_viewpt = record, al_ptr = owner, A8/I16,
+; D = 0, DB = $7e. US $08:9a4f-$08:9bd8, adapted to al_viewflags.
+; Consume normal/alternate requests unless the current view is locked;
+; the owner can force group 00 while retaining the selected view index.
+; View changes load seven into al_sword1 for the cockpit transition.
+; X preserved, Y returns record, A8/I16 out; A/x1/y1/z1/tpx and the low
+; bytes of svar_word1/2 are scratch. The early sound-ID mapping remains
+; separate; the retail view-change sound call is omitted here.
+updateviewpreset_l
+	ldy	al_viewpt,x
+	a16
+	lda.w	vc_flags,y
+	and	#vcf_viewlock
+	a8
+	bne	.selected
+	lda	al_viewflags,x
+	and	#avf_nextview
+	rlbeq	.selected
+	lda	al_viewflags,x
+	and	#~avf_nextview
+	sta	al_viewflags,x
+; Retail emits sound $24 here ($04:d656). Its SPC effect differs from
+; the early XLSND0 $24 (se_liftcar). TODO: Restore the matching retail
+; sound data/driver before adding this call.
+	phx
+	a16
+	lda.w	vc_presetbase,y
+	tax
+	a8
+	lda.l	viewpresettab,x
+	sta	svar_word1
+	lda.l	viewpresettab+1,x
+	sta	svar_word2
+	plx
+	lda	al_viewflags,x
+	and	#avf_altview
+	rlbeq	.next
+	lda	al_viewflags,x
+	and	#~avf_altview
+	sta	al_viewflags,x
+	lda	svar_word2
+	beq	.next
+	clc
+	adc	svar_word1
+	dec	a
+	cmp.w	vc_presetindex,y
+	bne	.store
+	lda	#0
+	bra	.store
+.next
+	lda.w	vc_presetindex,y
+	inc	a
+	cmp	svar_word1
+	bmi	.store
+	lda	#0
+.store
+	sta.w	vc_presetindex,y
+	a16
+	lda	#7
+	sta	al_sword1,x
+	a8
+.selected
+	phy
+	ldy	al_ptr,x
+	lda.w	al_viewflags,y
+	and	#avf_forceview
+	rlbeq	.normal
+	ply
+	a16
+	lda	#7
+	sta	al_sword1,x
+	a8
+	a16
+	phx
+	ldx	#0
+	bra	fetchviewpreset
+.normal
+	ply
+; US $08:9af0 entry, also usable with Y already pointing to the record.
+applyviewpreset
+	phx
+	a16
+	lda.w	vc_presetindex,y
+	and	#$00ff
+	asl	a
+	asl	a
+	asl	a
+	clc
+	adc.w	vc_presetbase,y
+	tax
+fetchviewpreset
+	inx
+	inx
+	lda.l	viewpresettab,x
+	sta.w	vc_flags,y
+	lda.l	viewpresettab+2,x
+	sta	x1
+	lda.l	viewpresettab+4,x
+	sta	y1
+	lda.l	viewpresettab+6,x
+	sta	z1
+	plx
+	phx
+	tyx
+	ply
+	lda	vc_flags,x
+	bit	#vcf_cockpit
+	beq	.offset
+	lda.w	al_sword1,y
+	beq	.follow
+	dec	a
+	sta.w	al_sword1,y
+	lda	vc_flags,x
+	ora	#vcf_roll!vcf_nosteerlag!vcf_lookat
+	sta	vc_flags,x
+	stz	x1
+	stz	y1
+	lda	#-50
+	sta	z1
+	bra	.offset
+.follow
+	lda	vc_flags,x
+	ora	#vcf_followrot
+	sta	vc_flags,x
+.offset
+	a8
+	a16
+	lda	x1
+	clc
+	adc	vc_speedx,x
+	sta	x1
+	a8
+	a16
+	lda	y1
+	clc
+	adc	vc_speedy,x
+	sta	y1
+	a8
+	a16
+	lda	z1
+	clc
+	adc	vc_speedz,x
+	sta	z1
+	a8
+	a16
+	lda	x1
+	clc
+	adc	vc_shakex,x
+	sta	x1
+	a8
+	a16
+	lda	y1
+	clc
+	adc	vc_shakey,x
+	sta	y1
+	a8
+	a16
+	lda	z1
+	clc
+	adc	vc_shakez,x
+	sta	z1
+	a8
+	a16
+	lda	vc_offx,x
+	sta	tpx
+	lda	x1
+	jsl	sr16_achase_alvar2
+	sta	vc_offx,x
+	a8
+	a16
+	lda	vc_offy,x
+	sta	tpx
+	lda	y1
+	jsl	sr16_achase_alvar2
+	sta	vc_offy,x
+	a8
+	a16
+	lda	vc_offz,x
+	sta	tpx
+	lda	z1
+	jsl	sr16_achase_alvar2
+	sta	vc_offz,x
+	a8
+	a16
+	lda	x1
+	sta	vc_destx,x
+	a8
+	a16
+	lda	y1
+	sta	vc_desty,x
+	a8
+	a16
+	lda	z1
+	sta	vc_destz,x
+	a8
+	phx
+	tyx
+	ply
+	rtl
+
+
+; Map a signed world X/Z position to a 32 by 32 grid of word entries.
+; US $08:83e8 long wrapper, $08:83ec object entry, $08:83f8 core.
+; A16, D = 0. getobjmapindex additionally needs I16 and X = object.
+; Input x1/z1 (or al_worldx/z); output A = byte offset into the map,
+; x1 = column byte offset (0..62), z1 = row byte offset (0..1984).
+; Cells are 2048 world units, with the origin in cell (16,16).
+; X/Y, DB and register widths preserved; arithmetic flags are scratch.
+	longa
+getmapindex_l
+	jsr	getmapindex
+	rtl
+getobjmapindex
+	lda.l	alx_worldx,x
+	sta	x1
+	lda.l	alx_worldz,x
+	sta	z1
+getmapindex
+	lda	x1
+	asra
+	asra
+	xba
+	sexa
+	clc
+	adc	#$0020
+	and	#$fffe
+	sta	x1
+	lda	z1
+	and	#$f800
+	asra
+	asra
+	asra
+	asra
+	asra
+	clc
+	adc	#$0400
+	sta	z1
+	clc
+	adc	x1
+	rts
+	shorta
+
+
+; Update a prepared retail camera-controller object (US $08:958f).
+; X = controller; al_viewpt points to its camera record. A8/I16,
+; D = 0, DB = $7e. X preserved, A/Y and camera work words scratch.
+updateviewcamera_l
+	phx
+	ldy	al_viewpt,x
+	tyx
+	jsl	getviewpos_l
+	jsl	getviewangles_l
+	plx
+	a8
+	rtl
+
+;****************************************************************************
+; Retail camera strategies, US $08:8e2a-$08:8f02 and $08:9861-$08:9a4e.
+; Reconstructed names. X = controller, al_viewpt = vc_ record,
+; D = 0, DB = $7e, A8/I16. Strategies preserve X and return A8/I16.
+; al_sbyte1 holds the camera hold timer (retail $2048); al_sbyte2
+; holds the refreshed camera activity count (retail $2036). These bytes are
+; private to camera controllers; no alien offsets are changed.
+; stepviewstrat_l ages the activity byte before dispatch, as in retail.
+; docamerastrats runs bound controllers once after dynamics, selecting
+; each owner's dynamics car. getview_l only publishes the selected record.
+; The ordinary object loop skips bound camera controllers.
+; TODO: Restore the remaining retail scene streams and mode selection.
+; Intro 14 returns to driving; hold locks the view for 80 update calls.
+; Scripts 02-10 keep their last shot; scripts 12/13 finish in the cockpit.
+; A terminal animation command is polled without restarting its script.
+	shorta
+
+; Camera activity gate from the object loop at US $03:d39c-$03:d3c6.
+; X = controller, A8/I16, D = 0, DB = $7e. X preserved; A/Y and tjmp
+; scratch. Zero sleeps; one clears the collision/dynamics reference and
+; sleeps; positive values decrement before the primary strategy runs.
+; Strategies refresh this byte to three. Expiry does not free the object.
+; Negative values reset to three and try the secondary callback, stored
+; in al_tempstratptr for these early camera controllers. The restored
+; scene allocator and camera strategies currently leave that pointer zero.
+; TODO: Restore general object activation and the scheduler's removal
+; path. The current camera strategies do not request removal via aldead.
+stepviewstrat_l
+	stz	aldead
+	lda	al_sbyte2,x
+	beq	.done
+	bmi	.rearm
+	dec	a
+	beq	.expire
+	sta	al_sbyte2,x
+	jml	call_strat_l
+.rearm
+	lda	#3
+	sta	al_sbyte2,x
+	jml	call_tempstrat_l
+.expire
+	stz	al_collobjptr,x
+	stz	al_collobjptr+1,x
+	stz	al_sbyte2,x
+.done
+	rtl
+
+viewintro_Istrat	; US $08:8e2a
+	s_set_strat	x,viewintro_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	ldy	#viewanim14&WM
+	jsl	setviewanim_l
+	jsl	updateviewcamera_l
+
+viewintro_strat	; US $08:8e51
+	jsl	updateviewanim_l
+	bcs	.finished
+	brl	viewupdate_strat
+
+.finished
+	jmp	viewdrive_Istrat
+
+viewhold_Istrat	; US $08:8e5d
+	ldy	al_viewpt,x
+	a16
+	lda	#$0021
+	sta.w	vc_flags,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_destx,y
+	a8
+	a16
+	lda	#$ff74
+	sta.w	vc_desty,y
+	a8
+	a16
+	lda	#$fe0c
+	sta.w	vc_destz,y
+	a8
+	jsr	snapview
+	s_set_strat	x,viewhold_strat
+	lda	#$50
+	sta	al_sbyte1,x
+
+viewhold_strat	; US $08:8ea2
+	lda	al_sbyte1,x
+	bne	.waiting
+	jml	viewdrive_Istrat
+
+.waiting
+	dec	al_sbyte1,x
+	jmp	viewupdate_strat
+
+viewsnap_Istrat	; US $08:8eb1
+	ldy	al_viewpt,x
+	a16
+	lda	#$0655
+	sta.w	vc_flags,y
+	a8
+	jsr	snapview
+
+viewdrive_Istrat	; US $08:8ec1
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_trackstate,y
+	a8
+	ldy	al_viewpt,x
+	lda	#$00
+	sta.w	vc_presetindex,y
+	lda	al_viewflags,x
+	and	#$fe
+	sta	al_viewflags,x
+	lda	al_viewflags,x
+	and	#$fd
+	sta	al_viewflags,x
+	s_set_strat	x,viewdrive_strat
+
+viewdrive_strat	; US $08:8ef5
+	jsl	updateviewpreset_l
+
+viewupdate_strat	; US $08:8ef9
+	jsl	updateviewcamera_l
+	lda	#$03
+	sta	al_sbyte2,x
+	rtl
+
+viewanim01_Istrat	; US $08:9861
+	ldy	#viewanim01&WM
+	jsl	setviewanim_l
+	s_set_strat	x,viewanim01_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+
+viewanim01_strat	; US $08:9888
+	lda	#$03
+	sta	al_sbyte2,x
+	jsl	updateviewanim_l
+	jsl	updateviewcamera_l
+	rtl
+
+viewanim02_Istrat	; US $08:9896
+	ldy	#viewanim02&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim03_Istrat	; US $08:98b1
+	ldy	#viewanim03&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim04_Istrat	; US $08:98cc
+	ldy	#viewanim04&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim05_Istrat	; US $08:98e7
+	ldy	#viewanim05&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim06_Istrat	; US $08:9902
+	ldy	#viewanim06&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim07_Istrat	; US $08:991d
+	ldy	#viewanim07&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim10_Istrat	; US $08:9938
+	ldy	#viewanim10&WM
+	jsl	setviewanim_l
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim08_Istrat	; US $08:9946
+	ldy	#viewanim08&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanim09_Istrat	; US $08:9961
+	ldy	#viewanim09&WM
+	jsl	setviewanim_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewanimloop_Istrat
+
+viewanimloop_Istrat	; US $08:997c
+	s_set_strat	x,viewanimloop_strat
+
+viewanimloop_strat	; US $08:998b
+	jsl	updateviewanim_l
+	jmp	viewupdate_strat
+
+viewcockpit_Istrat	; US $08:9992
+	ldy	al_viewpt,x
+	a16
+	lda	#$c080
+	sta.w	vc_flags,y
+	a8
+	s_set_strat	x,viewcockpit_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_offx,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$ff9c
+	sta.w	vc_offy,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_offz,y
+	a8
+	jsl	updateviewcamera_l
+	jmp	viewcockpit_strat
+
+viewanim13_Istrat	; US $08:99dc
+	ldy	#viewanim13&WM
+	jsl	setviewanim_l
+	jmp	viewcockpitanim_Istrat
+
+viewanim12_Istrat	; US $08:99e6
+	ldy	#viewanim12&WM
+	jsl	setviewanim_l
+
+viewcockpitanim_Istrat	; US $08:99ed
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	jsl	updateviewcamera_l
+	s_set_strat	x,viewcockpitanim_strat
+
+viewcockpitanim_strat	; US $08:9a0d
+	jsl	updateviewanim_l
+	bcs	.finished
+	brl	viewupdate_strat
+
+.finished
+	s_set_strat	x,viewcockpit_strat
+
+viewcockpit_strat	; US $08:9a25
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_offx,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$ff9c
+	sta.w	vc_offy,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_offz,y
+	a8
+	jmp	viewupdate_strat
+
+; Snap to the preset offsets, clear speed/shake offsets, calculate the
+; position and look-at angles, then restore the original camera flags.
+; US $08:8f03 is an RTS entry; the added long-call wrapper follows the
+; original source convention. Same inputs as updateviewcamera_l.
+snapview_l
+	jsr	snapview
+	rtl
+snapview
+	ldy	al_viewpt,x
+	a16
+	lda.w	vc_flags,y
+	pha
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_speedx,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_speedy,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_speedz,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_shakex,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_shakey,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_shakez,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda.w	vc_destx,y
+	sta.w	vc_offx,y
+	a8
+	a16
+	lda.w	vc_desty,y
+	sta.w	vc_offy,y
+	a8
+	a16
+	lda.w	vc_destz,y
+	sta.w	vc_offz,y
+	a8
+	jsl	updateviewcamera_l
+	ldy	al_viewpt,x
+	a16
+	pla
+	sta.w	vc_flags,y
+	a8
+	rts
+
+; Preset tracking entry, US $08:90d9-$08:917c. Names reconstructed.
+; X = controller, al_viewpt = record, A8/I16, D = 0, DB = $7e.
+; Clear transient speed/shake, snap to the destination offsets, then
+; enter preset tracking with $0755 flags and a cleared track-state word.
+; Unlike viewdrive_Istrat, retain the preset index and pending requests;
+; updateviewpreset_l consumes them through the normal lock/forced rules.
+; X preserved; A/Y and camera work words scratch. Refresh activity to
+; three through viewupdate_strat, including the initialization frame.
+; TODO: Identify this entry's retail callers and restore their routing.
+; It is available to mapview1/2; the early driving default is unchanged.
+viewtrack_Istrat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_speedx,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_speedy,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_speedz,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_shakex,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_shakey,y
+	a8
+	a16
+	lda	#$0000
+	sta.w	vc_shakez,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda.w	vc_destx,y
+	sta.w	vc_offx,y
+	a8
+	a16
+	lda.w	vc_desty,y
+	sta.w	vc_offy,y
+	a8
+	a16
+	lda.w	vc_destz,y
+	sta.w	vc_offz,y
+	a8
+	jsl	updateviewcamera_l
+	ldy	al_viewpt,x
+	a16
+	lda	#$0000
+	sta.w	vc_trackstate,y
+	a8
+	ldy	al_viewpt,x
+	a16
+	lda	#$0755
+	sta.w	vc_flags,y
+	a8
+	s_set_strat	x,viewtrack_strat
+viewtrack_strat
+	jsl	updateviewpreset_l
+	jmp	viewupdate_strat
+
+
+; Animation 16 returns to driving, US $08:917d-$08:919e followed by
+; the shared $08:91c8-$08:91ea path. Names reconstructed.
+; X = bound controller, A8/I16, D = 0, DB = $7e. The initializer
+; starts the script, updates the camera, then executes its first tick.
+; At the terminal command, set bit 0 of the shared GSU draw flag,
+; preserving all other bits, and enter viewdrive_Istrat in the same call.
+; TODO: Restore scene selection and the GSU draw consumer at $01:d12f.
+; TODO: Restore the adjacent animation-15 initializer at $08:919f once
+; retail scene mode $0d2b has a producer. That entry chooses animation
+; 00 for mode 3, otherwise 15, then joins viewanimdrive_start below.
+; bindviewobj_l's temporary svar_word2 input is not persistent scene state.
+viewanim16_Istrat
+	s_set_strat	x,viewanimdrive_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0001
+	sta.w	vc_flags,y
+	a8
+	ldy	#viewanim16&WM
+	jmp	viewanimdrive_start
+viewanimdrive_start
+	jsl	setviewanim_l
+	jsl	updateviewcamera_l
+viewanimdrive_strat
+	jsl	updateviewanim_l
+	bcs	.finished
+	brl	viewupdate_strat
+.finished
+	a16
+	lda.l	m_viewroadflags
+	ora	#$0001
+	sta.l	m_viewroadflags
+	a8
+	jmp	viewdrive_Istrat
+
+
+; Moving road camera, US $08:8c99-$08:8e29. Names reconstructed.
+; X = bound controller, A8/I16, D = 0, DB = $7e. A/Y/svar_word1
+; and route-helper scratch destroyed. Requires a bound packed route.
+; Start two points ahead at (+1000,-500,+1000). Each changed index
+; divisible by four chooses the next point at (+1000,-1500,+1000),
+; aims X/Z velocity at the following point with signed floor /32,
+; and raises world Y by 25 for 24 ticks. vc_trackstate is not reset.
+; Retail computes Y velocity but discards its integration result.
+; Preserve another retail edge case: index zero bypasses the record
+; load. With a zero counter, the X/Z stores use Y = owner instead.
+; The early car bridge now retains its last successful route index.
+; TODO: Ensure a valid initial index/table before scene activation;
+; a newly allocated car still has index zero until a search succeeds.
+; The shared flag's bit 0 is cleared without disturbing other bits.
+; TODO: Restore retail scene selection and the flag's GSU draw consumer.
+viewroad_Istrat
+	phx
+	ldy	al_ptr,x
+	a16
+	lda.w	al_collobjptr,y
+	tax
+	lda.l	mrambank+CAR_ROUTEINDEX,x
+	plx
+	jsl	nextroutepoint_l
+	jsl	nextroutepoint_l
+	sta.w	svar_word1
+	jsl	getroutepos_l
+	ldy	al_viewpt,x
+	lda.w	x1
+	clc
+	adc	#$03e8
+	sta.w	vc_worldx,y
+	lda.w	y1
+	clc
+	adc	#$fe0c
+	sta.w	vc_worldy,y
+	lda.w	z1
+	clc
+	adc	#$03e8
+	sta.w	vc_worldz,y
+	a8
+	s_set_strat	x,viewroad_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0003
+	sta.w	vc_flags,y
+	a8
+	a16
+	lda.l	m_viewroadflags
+	and	#$fffe
+	sta.l	m_viewroadflags
+	a8
+	a16
+	lda	#$0000
+	sta	al_sword1,x
+	a8
+	a16
+	lda	#$0000
+	sta	al_vx,x
+	a8
+	a16
+	lda	#$0000
+	sta	al_vy,x
+	a8
+	a16
+	lda	#$0000
+	sta	al_vz,x
+	a8
+viewroad_strat
+	phx
+	ldy	al_ptr,x
+	a16
+	lda.w	al_collobjptr,y
+	tax
+	lda.l	mrambank+CAR_ROUTEINDEX,x
+	plx
+	cmp	#$0000
+	bne	.nonzero
+	brl	.move
+.nonzero
+	ldy	al_viewpt,x
+	cmp.w	vc_trackstate,y
+	bne	.changed
+	brl	.move
+.changed
+	bit	#$0003
+	beq	.reposition
+	brl	.move
+.reposition
+	sta.w	vc_trackstate,y
+	jsl	nextroutepoint_l
+	sta.w	svar_word1
+	jsl	getroutepos_l
+	ldy	al_viewpt,x
+	lda.w	x1
+	clc
+	adc	#$03e8
+	sta.w	vc_worldx,y
+	lda.w	y1
+	clc
+	adc	#$fa24
+	sta.w	vc_worldy,y
+	lda.w	z1
+	clc
+	adc	#$03e8
+	sta.w	vc_worldz,y
+	lda	#$0018
+	sta	al_sword1,x
+	lda.w	svar_word1
+	jsl	nextroutepoint_l
+	jsl	getroutepos_l
+	ldy	al_viewpt,x
+	lda.w	x1
+	sec
+	sbc.w	vc_worldx,y
+	asra
+	asra
+	asra
+	asra
+	asra
+	sta	al_vx,x
+	lda.w	y1
+	sec
+	sbc.w	vc_worldy,y
+	asra
+	asra
+	asra
+	asra
+	asra
+	sta	al_vy,x
+	lda.w	z1
+	sec
+	sbc.w	vc_worldz,y
+	asra
+	asra
+	asra
+	asra
+	asra
+	sta	al_vz,x
+.move
+	lda	al_sword1,x
+	beq	.integrate
+	dec	a
+	sta	al_sword1,x
+	ldy	al_viewpt,x
+	lda.w	vc_worldy,y
+	clc
+	adc	#$0019
+	sta.w	vc_worldy,y
+.integrate
+	lda.w	vc_worldx,y
+	clc
+	adc	al_vx,x
+	sta.w	vc_worldx,y
+	lda.w	vc_worldy,y
+	clc
+	adc	al_vy,x
+; No store here in retail: only the countdown changes world Y.
+	lda.w	vc_worldz,y
+	clc
+	adc	al_vz,x
+	sta.w	vc_worldz,y
+	a8
+	jmp	viewupdate_strat
+
+
+; Fixed road cameras, US $08:928a-$08:92de and $08:937e-$08:93d6.
+; X = bound controller, al_ptr = car owner, al_viewpt = camera record.
+; A8/I16, D = 0, DB = $7e. maproute must have bound a valid table and
+; the owner's dynamics car must hold CAR_ROUTEINDEX. Names reconstructed.
+; Flags 3 keep world position fixed while looking toward the target car.
+; The initializer chooses its anchor once; later ticks only update the
+; look-at camera and refresh activity. They do not chase new route indices.
+; Retail performs no index/binding checks here; retain its wrap behaviour.
+; TODO: Restore retail scene selection for these shots.
+viewrouteahead_Istrat
+	s_set_strat	x,viewrouteahead_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0003
+	sta.w	vc_flags,y
+	a8
+	phx
+	ldy	al_ptr,x
+	a16
+	lda.w	al_collobjptr,y
+	tax
+	lda.l	mrambank+CAR_ROUTEINDEX,x
+	plx
+	jsl	nextroutepoint_l
+	jsl	nextroutepoint_l
+	jsl	getroutepos_l
+	ldy	al_viewpt,x
+	lda.w	x1
+	sta.w	vc_worldx,y
+	lda.w	y1
+	clc
+	adc	#$ff9c
+	sta.w	vc_worldy,y
+	lda.w	z1
+	sta.w	vc_worldz,y
+	a8
+viewrouteahead_strat
+	jmp	viewupdate_strat
+
+viewrouteside_Istrat
+	s_set_strat	x,viewrouteside_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0003
+	sta.w	vc_flags,y
+	a8
+	phx
+	ldy	al_ptr,x
+	a16
+	lda.w	al_collobjptr,y
+	tax
+	lda.l	mrambank+CAR_ROUTEINDEX,x
+	plx
+	jsl	nextroutepoint_l
+	jsl	getroutepos_l
+	ldy	al_viewpt,x
+	lda.w	x1
+	clc
+	adc	#$03e8
+	sta.w	vc_worldx,y
+	lda.w	y1
+	clc
+	adc	#$ff9c
+	sta.w	vc_worldy,y
+	lda.w	z1
+	clc
+	adc	#$03e8
+	sta.w	vc_worldz,y
+	a8
+viewrouteside_strat
+	jmp	viewupdate_strat
+
+
+; Packed route-point access, US $08:dc13-$08:dc6c. Names reconstructed.
+; A = one-based point index, A16/I16, D = 0, DB exposes low Work RAM.
+; maproute must first bind a valid inline table in viewrouteptr. Its bank
+; must also expose low Work RAM, as the retail LoROM table banks do.
+; X/Y/DB and viewrouteptr are preserved; A and x1/y1/z1 are scratch.
+; Table: count word, then eight bytes per point (XYZ words and one word
+; not read here). getroutepos_l returns XYZ in x1/y1/z1, A = Z.
+; nextroutepoint_l returns the next index in A, with the input in x1;
+; y1/z1 are unchanged. Only equality with the count wraps to one.
+; Neither entry bounds-checks indices or clamps the retail 16-bit offset.
+; viewrouteptr is the CPU address of shared GSU m_routeptr/m_routebank.
+; Early CAR_NEARMARKER is an object pointer, not the retail point index.
+; CAR_ROUTEINDEX holds the last successful normal-mode search result.
+; TODO: Restore retail mode selection and the remaining update consumers.
+getroutepos_l
+	sta.w	x1
+	phx
+	lda.l	viewrouteptr+2
+	a8
+	and	#$ff
+	phb
+	pha
+	plb
+	a16
+	lda.w	x1
+	dec	a
+	asl	a
+	asl	a
+	asl	a
+	clc
+	adc.l	viewrouteptr
+	inc	a
+	inc	a
+	tax
+	lda.w	0,x
+	sta.w	x1
+	lda.w	2,x
+	sta.w	y1
+	lda.w	4,x
+	sta.w	z1
+	plb
+	plx
+	rtl
+
+nextroutepoint_l
+	sta.w	x1
+	phx
+	lda.l	viewrouteptr+2
+	a8
+	and	#$ff
+	phb
+	pha
+	plb
+	a16
+	lda.l	viewrouteptr
+	tax
+	lda.w	x1
+	cmp.w	0,x
+	bne	.next
+	lda	#$0000
+.next
+	inc	a
+	plb
+	plx
+	rtl
+
+; Copy dynamics velocity into an object's motion words, US $08:dc6d.
+; X = destination object, Y = car owner, A8/I16, D = 0, DB = $7e.
+; X/Y preserved, A scratch, returns A8/I16. The three arithmetic shifts
+; divide by eight with negative values rounded down, not toward zero.
+; Use the early dynamics layout's named OBJ_VEL fields (dynshift = 3).
+copycarvelocity_l
+	phx
+	phy
+	a16
+	lda.w	al_collobjptr,y
+	txy
+	tax
+	lda.l	mrambank+OBJ_VELX,x
+	asra
+	asra
+	asra
+	sta.w	al_vx,y
+	lda.l	mrambank+OBJ_VELY,x
+	asra
+	asra
+	asra
+	sta.w	al_vy,y
+	lda.l	mrambank+OBJ_VELZ,x
+	asra
+	asra
+	asra
+	sta.w	al_vz,y
+	a8
+	ply
+	plx
+	rtl
+
+; Drifting approaches to the moving road camera, US $08:91eb-$08:9289
+; and $08:92df-$08:937d. Names reconstructed. X = bound controller,
+; A8/I16, D = 0, DB = $7e. Copy the owner's velocity with signed floor
+; /8, then clear Y velocity. Integrate before chasing all three axes
+; toward zero with the original rate-3 chase. Preserve the two bodies.
+; The initializer also executes the first tick. Test the timer after
+; integration: delays 30/40 hand off on calls 31/41, respectively.
+; The handoff executes viewroad_Istrat and its tick in the same call,
+; selecting an anchor from the then-current car index and route table.
+; No route reads or shared-flag changes occur during the drift phase.
+; TODO: Restore retail scene selection. Initial route validity and the
+; pending GSU drawing dependency also apply at the road-camera handoff.
+viewroaddrift30_Istrat
+	s_set_strat	x,viewroaddrift30_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0003
+	sta.w	vc_flags,y
+	a8
+	lda	#$1e
+	sta	al_sbyte1,x
+	ldy	al_ptr,x
+	jsl	copycarvelocity_l
+	a16
+	lda	#$0000
+	sta	al_vy,x
+	a8
+viewroaddrift30_strat
+	a16
+	ldy	al_viewpt,x
+	lda	al_vx,x
+	clc
+	adc.w	vc_worldx,y
+	sta.w	vc_worldx,y
+	lda	al_vy,x
+	clc
+	adc.w	vc_worldy,y
+	sta.w	vc_worldy,y
+	lda	al_vz,x
+	clc
+	adc.w	vc_worldz,y
+	sta.w	vc_worldz,y
+	a8
+	a16
+	lda	al_vx,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vx,x
+	a8
+	a16
+	lda	al_vy,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vy,x
+	a8
+	a16
+	lda	al_vz,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vz,x
+	a8
+	lda	al_sbyte1,x
+	bne	.wait
+	jml	viewroad_Istrat
+.wait
+	dec	al_sbyte1,x
+	jmp	viewupdate_strat
+
+viewroaddrift40_Istrat
+	s_set_strat	x,viewroaddrift40_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0003
+	sta.w	vc_flags,y
+	a8
+	lda	#$28
+	sta	al_sbyte1,x
+	ldy	al_ptr,x
+	jsl	copycarvelocity_l
+	a16
+	lda	#$0000
+	sta	al_vy,x
+	a8
+viewroaddrift40_strat
+	a16
+	ldy	al_viewpt,x
+	lda	al_vx,x
+	clc
+	adc.w	vc_worldx,y
+	sta.w	vc_worldx,y
+	lda	al_vy,x
+	clc
+	adc.w	vc_worldy,y
+	sta.w	vc_worldy,y
+	lda	al_vz,x
+	clc
+	adc.w	vc_worldz,y
+	sta.w	vc_worldz,y
+	a8
+	a16
+	lda	al_vx,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vx,x
+	a8
+	a16
+	lda	al_vy,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vy,x
+	a8
+	a16
+	lda	al_vz,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vz,x
+	a8
+	lda	al_sbyte1,x
+	bne	.wait
+	jml	viewroad_Istrat
+.wait
+	dec	al_sbyte1,x
+	jmp	viewupdate_strat
+
+
+; Drifting camera and fixed-position pitch transition, US $08:93d7-94a0.
+; Names reconstructed. X = controller, al_ptr = car, al_viewpt = record;
+; A8/I16, D = 0, DB = $7e. X preserved, A/Y/tpx and camera words scratch.
+; Integrate inherited velocity, chase X/Z motion toward zero and Y toward
+; -10, then check the 40-count delay. The transition call still integrates
+; motion before switching to the fixed-position pitch strategy.
+; Both paths refresh activity via viewupdate_strat. Position remains fixed
+; in the record while the pitch approaches $1000 using the rate-5 chase.
+; TODO: Identify and restore scene/strategy routing for these camera shots.
+; The entries are available to mapview1/2; default driving is unchanged.
+viewdrift_Istrat
+	s_set_strat	x,viewdrift_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0003
+	sta.w	vc_flags,y
+	a8
+	lda	#$28
+	sta	al_sbyte1,x
+	ldy	al_ptr,x
+	jsl	copycarvelocity_l
+viewdrift_strat
+	a16
+	ldy	al_viewpt,x
+	lda	al_vx,x
+	clc
+	adc.w	vc_worldx,y
+	sta.w	vc_worldx,y
+	lda	al_vy,x
+	clc
+	adc.w	vc_worldy,y
+	sta.w	vc_worldy,y
+	lda	al_vz,x
+	clc
+	adc.w	vc_worldz,y
+	sta.w	vc_worldz,y
+	a8
+	a16
+	lda	al_vx,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vx,x
+	a8
+	a16
+	lda	al_vy,x
+	sta	tpx
+	lda	#$fff6
+	jsl	sr16_achase_alvar3
+	sta	al_vy,x
+	a8
+	a16
+	lda	al_vz,x
+	sta	tpx
+	lda	#$0000
+	jsl	sr16_achase_alvar3
+	sta	al_vz,x
+	a8
+	lda	al_sbyte1,x
+	bne	.wait
+	jml	viewtilt_Istrat
+.wait
+	dec	al_sbyte1,x
+	jmp	viewupdate_strat
+viewtilt_Istrat
+	s_set_strat	x,viewtilt_strat
+	ldy	al_viewpt,x
+	a16
+	lda	#$0002
+	sta.w	vc_flags,y
+	a8
+viewtilt_strat
+	ldy	al_viewpt,x
+	a16
+	lda.w	vc_rotx,y
+	sta	tpx
+	lda	#$1000
+	jsl	sr16_achase_alvar5
+	sta.w	vc_rotx,y
+	a8
+	jmp	viewupdate_strat
+
+
 viewlag	=	6
 copyviewpos_l	
 	phx
@@ -1211,9 +3155,17 @@ copyviewpos_l
 viewcontrol_l
 	a8
 	
-	s_jmp_keyup	start,.nview
-	s_jmp_lastkeydown	start,.nview
-;	s_not_alsflag	x,sflag5
+; Retail Select changes view on a rising edge ($08:c663-$08:c68d).
+	s_jmp_keyup	select,.nview
+	s_jmp_lastkeydown	select,.nview
+	phy
+	ldy	al_viewpt,x
+	beq	.ncamera
+	lda.w	al_viewflags,y
+	ora	#avf_nextview
+	sta.w	al_viewflags,y
+.ncamera
+	ply
 .nview
 
 
@@ -1659,9 +3611,10 @@ dodynamics_l
 ;*****************************************************************************
 carposition_l
 	a8
-	s_jmp_keyup	select,.nhand
-	jsl	makehand_l
-.nhand
+; Select now changes view; this was the early manual-rescue debug hook.
+;	s_jmp_keyup	select,.nhand
+;	jsl	makehand_l
+;.nhand
 
 
 	lda	al_offroadtime,x

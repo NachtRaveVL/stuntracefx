@@ -30,6 +30,21 @@ viewpostablen	=	6*10
 	zalc	mariotimer,2
 	alc	dyntimer,2	
 	alc	disptimer,2
+; Working state for the retail camera position update (all words).
+	alc	viewposflags,2
+	alc	viewpostarget,2
+	alc	viewposdelta,2
+; Separate low-WRAM records, reached through each camera object.
+	alc	viewcamera1,vc_sizeof
+	alc	viewcamera2,vc_sizeof
+; Retail map references: byte index, column byte offset, row byte offset.
+; These are independent of the early renderer's viewmapz range byte.
+	alc	viewmapindex,2
+	alc	viewmapcol,2
+	alc	viewmaprow,2
+	alc	targetmapindex,2
+	alc	targetmapcol,2
+	alc	targetmaprow,2
 	alc	viewpos_offx,2
 	alc	viewpos_offy,2
 	alc	viewpos_offz,2
@@ -350,6 +365,12 @@ kf_LRkeydown	equ	2
 
 	alc	trotx,1
 	alc	troty,1
+
+; Scene-created cameras waiting for their car initializer.
+; FIXME: Early ownership handoff; retail keeps permanent controller slots.
+	alc	viewpending1,2
+	alc	viewpending2,2
+
 		      
 
 

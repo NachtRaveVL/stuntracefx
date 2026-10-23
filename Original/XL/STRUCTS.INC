@@ -47,6 +47,9 @@ alcon	=	1
 	defalx	coltab,2
 	defalx	tx,1
 	defalx	ty,1
+; Separate camera requests from the early build's occupied strategy flags.
+; Appended so every existing alien field retains its offset.
+	defalx	viewflags,1
 	struct	alx_end,0
 
 alx_size	=	alx_end-alx_start
@@ -154,6 +157,69 @@ cl_sizeof	=	cl_size-collisttemp
 	xalc	collist,number_al*cl_sizeof
 
 ;----------------------------------
+
+;----------------------------------
+; Retail camera fields used by the angle and offset-animation routines.
+; Names reconstructed. Only recovered fields are named here; the full
+; record extent is vc_sizeof.
+; The record is indexed from direct page zero, in low Work RAM.
+
+vc_flags	equ	$00
+vc_target	equ	$02	; object offset, as used by al_worldx,x
+vc_trackstate	equ	$04	; tracking/selection state, cleared on return to driving
+vc_worldx	equ	$08
+vc_worldy	equ	$0a
+vc_worldz	equ	$0c
+vc_rotx	equ	$0e	; 16 bit pitch
+vc_roty	equ	$10	; 16 bit yaw
+vc_rotz	equ	$12	; 16 bit roll
+vc_orbitx	equ	$14	; pitch used to rotate the local offset
+vc_orbity	equ	$16	; lagged yaw used to rotate the local offset
+
+; Current local offset and the destination followed by the animation.
+vc_offx	equ	$1a
+vc_offy	equ	$1c
+vc_offz	equ	$1e
+vc_destx	equ	$20
+vc_desty	equ	$22
+vc_destz	equ	$24
+
+vc_speedx	equ	$26	; speed-dependent offset for camera callers
+vc_speedy	equ	$28
+vc_speedz	equ	$2a
+vc_shakex	equ	$2c
+vc_shakey	equ	$2e
+vc_shakez	equ	$30
+vc_presetbase	equ	$32	; byte offset of a group in viewpresettab
+vc_presetindex	equ	$34	; byte index within that group
+vc_biasx	equ	$35	; extra orbit rotation
+vc_biasy	equ	$37
+vc_biasz	equ	$39
+vc_sizeof	equ	$3b	; spacing of the two retail camera records
+
+avf_nextview	equ	$01	; controller: pending view change
+avf_altview	equ	$02	; controller: choose alternate view on that change
+avf_forceview	equ	$04	; owner: temporarily use fallback group 00
+vcf_viewlock	equ	$0020	; defer a pending view change
+
+vcf_cockpit	equ	$0080	; seven-frame look-at transition, then follow rotation
+vcf_fixedpos	equ	$0002
+vcf_speedoff	equ	$0004
+vcf_poslag	equ	$0008	; X/Z quarter-step, Y eighth-step
+vcf_heightlag	equ	$0010	; X/Z direct; asymmetric Y lag
+vcf_worldoff	equ	$0100	; local offset without object rotation
+vcf_nosteerlag	equ	$0200	; suppress the hard-steering override
+vcf_cameramap	equ	$2000	; use camera cell for the target map reference
+vcf_yawlagmask	equ	$1c00
+vcf_yawlagauto	equ	$0400	; half or quarter, by velocity alignment
+vcf_yawlag4	equ	$0800
+vcf_yawlag12	equ	$0c00	; 5/32 then divide by two
+vcf_yawlag25	equ	$1000	; 5/32 then divide by four
+
+vcf_lookat	equ	$0001	; face the target object
+vcf_pitchlag	equ	$0040	; quarter-step toward target pitch
+vcf_followrot	equ	$4000	; half-step toward object angles
+vcf_roll	equ	$8000	; retain roll (otherwise force zero)
 
 alcon	=	0
 

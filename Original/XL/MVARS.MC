@@ -458,6 +458,24 @@ part_len	equ	14
 
 	Zmalc	m_particlerand,2
 	malc	m_particles,part_len*(maxparticles+1)
+
+; Packed route shared by the scene parser, GSU and CPU cameras.
+; Retail $1092/$1094: ROM address followed by a zero-extended bank word.
+; Appended after existing MVARS allocations; m_aitest1 follows in MAI.
+	malc	m_routeptr,2
+	malc	m_routebank,2
+viewrouteptr	=	m_routeptr
+
+; Retail $273c: bit 0 gates the GSU draw entry at $01:d12f.
+; Cleared by $08:8c99, set by $08:91db, reset by GSU $04:887b.
+; Names reconstructed; higher bits are preserved by camera changes.
+; viewanimdrive_strat restores the animation-completion setter.
+; TODO: Restore the GSU draw consumer.
+	malc	m_viewroadflags,2
+
+; Current map number for retail route-speed and AI tables.
+; Retail copies CPU $0e3d to GSU RAM $26f4 while loading the scene.
+	malc	m_mapnumber,2
 ;	malc	m_particlerand2,2
 ;	malc	m_drawparticles,(8+6)*(maxparticles+1)
 		  

@@ -181,6 +181,91 @@ mapjmp	dw	mapobjdo&WM	;0
 	dw	notneededyet&WM		;136
 	dw	mapwait2do&WM		;138
 	dw	mapsetpathdo&WM		;140
+	dw	mapview1do&WM		;142
+	dw	mapview2do&WM		;144
+	dw	maproutedo&WM		;146
+
+; US $08:81f8/8233: allocate a camera, retain its record, read the three
+; strategy bytes and continue at the next four-byte command.
+; FIXME: Pending slots bridge the early car-owned creation order. An
+; occupied slot, bound record or allocation failure skips this command,
+; retaining the previous camera. Retail calls its error handler instead.
+; TODO: Restore retail controller lifetime/replacement and scene ordering.
+	longa
+	longi
+mapview1do
+	ldx	#0
+	bra	mapviewdo
+mapview2do
+	ldx	#2
+mapviewdo
+	lda	viewpending1,x
+	bne	.advance
+	lda.l	mapviewrecords,x
+	phx
+	tax
+	lda.w	vc_target,x
+	plx
+	cmp	#0
+	bne	.advance
+	phy
+	phx
+	lda.l	mapviewrecords,x
+	tay
+	a8
+	jsl	makeviewpending_l
+	a16
+	ply
+	bcc	.failed
+	txa
+	sta.w	viewpending1,y
+	ply
+	lda	mapbase&WM+1,y
+	sta.l	alx_stratptr,x
+	lda	mapbase&WM+2,y
+	sta.l	alx_stratptr+1,x
+	bra	.advance
+.failed
+	ply
+.advance
+	tya
+	clc
+	adc	#4
+	tax
+	jmp	newobjex
+mapviewrecords
+	dw	viewcamera1,viewcamera2
+
+; Terminal route binding, US $08:802c-$08:8048. Y is the command offset,
+; DB is the scene bank. The inline count word begins one byte later.
+; Keep the early cursor at the terminal opcode, as mapenddo does; later
+; map updates must not interpret packed point data as object commands.
+; The outer newobjs_l restores DB; this local dispatcher returns by RTS.
+; viewrouteptr addresses the shared GSU m_routeptr/m_routebank pair.
+; Route data must fit within its scene bank.
+maproutedo
+	tyx
+	stx	mapptr
+	iny
+	a16
+	tya
+	clc
+	adc	#mapbase&WM
+	sta.l	viewrouteptr
+	a8
+	phb
+	pla
+	a16
+	and	#$00ff
+	sta.l	viewrouteptr+2
+; FIXME: The early parser lacks retail's scene setup at $08:80ef.
+; Synchronize the map selector here when its packed route becomes active.
+	lda	map_number
+	and	#$00ff
+	sta.l	m_mapnumber
+	a8
+	rts
+
 
 
 	longa

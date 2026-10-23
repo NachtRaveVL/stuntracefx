@@ -252,9 +252,13 @@ minit_dynamics	; INITIALISE DYNAMICS.
 	sm	[m_lastroadobj],r0
 	sm	[m_lastmarkobj],r0
 	sm	[m_objects],r0
+; The separate car list shares the early dynamics heap lifetime.
+	sm	[m_avoidcarhead&WM],r0
 	sm	[m_dynframe],r0
 	sm	[m_testcar1],r0
 	sm	[m_test1],r0
+; FIXME: Early dynamics initialization is the retail GSU reset boundary.
+	sm	[m_viewroadflags],r0
 
 	minit_mem	m_dynmem,totaldynmem,r1
 ;	minit_mem	m_dynmem,1000,r1
@@ -307,6 +311,7 @@ mmake_obj
 
 	mtest	r1
 	beq	.error
+	nop
 
 
 ; clear object block.
@@ -418,6 +423,9 @@ mrem_obj
 mrem_car
 	mpush	r11
 	mpush	r1
+; FIXME: Early cars can be freed; unlink before their heap is reused.
+	mcall	munlink_avoidcar
+	nop
 
 	mloadw	r4,CAR_WHEELS,r1
 .loop
@@ -593,6 +601,14 @@ mmake_car
 	nop
 	sm	[m_dynvar1],r1	
 
+; Do not register or initialise a failed allocation.
+	mtest	r1
+	bne	.allocated
+	nop
+	stop
+	nop
+.allocated
+
 ; car strategy
 	iwt	r2,#mdo_car&WM
 	mstorew	r2,OBJ_STRATPTR,r1
@@ -616,6 +632,10 @@ mmake_car
 	mcall	minit_car
 	nop	
 
+; Initialise the new camera alignment field before the first dynamics tick.
+	iwt	r2,#32767
+	mstorew	r2,CAR_VELALIGN,r1
+
 ; set car flag
 	mloadw	r2,OBJ_TYPE,r1
 	msetreg	r2,OBJTYPE_car
@@ -627,6 +647,8 @@ mmake_car
 	nop
 	sm	[m_testcar1],r1
 .nfc
+	mcall	mlink_avoidcar
+	nop
 
 	stop
 	nop
@@ -1123,6 +1145,54 @@ rcosy	equr	5
 rprodlo	equr	7
 rprodhi	equr 	8
 rsiny	equr	9
+
+; Velocity alignment used by the retail camera's adaptive yaw lag.
+; US retail $04:bcba-$04:bd1f. r8 = car, current car matrix in m_wmat.
+; Normalise velocity, then accumulate its dot product with the forward row
+; at full product precision. At absolute ground speed below ten use $7fff.
+; r8 and return link preserved; r0-r7/r9/r12/r13 scratch.
+mcalcvelalign
+	mpush	r11
+	mpush	r8
+	mloadw	r1,OBJ_VELX,r8
+	mloadw	r2,OBJ_VELY,r8
+	mloadw	r3,OBJ_VELZ,r8
+	mcall	mnormalise16
+	nop
+	lms	r6,[m_wmat31]
+	from	r1
+	lmult
+	move	r7,r4
+	lms	r6,[m_wmat32]
+	from	r2
+	to	r5
+	lmult
+	with	r7
+	add	r4
+	adc	r5
+	lms	r6,[m_wmat33]
+	from	r3
+	to	r5
+	lmult
+	with	r7
+	add	r4
+	adc	r5
+	with	r7
+	add	r7
+	rol
+	move	r1,r0
+	mpop	r8
+	mloadw	r0,CAR_GNDSPEED,r8
+	mabs	r0,r0
+	iwt	r2,#10
+	cmp	r2
+	bpl	.moving
+	nop
+	iwt	r1,#32767
+.moving
+	mstorew	r1,CAR_VELALIGN,r8
+	mpop	pc
+	nop
 
 mdo_car
 	mpush	r11
@@ -2299,6 +2369,12 @@ rounddown	=	64
 	move	r1,r0
 	mstorew	r1,CAR_GNDSPEED,rcarptr	
 
+	mpush	r9
+	mcall	mcalcvelalign
+	nop
+	mpop	r9
+
+
 ;---------------------------------------------------------------------
 ; save Y acceleration for animation.
 
@@ -2424,6 +2500,19 @@ rounddown	=	64
 
 .end
 
+; FIXME: The early car tick has no retail $70 route-mode flags yet.
+; Use normal-mode index tracking when maproute has bound a table, after
+; movement and before the CPU camera pass. This includes dynoff cars.
+; Failed searches retain the last index, as in retail's normal branch.
+; TODO: Restore mode selection, steering and automatic advancement.
+; The separate mupdate_carroute entry retains query-only zero-on-failure.
+	lm	r0,[m_routeptr]
+	mtest	r0
+	beq	.nroute
+	nop
+	mcall	mtrack_carroute
+	nop
+.nroute
 	mpop	pc
 	nop
 

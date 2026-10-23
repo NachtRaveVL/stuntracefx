@@ -12,5 +12,40 @@
 	global	whitetyres_Istrat,redtyres_Istrat
 	global	bush1_Istrat,truck1_Istrat
 	global	objcar1_Istrat
-
 
+
+	global	setviewanim_l,nextviewanim_l,updateviewanim_l
+	global	viewanimtab
+	global	viewanim00,viewanim01,viewanim02,viewanim03,viewanim04
+	global	viewanim05,viewanim06,viewanim07,viewanim08,viewanim09
+	global	viewanim10,viewanim11,viewanim12,viewanim13,viewanim14
+	global	viewanim15,viewanim16,viewanim17,viewanim18
+	global	stepviewstrat_l
+	global	makeviewpending_l
+	global	bindviewobj_l,viewchoice_standard,viewchoice_large
+	global	initviewrecord_l
+	global	updateviewpreset_l,applyviewpreset
+	global	viewpresettab,viewpreset00,viewpreset01,viewpreset02
+	global	viewpreset03,viewpreset04,viewpreset05
+	global	getmapindex_l,getobjmapindex,getmapindex
+	global	updateviewcamera_l,snapview_l,snapview
+	global	viewintro_Istrat,viewintro_strat,viewhold_Istrat
+	global	viewhold_strat,viewsnap_Istrat,viewdrive_Istrat
+	global	viewdrive_strat,viewupdate_strat,viewanim01_Istrat
+	global	viewtrack_Istrat,viewtrack_strat
+	global	viewanim16_Istrat,viewanimdrive_strat
+	global	getroutepos_l,nextroutepoint_l
+	global	copycarvelocity_l,viewdrift_Istrat,viewdrift_strat
+	global	viewtilt_Istrat,viewtilt_strat
+	global	viewroad_Istrat,viewroad_strat
+	global	viewroaddrift30_Istrat,viewroaddrift30_strat
+	global	viewroaddrift40_Istrat,viewroaddrift40_strat
+	global	viewrouteahead_Istrat,viewrouteahead_strat
+	global	viewrouteside_Istrat,viewrouteside_strat
+	global	viewanim01_strat,viewanim02_Istrat,viewanim03_Istrat
+	global	viewanim04_Istrat,viewanim05_Istrat,viewanim06_Istrat
+	global	viewanim07_Istrat,viewanim10_Istrat,viewanim08_Istrat
+	global	viewanim09_Istrat,viewanimloop_Istrat,viewanimloop_strat
+	global	viewcockpit_Istrat,viewanim13_Istrat,viewanim12_Istrat
+	global	viewcockpitanim_Istrat,viewcockpitanim_strat,viewcockpit_strat
+

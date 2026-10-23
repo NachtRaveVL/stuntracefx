@@ -6,7 +6,7 @@
 	global	m_boostanim,m_rotx,m_bigx,m_bigy
 	global	m_clrbitmaps
 	global	m_x1,m_z1,m_xp1
-	global	mwmatrotp16,m_bigz
+	global	mwmatrotp16,mwmatrotp16t,m_bigz
 	global	m_drawlist,m_enddatabnk,m_enddata,m_bossmaxhp
 	global	m_viewposy,mvanishx,mvanishy,mcallarctan16
 	global	m_cnt
@@ -108,6 +108,24 @@
 	global	rtest3
 	global	rtest4
 	global	rtest5
+
+	global	mcalcvelalign
+	global	m_routeptr,m_routebank,viewrouteptr
+	global	m_viewroadflags
+	global	m_mapnumber
+	global	mfind_nearroute,mfind_carroute,mroutepointptr,mreadroutepoint
+	global	mupdate_carroute,mtrack_carroute
+	global	mselect_routepoint
+	global	mnext_routepoint,mprev_routepoint
+	global	mcar2point_Yangle
+	global	mheadingvector
+	global	mcarheadingvelocity
+	global	mroute_speedscale
+	global	mroute_carvelocity
+	global	mroute_steerprep
+	global	mroute_controls
+	global	mroute_avoidcars,m_avoidcarhead
+	global	mlink_avoidcar,munlink_avoidcar
 
 
 

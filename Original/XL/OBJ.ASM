@@ -166,6 +166,43 @@ wmatrotp16_l
 	rtl
 
 
+; Transposed world-matrix multiply, US retail $03:afd7.
+; Entry name reconstructed. Uses x1,y1,z1; returns bigx,bigy,bigz.
+; X,Y and register widths are preserved, as in wmatrotp16_l.
+
+wmatrotp16t_l
+	phx	
+	phy
+	php
+
+	ai16
+	lda	x1
+	sta.l	m_x1
+	lda	y1
+	sta.l	m_y1
+	lda	z1
+	sta.l	m_z1
+
+	a8
+	lda	#mwmatrotp16t>>16
+	ldx	#mwmatrotp16t&$ffff
+	jsl	runmario_l
+
+	a16
+	lda.l	m_bigx
+	sta	bigx
+	lda.l	m_bigy
+	sta	bigy
+	lda.l	m_bigz
+	sta	bigz
+
+	plp
+	ply
+	plx
+
+	rtl
+
+
 crotmat16_l
 	a16
 	lda	matxw

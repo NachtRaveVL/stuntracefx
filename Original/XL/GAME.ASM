@@ -8,6 +8,52 @@ getview_l
 	pha
 	plb
 
+; Use the prepared retail record for the early build's driving view.
+; docamerastrats has already advanced the record after dynamics.
+; Publishing it again must not advance its strategy or activity counter.
+; Other view modes and the early game-over camera retain the path below.
+	a8
+	lda	viewtype
+	cmp	#viewtype_mia
+	bne	.earlyview
+	ai16
+	ldx	viewpt
+	lda	al_viewpt,x
+	cmp	#viewcamera1
+	beq	.record
+	cmp	#viewcamera2
+	bne	.earlyview
+.record
+	tay
+	lda.w	vc_target,y
+	cmp	viewtoobj
+	bne	.earlyview
+; Use the same complete binding as the object-loop exclusion.
+	cmp	al_ptr,x
+	bne	.earlyview
+	tay
+	beq	.earlyview
+	txa
+	cmp.w	al_viewpt,y
+	bne	.earlyview
+	a8
+	s_jmp_alsflag	y,sflag2,.earlyview
+; Keep the early draw list's world-Z range test tied to the target.
+	lda.w	al_worldzh,y
+	sta	viewmapz
+; Retain the selected dynamics car for the early display path.
+	a16
+	lda.w	al_collobjptr,y
+	sta.l	m_testcar1
+	a8
+	ldy	al_viewpt,x
+	tyx
+	jsl	setviewrecord_l
+	jsl	getviewmat_l
+	plb
+	rtl
+
+.earlyview
 	a8
 
 	ifeq	1
@@ -317,24 +363,7 @@ getview_l
 
 .dviewrot
 
-	a16
-	lda viewrotxw
-	sta matxw
-	lda viewrotyw
-	sta matyw
-	lda viewrotzw
-	sta matzw
-
-
-.DoneMatAngles
-	ai8
-	jsl crotmat16_l
-
-	a16
-	copymat16 mat,wmat
-	a8
-
-
+	jsl	getviewmat_l
 
 
 	ifeq	1
@@ -439,6 +468,517 @@ getview_l
 
 
 
+
+
+
+; Publish a prepared camera record to the retail display state.
+; US $02:dad6-$02:db58. X = low-WRAM vc_ record, D = 0, DB = $7e.
+; Returns A16/I16, X/Y preserved.
+; A, x1/z1 and arithmetic flags are scratch. Position and angles must
+; already be current; this entry does not advance the camera or matrix.
+; The two map references normally describe camera and target separately;
+; vcf_cameramap makes both use the camera cell. The early renderer still
+; has its own viewmapz range byte, which is not a retail map reference.
+setviewrecord_l
+	ai16
+	lda	vc_worldx,x
+	sta	viewposx
+	lda	vc_worldy,x
+	sta	viewposy
+	lda	vc_worldz,x
+	sta	viewposz
+	lda	vc_rotx,x
+	sta	viewrotxw
+	lda	vc_roty,x
+	sta	viewrotyw
+	lda	vc_rotz,x
+	sta	viewrotzw
+	phx
+	lda	vc_target,x
+	tax
+	lda.l	alx_collobjptr,x
+	sta.l	m_testcar1
+	plx
+	phx
+	lda	viewposx
+	sta	x1
+	lda	viewposz
+	sta	z1
+	jsl	getmapindex_l
+	sta	viewmapindex
+	lda	x1
+	sta	viewmapcol
+	lda	z1
+	sta	viewmaprow
+	plx
+	lda	vc_flags,x
+	and	#vcf_cameramap
+	beq	.target
+	lda	viewmapindex
+	sta	targetmapindex
+	lda	viewmapcol
+	sta	targetmapcol
+	lda	viewmaprow
+	sta	targetmaprow
+	bra	.done
+.target
+	phx
+	lda	vc_target,x
+	tax
+	lda.l	alx_worldx,x
+	sta	x1
+	lda.l	alx_worldz,x
+	sta	z1
+	jsl	getmapindex_l
+	sta	targetmapindex
+	lda	x1
+	sta	targetmapcol
+	lda	z1
+	sta	targetmaprow
+	plx
+.done
+	rtl
+
+
+; Retail camera position update, US $02:db71-$02:de44.
+; X = vc_ record, I16, D = 0, DB = $7e; returns A16/I16, X preserved.
+; Uses the selected car in m_testcar1 for steering/velocity alignment.
+; With world-offset plus position-lag flags, the retail path leaves Y to
+; the caller: it must already identify the target object in that case.
+; Matrix and angle temporaries, A/Y and the viewpos* work words are scratch.
+; The controller strategy supplies its prepared record.
+getviewpos_l
+	phx
+	ai16
+	phx
+	lda	vc_target,x
+	tax
+	stx	viewpostarget
+	plx
+	lda	vc_flags,x
+	sta	viewposflags
+	lda	viewposflags
+	and	#vcf_fixedpos
+	beq	.speedcheck
+	brl	.done
+.speedcheck
+	a16
+	lda	viewposflags
+	and	#vcf_speedoff
+	bne	.speed
+	brl	.nospeed
+.speed
+	phx
+	ldx	viewpostarget
+	lda.l	alx_collobjptr,x
+	tax
+	lda.l	mrambank+car_gndspeed,x
+	bpl	.speedabs
+	nega
+.speedabs
+	plx
+	asra
+	bpl	.speedhalf
+	adc	#$0000
+.speedhalf
+	sta	z1
+	asra
+	asra
+	bpl	.speedquarter
+	adc	#$0000
+.speedquarter
+	sta	y1
+	stz	x1
+	lda	x1
+	nega
+	sta	vc_speedx,x
+	lda	y1
+	nega
+	sta	vc_speedy,x
+	lda	z1
+	nega
+	sta	vc_speedz,x
+	bra	.offset
+.nospeed
+	stz	vc_speedx,x
+	stz	vc_speedy,x
+	stz	vc_speedz,x
+.offset
+	lda	vc_offx,x
+	sta	x1
+	lda	vc_offy,x
+	sta	y1
+	lda	vc_offz,x
+	sta	z1
+	lda	viewposflags
+	bit	#vcf_worldoff
+	beq	.orbit
+	stz	matxw
+	stz	matyw
+	stz	matzw
+	jmp	.rotate
+.orbit
+	bit	#vcf_yawlagmask
+	bne	.lag
+	ldy	viewpostarget
+	lda.w	al_roty,y
+	xba
+	and	#$ff00
+	nega
+	sta	vc_orbity,x
+	sta	matyw
+	lda.w	al_rotx,y
+	xba
+	and	#$ff00
+	asra
+	asra
+	sta	vc_orbitx,x
+	sta	matxw
+	stz	matzw
+	jmp	.rotate
+.lag
+	ldy	viewpostarget
+	phx
+	lda.l	m_testcar1
+	tax
+	lda.l	mrambank+car_flags,x
+	plx
+	and	#$000c
+	beq	.yawdelta
+	lda	viewposflags
+	and	#vcf_nosteerlag
+	bne	.yawdelta
+	lda.w	al_roty,y
+	xba
+	and	#$ff00
+	nega
+	sec
+	sbc	vc_orbity,x
+	asra
+	clc
+	adc	vc_orbity,x
+	sta	vc_orbity,x
+	sta	matyw
+	jmp	.pitch
+.yawdelta
+	lda.w	al_roty,y
+	xba
+	and	#$ff00
+	nega
+	sec
+	sbc	vc_orbity,x
+	sta	viewposdelta
+	lda	viewposflags
+	and	#vcf_yawlagmask
+	cmp	#$0000
+	beq	.directyaw
+	cmp	#vcf_yawlagauto
+	beq	.autolag
+	cmp	#vcf_yawlag4
+	beq	.quarter
+	cmp	#vcf_yawlag12
+	beq	.lag12
+	cmp	#vcf_yawlag25
+	beq	.lag25
+.directyaw
+	lda	viewposdelta
+	bra	.addyaw
+.autolag
+	phx
+	lda.l	m_testcar1
+	tax
+	lda.l	mrambank+car_velalign,x
+	bpl	.alignabs
+	nega
+.alignabs
+	plx
+	cmp	#$7ef4
+	bpl	.half
+	lda	viewposdelta
+	asra
+	asra
+	bpl	.autoquarter
+	adc	#$0000
+.autoquarter
+	bra	.addyaw
+.half
+	lda	viewposdelta
+	asra
+	bpl	.halfdone
+	adc	#$0000
+.halfdone
+	bra	.addyaw
+.quarter
+	lda	viewposdelta
+	asra
+	asra
+	bpl	.quarterdone
+	adc	#$0000
+.quarterdone
+	bra	.addyaw
+.lag12
+	lda	viewposdelta
+	jsl	perc15a_l
+	asra
+	bpl	.lag12done
+	adc	#$0000
+.lag12done
+	bra	.addyaw
+.lag25
+	lda	viewposdelta
+	jsl	perc15a_l
+	asra
+	asra
+	bpl	.addyaw
+	adc	#$0000
+.addyaw
+	clc
+	adc	vc_orbity,x
+	sta	vc_orbity,x
+	sta	matyw
+.pitch
+	lda.w	al_rotx,y
+	xba
+	and	#$ff00
+	asra
+	asra
+	bpl	.pitchdone
+	adc	#$0000
+.pitchdone
+	sta	vc_orbitx,x
+	sta	matxw
+	stz	matzw
+.rotate
+	phx
+	lda	matxw
+	clc
+	adc	vc_biasx,x
+	nega
+	sta	matxw
+	lda	matyw
+	clc
+	adc	vc_biasy,x
+	sta	matyw
+	lda	matzw
+	clc
+	adc	vc_biasz,x
+	sta	matzw
+	a8
+	jsl	crotmat16_l
+	a16
+	copymat16	mat,wmat
+	a8
+	jsl	wmatrotp16t_l
+	ai16
+	plx
+	lda	viewposflags
+	bit	#vcf_poslag
+	beq	.heightcheck
+	brl	.poslag
+.heightcheck
+	bit	#vcf_heightlag
+	bne	.heightlag
+	ldy	viewpostarget
+	lda.w	al_worldx,y
+	clc
+	adc	bigx
+	sta	vc_worldx,x
+	lda.w	al_worldy,y
+	clc
+	adc	bigy
+	sta	vc_worldy,x
+	lda.w	al_worldz,y
+	clc
+	adc	bigz
+	sta	vc_worldz,x
+	bra	.done
+.heightlag
+	ldy	viewpostarget
+	lda.w	al_worldx,y
+	clc
+	adc	bigx
+	sta	vc_worldx,x
+	lda.w	al_worldy,y
+	clc
+	adc	bigy
+	sec
+	sbc	vc_worldy,x
+	bmi	.heightstep
+	asra
+.heightstep
+	asra
+	clc
+	adc	vc_worldy,x
+	sta	vc_worldy,x
+	lda.w	al_worldz,y
+	clc
+	adc	bigz
+	sta	vc_worldz,x
+	bra	.done
+.poslag
+	lda.w	al_worldx,y
+	clc
+	adc	bigx
+	sec
+	sbc	vc_worldx,x
+	asra
+	asra
+	clc
+	adc	vc_worldx,x
+	sta	vc_worldx,x
+	lda.w	al_worldy,y
+	clc
+	adc	bigy
+	sec
+	sbc	vc_worldy,x
+	asra
+	asra
+	asra
+	clc
+	adc	vc_worldy,x
+	sta	vc_worldy,x
+	lda.w	al_worldz,y
+	clc
+	adc	bigz
+	sec
+	sbc	vc_worldz,x
+	asra
+	asra
+	clc
+	adc	vc_worldz,x
+	sta	vc_worldz,x
+	bra	.done
+.done
+	plx
+	rtl
+
+; Build the world-view matrix from the 16 bit view angles.
+; US retail $02:df24. Shared with the early getview_l camera path.
+; D = 0, DB = $7e. Returns A8/I8; matrix-helper temporaries scratch.
+
+getviewmat_l
+	a16
+	lda viewrotxw
+	sta matxw
+	lda viewrotyw
+	sta matyw
+	lda viewrotzw
+	sta matzw
+
+
+	ai8
+	jsl crotmat16_l
+
+	a16
+	copymat16 mat,wmat
+	a8
+	rtl
+
+
+; Update the angles of a retail camera record, US retail $02:de45.
+; Entry name and field names reconstructed.
+; X = camera record in low Work RAM, D = 0, DB = $7e.
+; X and P are preserved; A,Y and angle-helper temporaries are scratch.
+; Position/record setup belongs to the retail camera caller, not getview_l.
+
+getviewangles_l
+	php
+	ai16
+	lda	vc_flags,x
+	and	#vcf_lookat
+	bne	.lookat
+	brl	.follow
+.lookat
+	ai16
+	txy
+	lda	vc_target,x
+	tax
+	lda.w	vc_worldx,y
+	sta	x2
+	lda.w	vc_worldy,y
+	sta	y2
+	lda.w	vc_worldz,y
+	sta	z2
+	jsl	Yanglexabs16_l
+	clc
+	adc	#$8000
+	sta.w	vc_roty,y
+	lda.w	vc_flags,y
+	and	#vcf_pitchlag
+	bne	.pitchlag
+	jsl	Xanglexabs16_l
+	bra	.pitchdone
+.pitchlag
+	jsl	Xanglexabs16_l
+	sec
+	sbc.w	vc_rotx,y
+	asra
+	asra
+	clc
+	adc.w	vc_rotx,y
+.pitchdone
+	sta.w	vc_rotx,y
+	lda	al_rotz,x
+	and	#$ff
+	xba
+	nega
+	asra
+	asra
+	sec
+	sbc.w	vc_rotz,y
+	asra
+	clc
+	adc.w	vc_rotz,y
+	sta.w	vc_rotz,y
+	tyx
+	bra	.rollcheck
+.follow
+	a16
+	lda	vc_flags,x
+	and	#vcf_followrot
+	beq	.rollcheck
+	txy
+	lda	vc_target,x
+	tax
+	lda	al_rotx,x
+	and	#$ff
+	xba
+	nega
+	sec
+	sbc.w	vc_rotx,y
+	asra
+	clc
+	adc.w	vc_rotx,y
+	sta.w	vc_rotx,y
+	lda	al_roty,x
+	and	#$ff
+	xba
+	nega
+	sec
+	sbc.w	vc_roty,y
+	asra
+	clc
+	adc.w	vc_roty,y
+	sta.w	vc_roty,y
+	lda	al_rotz,x
+	and	#$ff
+	xba
+	nega
+	sec
+	sbc.w	vc_rotz,y
+	asra
+	clc
+	adc.w	vc_rotz,y
+	sta.w	vc_rotz,y
+	tyx
+.rollcheck
+	lda	vc_flags,x
+	and	#vcf_roll
+	bne	.done
+	stz	vc_rotz,x
+.done
+	plp
+	rtl
 
 
 	IFEQ	1

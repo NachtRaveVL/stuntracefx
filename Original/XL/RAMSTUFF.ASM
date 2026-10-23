@@ -22,7 +22,8 @@ runmario_l
 	ora	#%00011000	;nasty
 	sta	mio_mode
 
-     	stx	mr15
+     	stz	mflags		; clear SFR before starting, as in retail
+	stx	mr15
 .dowait	
 	inc	mariotimer
 	bne	.n

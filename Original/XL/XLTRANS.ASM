@@ -54,6 +54,9 @@ transfer_l
 	blink
 .ok
 
+; Camera records advance once per frame, with the updated car dynamics.
+	jsr	docamerastrats
+
 stratsfrozen
 
 
@@ -98,8 +101,10 @@ stratsfrozen
 	lda.l	alx_viewpt,x
 	sta	viewpt	
 	stx	viewtoobj
-	jsl	calcbgscroll_l
 	jsl	getview_l
+	ai16
+; Scroll uses this frame's camera angles, after the view is calculated.
+	jsl	calcbgscroll_l
 	jsl	showview_l
 	ai16
 	jsl	do_3d_display_l
@@ -697,7 +702,36 @@ dostrats
 	ldx	alxlst			;do all strategies
 
 stratlp	stz	aldead
-	
+
+; A scene may prepare a camera before its car runs its initializer.
+; FIXME: The early object order needs this explicit pending wait; the
+; retail scene/lifetime scheduler has not yet been restored.
+	cpx	viewpending1
+	beq	.nextobject
+	cpx	viewpending2
+	beq	.nextobject
+
+; Bound camera controllers run in docamerastrats after dynamics.
+; Match both directions of the owner/record binding so another object's
+; al_viewpt cannot suppress its ordinary strategy.
+	a16
+	lda	al_viewpt,x
+	cmp	#viewcamera1
+	beq	.viewrecord
+	cmp	#viewcamera2
+	bne	.object
+.viewrecord
+	tay
+	lda.w	vc_target,y
+	cmp	al_ptr,x
+	bne	.object
+	tay
+	beq	.object
+	txa
+	cmp.w	al_viewpt,y
+	beq	.nextobject
+.object
+	a8
 	phx
 	jsl	do_strat_l
 	plx
@@ -705,6 +739,8 @@ stratlp	stz	aldead
 	lda	aldead
 	bne	.killal
 
+.nextobject
+	a8
 	ldy	al_next,x
 .killed	tyx
 	bne	stratlp
@@ -717,6 +753,71 @@ stratlp	stz	aldead
 	
 	bra	.killed
 .cont	plb
+	rts
+
+
+; Camera portion of the retail activity loop at US $03:d388, separated
+; from drawing a view. Walk the object list, not the selected view, so
+; each bound camera advances once even when its view is not displayed.
+; A8/I16, D = 0; DB and m_testcar1 preserved, A/X/Y scratch.
+; FIXME: The early car strategies still run before dynamics. This second
+; pass keeps their ordering while the retail object scheduler is pending.
+; Pending cameras wait for their owner; early game-over cameras retain
+; the car-owned path. Other view modes do not stop the bound strategies.
+; TODO: Restore callback-requested removal and camera/owner teardown.
+; None of the currently restored camera strategies sets aldead.
+docamerastrats
+	a8i16
+	phb
+	lda	#$7e
+	pha
+	plb
+	a16
+	lda.l	m_testcar1
+	pha
+	a8
+	ldx	alxlst
+	beq	.done
+.loop
+	cpx	viewpending1
+	beq	.next
+	cpx	viewpending2
+	beq	.next
+	a16
+	lda	al_viewpt,x
+	cmp	#viewcamera1
+	beq	.record
+	cmp	#viewcamera2
+	bne	.next
+.record
+	tay
+	lda.w	vc_target,y
+	cmp	al_ptr,x
+	bne	.next
+	tay
+	beq	.next
+	txa
+	cmp.w	al_viewpt,y
+	bne	.next
+	a8
+	s_jmp_alsflag	y,sflag2,.next
+; Position lag must use this camera's car, including offscreen cameras.
+	a16
+	lda.w	al_collobjptr,y
+	sta.l	m_testcar1
+	a8
+	jsl	stepviewstrat_l
+.next
+	a8
+	ldy	al_next,x
+	tyx
+	bne	.loop
+.done
+	a16
+	pla
+	sta.l	m_testcar1
+	a8
+	plb
 	rts
 
 

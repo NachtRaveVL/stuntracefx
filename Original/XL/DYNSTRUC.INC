@@ -152,6 +152,40 @@ CARflag_makestop	equ	32768
 	
 	struct		CAR_BOOSTTIME,2
 
+; Retail camera turn lag uses the velocity/forward-axis dot product.
+; Appended here to retain all existing early-build car field offsets.
+	struct		CAR_VELALIGN,2
+
+; Last route query index (retail car $58), one-based; zero = no result.
+; Keep the early CAR_NEARMARKER object pointer and all old offsets intact.
+; mmake_obj clears the complete enlarged block, including this field.
+	struct		CAR_ROUTEINDEX,2
+
+; Retail car $70 packed-route control word. Keep it separate from the
+; early CAR_FLAGS word; bit 1 selects reverse route traversal.
+; TODO: Restore the retail producers for this and its remaining bits.
+CARroutemode_reverse	equ	2
+CARroutemode_slowspeed	equ	32
+	struct		CAR_ROUTEMODE,2
+
+; Retail car $42 prepared control word. Route AI writes this before the
+; common car-control consumer applies collision and strategy adjustments.
+	struct		CAR_CONTROL,2
+
+; Retail car $7c/$7e route-AI counters. Appended to preserve every early
+; structure offset. FIXME: Their original source names are not known.
+	struct		CAR_AIDELAY,2
+	struct		CAR_AISTUCK,2
+
+; Retail car $74/$16 avoidance-list link and skip flags. Keep these
+; separate from the early mixed object list and OBJ_TYPE field.
+; FIXME: Names reconstructed; only flag $0400 is identified here.
+; mlink_avoidcar restores list insertion; early lifetime hooks maintain it.
+; TODO: Restore the retail skip-flag producer.
+CARaiflag_skipavoid	equ	$0400
+	struct		CAR_AINEXT,2
+	struct		CAR_AIFLAGS,2
+
  	
 	struct		CAR_LEN,0	
 
