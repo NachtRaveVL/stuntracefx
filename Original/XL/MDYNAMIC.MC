@@ -2500,11 +2500,11 @@ rounddown	=	64
 
 .end
 
-; FIXME: The early car tick has no retail $70 route-mode flags yet.
+; FIXME: The early car tick lacks the retail route-mode producers.
 ; Use normal-mode index tracking when maproute has bound a table, after
 ; movement and before the CPU camera pass. This includes dynoff cars.
 ; Failed searches retain the last index, as in retail's normal branch.
-; TODO: Restore mode selection, steering and automatic advancement.
+; TODO: Connect mroute_modestep after field/render-list integration.
 ; The separate mupdate_carroute entry retains query-only zero-on-failure.
 	lm	r0,[m_routeptr]
 	mtest	r0
@@ -5727,7 +5727,7 @@ car1_anims
 ; Build the matrix from negated Z/Y/X angles, transpose, save world XYZ
 ; and update wheel poses. r8/r10 preserved; other regs/flags scratch.
 ; Uses all three angles; the early wheel tick's zero-roll path differs.
-; TODO: Connect the retail route-mode transition caller.
+; mroute_modestep restores the route-mode transition caller.
 mroute_setupcar
 	mpush	r11
 	mpush	r8

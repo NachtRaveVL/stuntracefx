@@ -4,7 +4,7 @@
 ;    Giles Goddard
 
 
-	malc	m_aitest1,2
+	zmalc	m_aitest1,2
 
 ; Retail car-AI scratch, separate from the early mixed object list.
 ; mlink_avoidcar binds this list; early dynamics reset/removal maintain it.
@@ -606,8 +606,8 @@ mroute_speedscale
 ; r14 = costab plus the yaw high byte. r7-r10/r12/r13 are preserved;
 ; r11 is call scratch, RAM bank 0 and ROM bank 0 on successful return.
 ; Point and table arithmetic retains retail's unchecked 16-bit wrap.
-; TODO: Connect this path when the enclosing retail route-mode field
-; and its dispatcher at $04:c65a-$04:c72e have been reconstructed.
+; FIXME: Callable push/return replaces retail $c72f's initial pop r11.
+; mroute_modestep supplies its extra-frame unwind on a thaw transition.
 mroute_carvelocity
 	mpush	r11
 	mloadw	r0,CAR_ROUTEINDEX,r8
@@ -1403,7 +1403,7 @@ mroutepointptr
 ; index on failure. r8/r10 preserved; search scratch and r11 destroyed.
 ; FIXME: Extracted as a callable block with its own push/return. Retail
 ; continues to next-point/steering on success and $04:c933 on both paths.
-; mroute_drivestep restores those consumers; the mode dispatcher is TODO.
+; mroute_drivestep restores those consumers; mroute_modestep dispatches.
 mtrack_carroute
 	mpush	r11
 	mloadw	r1,OBJ_WORLDX,r8
@@ -1450,7 +1450,7 @@ mupdate_carroute
 ; r8/r10 preserved; route/math scratch, r0-r7/r9/r11-r14/flags destroyed.
 ; Shares mcar2point_Yangle's documented -32768 ROM-layout edge case.
 ; FIXME: The entry push and calls join the previously extracted blocks.
-; TODO: Restore the enclosing mode/skip dispatcher before live scheduling.
+; mroute_modestep supplies mode/skip selection; live scheduling is TODO.
 mroute_drivestep
 	mpush	r11
 	mcall	mtrack_carroute
@@ -1839,7 +1839,7 @@ mread_carroutetiming
 ; r8/r10 preserved; r0-r7/r9/r11-r14/flags destroyed, RAM bank 0.
 ; FIXME: Joins extracted helpers with calls, supplies reference car as
 ; an argument, and stops target preparation before attached render lists.
-; TODO: Restore $04:c6e4-$04:c729 and the enclosing mode dispatcher.
+; TODO: Restore $04:c6e4-$04:c729; mroute_modestep supplies dispatch.
 ; Not scheduled by the early car tick. Retains native signed overflow
 ; behavior and mcar2point_Yangle's documented -32768 ROM-layout edge.
 mroute_frozenstep
@@ -1882,4 +1882,141 @@ mroute_frozenstep
 	mcall	mroute_advancecar
 	nop
 	mpop	pc
+	nop
+
+
+; Route modes, US $04:c3d5-$04:c477 and $04:c4b7-$04:c4bd.
+; r8 = car, r2 = reference car for frozen timing; RAM bank 0.
+; AIFLAGS $0400 selects frozen motion, ROUTEMODE $0004 query-only.
+; Preserve native initialization/thaw ordering and skip-route avoidance.
+; Return zero after frozen motion, one after normal/query-only work.
+; Thaw consumes an extra caller return word, as in retail $04:c72f,
+; and returns velocity's r0 to that caller, skipping further dispatch.
+; r8 preserved; r10 preserved except thaw (-2); other regs/flags scratch.
+; FIXME: Saved reference argument replaces the unbound player global.
+; TODO: Restore slot/flag/list producers and attached render updates.
+mroute_modestep
+	mpush	r11
+	mpush	r2
+	iwt	r1,#CAR_AIFLAGS
+	with	r1
+	add	r8
+	to	r1
+	ldw	[r1]
+	iwt	r0,#CARaiflag_skipavoid
+	and	r1
+	bne	.frozen
+	nop
+	miwt	pc,.normal&WM
+	nop
+.frozen
+	nop
+	iwt	r0,#CAR_RENDERLINK
+	add	r8
+	ldw	[r0]
+	mtest	r0
+	beq	.checkinit
+	nop
+	iwt	r0,#CAR_ROUTESTATE
+	add	r8
+	ldw	[r0]
+	iwt	r1,#CARroutestate_attached
+	or	r1
+	sbk
+.checkinit
+	iwt	r0,#CAR_ROUTESTATE
+	add	r8
+	ldw	[r0]
+	iwt	r1,#CARroutestate_frozen
+	to	r2
+	and	r1
+	bne	.frozenmode
+	nop
+	or	r1
+	sbk
+	ibt	r1,#-1
+	iwt	r0,#CAR_ROUTECOUNT
+	add	r8
+	from	r1
+	stw	[r0]
+	ibt	r1,#0
+	mstorew	r1,OBJ_VELX,r8
+	mstorew	r1,OBJ_VELY,r8
+	mstorew	r1,OBJ_VELZ,r8
+.frozenmode
+	mloadw	r2,CAR_ROUTEMODE,r8
+	iwt	r0,#CARroutemode_query
+	and	r2
+	beq	.frozenmove
+	nop
+	miwt	pc,.query&WM
+	nop
+.frozenmove
+	mpop	r2
+	mcall	mroute_frozenstep
+	nop
+	miwt	pc,.frozenreturn&WM
+	nop
+.normal
+	iwt	r0,#CAR_ROUTESTATE
+	add	r8
+	ldw	[r0]
+	iwt	r1,#CARroutestate_frozen
+	to	r2
+	and	r1
+	beq	.normalmode
+	nop
+	bic	r1
+	sbk
+	mcall	mroute_setupcar
+	nop
+	dec	r10
+	dec	r10
+	mpop	r11
+	mcall	mroute_carvelocity
+	nop
+	mpop	pc
+	nop
+.normalmode
+	mloadw	r2,CAR_ROUTEMODE,r8
+	iwt	r0,#CARroutemode_query
+	and	r2
+	beq	.checkskip
+	nop
+	miwt	pc,.query&WM
+	nop
+.checkskip
+	iwt	r2,#CAR_MOTIONFLAGS
+	with	r2
+	add	r8
+	to	r2
+	ldw	[r2]
+	iwt	r0,#CARmotion_skiproute
+	and	r2
+	beq	.drive
+	nop
+	miwt	pc,.avoid&WM
+	nop
+.drive
+	mcall	mroute_drivestep
+	nop
+	miwt	pc,.done&WM
+	nop
+.avoid
+	mcall	mroute_avoidcars
+	nop
+	ibt	r0,#1
+.done
+	dec	r10
+	dec	r10
+	mpop	pc
+	nop
+.frozenreturn
+	ibt	r0,#0
+	mpop	pc
+	nop
+.query
+	mcall	mupdate_carroute
+	nop
+	miwt	pc,.done&WM
 	nop

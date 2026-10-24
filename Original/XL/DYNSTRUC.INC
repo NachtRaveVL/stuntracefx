@@ -165,6 +165,7 @@ CARflag_makestop	equ	32768
 ; early CAR_FLAGS word; bit 1 selects reverse route traversal.
 ; TODO: Restore the retail producers for this and its remaining bits.
 CARroutemode_reverse	equ	2
+CARroutemode_query	equ	4
 CARroutemode_slowspeed	equ	32
 	struct		CAR_ROUTEMODE,2
 
@@ -190,9 +191,19 @@ CARaiflag_skipavoid	equ	$0400
 ; Retail car $72/$88 frozen-route countdown and slot index.
 ; Appended to retain all early offsets; mmake_obj clears both words.
 ; FIXME: Names reconstructed. Slots must differ by -3..3 for the timing
-; table. TODO: Restore the retail slot assignment and mode dispatcher.
+; table. TODO: Restore the retail slot assignment.
 	struct		CAR_ROUTECOUNT,2
 	struct		CAR_ROUTESLOT,2
+
+; Retail car $1c/$2c/$18 state, motion flags and attached render list.
+; Keep these separate from early object type/collision fields.
+; FIXME: Names reconstructed. TODO: Restore flag/list producers.
+CARroutestate_frozen	equ	$0010
+CARroutestate_attached	equ	$0040
+CARmotion_skiproute	equ	$0040
+	struct		CAR_ROUTESTATE,2
+	struct		CAR_MOTIONFLAGS,2
+	struct		CAR_RENDERLINK,2
 
  	
 	struct		CAR_LEN,0	

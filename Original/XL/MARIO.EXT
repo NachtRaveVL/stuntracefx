@@ -131,6 +131,7 @@
 	global	mread_carflags
 	global	mread_carroutetiming,mroute_frozenstep
 	global	mroute_setupcar,mroute_wheelpose
+	global	mroute_modestep
 
 
 

@@ -380,9 +380,11 @@ mmaxvistab	=	100	; was 128
 	malc	m_whlrotposZ,2
 
 	malc	m_carflags,2
-	malc	m_carworldx,2
-	malc	m_carworldy,2
-	malc	m_carworldz,2
+; Dynamics words moved to zero page for the appended route-state fields.
+; Keep each XYZ/scratch/friction group contiguous.
+	zmalc	m_carworldx,2
+	zmalc	m_carworldy,2
+	zmalc	m_carworldz,2
 	malc	m_test1,2
 	malc	m_test2,2
 	
@@ -393,12 +395,12 @@ mmaxvistab	=	100	; was 128
 	malc	m_frictdispy,2
 	malc	m_frictdispz,2
 
-	malc	m_t1,2
-	malc	m_t2,2
-	malc	m_t3,2
-	malc	m_t4,2
-	malc	m_t5,2
-	malc	m_t6,2
+	zmalc	m_t1,2
+	zmalc	m_t2,2
+	zmalc	m_t3,2
+	zmalc	m_t4,2
+	zmalc	m_t5,2
+	zmalc	m_t6,2
 	
 	malc	m_normX,2
 	malc	m_normY,2
@@ -421,17 +423,16 @@ mmaxvistab	=	100	; was 128
 	malc	m_whlspringx,2
 	malc	m_whlspringy,2
 	malc	m_whlspringz,2
-; Keep the three CPU/GSU argument words contiguous. Moving these and
-; the route pair/map number to zero page makes room for the two appended
-; car words (4 cars * 4 bytes) without reducing the dynamics heap.
+; Keep the CPU/GSU argument triple contiguous in zero page.
+; The appended car fields require the additional heap reservation.
 	zmalc	m_dynvar1,2
 	zmalc	m_dynvar2,2
 	zmalc	m_dynvar3,2
 	malc	m_lastroadobj,2
 	malc	m_lastmarkobj,2
 
-	malc	m_offroadfriction,2
-	malc	m_onroadfriction,2
+	zmalc	m_offroadfriction,2
+	zmalc	m_onroadfriction,2
 	malc	m_objspeed,2
 	
 	malc	m_groupblocks,(2*5)*max_groups
