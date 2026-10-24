@@ -132,6 +132,9 @@
 	global	mread_carroutetiming,mroute_frozenstep
 	global	mroute_setupcar,mroute_wheelpose
 	global	mroute_modestep
+	global	mcoalesce_dynamics
+	global	mput_carrenderlink,mput_renderlink
+	global	mclear_renderlist,msweep_renderlist
 
 
 

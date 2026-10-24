@@ -180,10 +180,11 @@ CARroutemode_slowspeed	equ	32
 
 ; Retail car $74/$16 avoidance-list link and skip flags. Keep these
 ; separate from the early mixed object list and OBJ_TYPE field.
-; FIXME: Names reconstructed; only flag $0400 is identified here.
+; FIXME: Names reconstructed; flags $0080/$0400 are identified here.
 ; mlink_avoidcar restores list insertion; early lifetime hooks maintain it.
 ; mread_carflags reads the retail definition's flags, including $0400.
 ; TODO: Restore its constructor caller; the early cardef format differs.
+CARaiflag_skiprenderlink	equ	$0080
 CARaiflag_skipavoid	equ	$0400
 	struct		CAR_AINEXT,2
 	struct		CAR_AIFLAGS,2
@@ -324,6 +325,22 @@ TOBJflag_stratflag1	equ	2
 
 
 	PRINTF	"hand obj struct size = ",HANDOBJ_LEN,"%n"
+
+; Retail attached render records. The first four bytes are the existing
+; dynamics allocator's next/size header; ownership uses a separate link.
+; FIXME: Names reconstructed. These are not early OBJ/CAR/WHL offsets.
+RL_NEXTFREE	equ	0
+RL_SIZE		equ	2
+RL_VELX		equ	4
+RL_VELZ		equ	6
+RL_WORLDX	equ	8
+RL_WORLDZ	equ	10
+RL_OBJECT	equ	12
+RL_NEXT		equ	14
+RL_FLAGS	equ	16
+RL_LEN		equ	18
+RLflag_used	equ	1
+RLflag_hold	equ	4
 
 
 ;******************************************************************************************

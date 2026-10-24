@@ -5857,6 +5857,287 @@ mroute_wheelpose
 	mpop	pc
 	nop
 
+; Coalesce the dynamics heap, US $04:8898-$04:88d4.
+; The surviving macro matches retail's first-heap pass. Negative blocks
+; and nonadjacent free links are retained. A pass does not necessarily
+; combine an entire run; repeated passes may be needed after bulk frees.
+; r0-r3/flags scratch; other registers/banks preserved; callable return.
+; FIXME: Retail continues with a second heap, absent from this early tree.
+; The early frame's coalescing call remains disabled.
+mcoalesce_dynamics
+	munfrag_mem	m_dynmem,r1,r2,r3
+	move	pc,r11
+	nop
+
+
+; Car render-record gate, US $04:a345-$04:a353.
+; r6 = owner car, r8 = source object; RAM bank 0.
+; AIFLAGS $0080 suppresses both lookup and allocation.
+; r6/r8/r10 preserved; r0/r7/r9/r11/flags scratch.
+; FIXME: The shared retail owner layout is adapted to CAR_AIFLAGS and
+; CAR_RENDERLINK. Wheel callers need their own head/flag mapping.
+mput_carrenderlink
+	iwt	r0,#CAR_AIFLAGS
+	add	r6
+	ldw	[r0]
+	iwt	r9,#CARaiflag_skiprenderlink
+	and	r9
+	beq	.put
+	nop
+	move	pc,r11
+	nop
+.put
+	mpush	r11
+	mpush	r6
+	iwt	r0,#CAR_RENDERLINK
+	add	r6
+	move	r6,r0
+	mcall	mput_renderlink
+	nop
+	mpop	r6
+	mpop	pc
+	nop
+
+
+; Attached render records, US $04:a354-$04:a440.
+; r6 = address of the owner's render-head word, r8 = source object.
+; Reuse the record keyed by r8, or allocate RL_LEN from m_dynmem and
+; prepend it. Copy source X/Z velocity/position unless RLflag_hold;
+; always set RLflag_used. Exhaustion leaves the owner list unchanged.
+; r6/r8/r10/r11 preserved; r0/r7/r9/flags scratch; RAM bank 0.
+; FIXME: Head-word argument replaces retail owner+$18. The caller must
+; apply retail $a345's owner flag $0080 exclusion before this entry.
+; TODO: Restore wheel head storage, producers and scene/frame consumers.
+; Records share the dynamics heap but do not join m_objects. No extra
+; capacity is reserved here; the existing allocation-failure path applies.
+mput_renderlink
+	to	r7
+	ldw	[r6]
+	mtest	r7
+	beq	.allocate
+	nop
+.find
+	mloadw	r0,RL_OBJECT,r7
+	cmp	r8
+	bne	.next
+	nop
+	miwt	pc,.update&WM
+	nop
+.next
+	mloadw	r0,RL_NEXT,r7
+	moves	r7,r0
+	bne	.find
+	nop
+.allocate
+	mpush	r8
+	iwt	r9,#m_dynmem&WM
+	cache
+	ibt	r7,#RL_LEN
+	mpush	r9
+.exact
+	to	r8
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	ldw	[r9]
+	sub	r7
+	beq	.exactfit
+	nop
+	moves	r9,r8
+	bne	.exact
+	nop
+	mpop	r9
+.larger
+	to	r8
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	ldw	[r9]
+	sub	r7
+	bpl	.split
+	nop
+	moves	r9,r8
+	bne	.larger
+	nop
+	ibt	r7,#0
+	bra	.allocated
+	nop
+.exactfit
+	mpop	r0
+	mneg	r7
+	sub	r0
+	bra	.take
+	nop
+.split
+	sub	#4
+	bpl	.remainder
+	nop
+	add	#4
+	with	r7
+	add	r0
+	mneg	r7
+	ibt	r0,#-4
+.remainder
+	add	#4
+	stw	[r9]
+.take
+	from	r9
+	to	r8
+	add	r0
+	from	r7
+	stw	[r8]
+	dec	r8
+	dec	r8
+	move	r7,r8
+.allocated
+	mpop	r8
+	mtest	r7
+	bne	.attach
+	nop
+	miwt	pc,.nomem&WM
+	nop
+.attach
+	nop
+	iwt	r9,#RL_LEN
+	mstorew	r8,RL_OBJECT,r7
+	to	r9
+	ldw	[r6]
+	mstorew	r9,RL_NEXT,r7
+	from	r7
+	stw	[r6]
+	ibt	r9,#0
+	mstorew	r9,RL_FLAGS,r7
+.update
+	mloadw	r9,RL_FLAGS,r7
+	iwt	r0,#RLflag_hold
+	and	r9
+	bne	.mark
+	nop
+	mloadw	r9,OBJ_VELX,r8
+	mstorew	r9,RL_VELX,r7
+	mloadw	r9,OBJ_VELZ,r8
+	mstorew	r9,RL_VELZ,r7
+	mloadw	r9,OBJ_WORLDX,r8
+	mstorew	r9,RL_WORLDX,r7
+	mloadw	r9,OBJ_WORLDZ,r8
+	mstorew	r9,RL_WORLDZ,r7
+.mark
+	mloadw	r0,RL_FLAGS,r7
+	iwt	r9,#RLflag_used
+	or	r9
+	sbk
+	move	pc,r11
+	nop
+.nomem
+	move	pc,r11
+	nop
+
+
+; Clear render usage marks, US $04:a441-$04:a461.
+; r6 = address of the owner's render-head word; RAM bank 0.
+; Preserve every other flag and all list/header/data words.
+; r6/r10/r11 preserved; r0/r8/r12/flags scratch.
+; FIXME: Head-word argument replaces retail owner+$18.
+mclear_renderlist
+	to	r8
+	ldw	[r6]
+	mtest	r8
+	beq	.done
+	nop
+	iwt	r12,#RLflag_used
+.next
+	mloadw	r0,RL_FLAGS,r8
+	bic	r12
+	sbk
+	mloadw	r0,RL_NEXT,r8
+	moves	r8,r0
+	bne	.next
+	nop
+.done
+	move	pc,r11
+	nop
+
+
+; Sweep render records, US $04:a462-$04:a4d4.
+; r6 = address of the owner's render-head word; RAM bank 0.
+; Keep marked records in order, clear their usage bit, unlink unmarked
+; records and return them to m_dynmem. Negative sizes become positive;
+; positive-size records are reinserted at the heap head, as in mfree_mem.
+; r6/r10/r11 preserved; r0/r2/r7-r9/r12/flags scratch.
+; FIXME: Head-word argument replaces retail owner+$18. No coalescing.
+msweep_renderlist
+	to	r8
+	ldw	[r6]
+	mtest	r8
+	beq	.done
+	nop
+	iwt	r12,#RLflag_used
+	ibt	r2,#0
+.next
+	mloadw	r0,RL_FLAGS,r8
+	to	r9
+	and	r12
+	beq	.remove
+	nop
+	bic	r12
+	sbk
+	move	r2,r8
+.follow
+	mloadw	r0,RL_NEXT,r8
+.advance
+	moves	r8,r0
+	bne	.next
+	nop
+.done
+	move	pc,r11
+	nop
+.remove
+	mloadw	r7,RL_NEXT,r8
+	mtest	r2
+	bne	.previous
+	nop
+	from	r7
+	stw	[r6]
+	bra	.free
+	nop
+.previous
+	mstorew	r7,RL_NEXT,r2
+.free
+	mpush	r7
+	inc	r8
+	inc	r8
+	ldw	[r8]
+	with	r7
+	from	r0
+	bpl	.header
+	nop
+	mneg	r7
+.header
+	dec	r8
+	dec	r8
+	iwt	r7,#m_dynmem&WM
+	move	r9,r8
+	inc	r9
+	inc	r9
+	ldw	[r9]
+	mtest	r0
+	bpl	.insert
+	nop
+	mneg	r0
+	stw	[r9]
+	bra	.freed
+	nop
+.insert
+	ldw	[r7]
+	stw	[r8]
+	from	r8
+	stw	[r7]
+.freed
+	mpop	r7
+	move	r0,r7
+	bra	.advance
+	nop
+
 
 
 
