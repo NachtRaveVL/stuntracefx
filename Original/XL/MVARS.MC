@@ -421,9 +421,12 @@ mmaxvistab	=	100	; was 128
 	malc	m_whlspringx,2
 	malc	m_whlspringy,2
 	malc	m_whlspringz,2
-	malc	m_dynvar1,2
-	malc	m_dynvar2,2
-	malc	m_dynvar3,2
+; Keep the three CPU/GSU argument words contiguous. Moving these and
+; the route pair/map number to zero page makes room for the two appended
+; car words (4 cars * 4 bytes) without reducing the dynamics heap.
+	zmalc	m_dynvar1,2
+	zmalc	m_dynvar2,2
+	zmalc	m_dynvar3,2
 	malc	m_lastroadobj,2
 	malc	m_lastmarkobj,2
 
@@ -461,9 +464,9 @@ part_len	equ	14
 
 ; Packed route shared by the scene parser, GSU and CPU cameras.
 ; Retail $1092/$1094: ROM address followed by a zero-extended bank word.
-; Appended after existing MVARS allocations; m_aitest1 follows in MAI.
-	malc	m_routeptr,2
-	malc	m_routebank,2
+; Keep this pair contiguous for CPU viewrouteptr+2 accesses.
+	zmalc	m_routeptr,2
+	zmalc	m_routebank,2
 viewrouteptr	=	m_routeptr
 
 ; Retail $273c: bit 0 gates the GSU draw entry at $01:d12f.
@@ -475,7 +478,7 @@ viewrouteptr	=	m_routeptr
 
 ; Current map number for retail route-speed and AI tables.
 ; Retail copies CPU $0e3d to GSU RAM $26f4 while loading the scene.
-	malc	m_mapnumber,2
+	zmalc	m_mapnumber,2
 ;	malc	m_particlerand2,2
 ;	malc	m_drawparticles,(8+6)*(maxparticles+1)
 		  

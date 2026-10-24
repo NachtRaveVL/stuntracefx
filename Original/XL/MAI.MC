@@ -6,7 +6,7 @@
 
 	malc	m_aitest1,2
 
-; Retail avoidance state, separate from the early mixed object list.
+; Retail car-AI scratch, separate from the early mixed object list.
 ; mlink_avoidcar binds this list; early dynamics reset/removal maintain it.
 	zmalc	m_avoidcarhead,2
 	zmalc	m_avoidcarx,2
@@ -18,6 +18,7 @@
 	zmalc	m_avoiddx,2
 	zmalc	m_avoiddy,2
 	zmalc	m_avoiddz,2
+	zmalc	m_avoidcary,2
 
 ;*******************************************************************
 ; mdo_carAI - car artificial intelligence
@@ -638,7 +639,8 @@ mroute_carvelocity
 ; RAM bank 0. mcar2point_Yangle may select ROM bank 0 for its table.
 ; FIXME: Extracted with a callable return; retail continues directly
 ; into the control-word selection at $04:c81a.
-; TODO: Connect the enclosing dispatcher to mroute_avoidcars.
+; mroute_drivestep joins this to steering and avoidance.
+; TODO: Restore the enclosing mode dispatcher.
 mroute_steerprep
 	mpush	r11
 	mloadw	r0,CAR_ROUTEMODE,r8
@@ -688,7 +690,8 @@ mroute_steerprep
 ; RAM bank 0. CAR_AIDELAY/CAR_AISTUCK original source names are unknown.
 ; FIXME: Extracted as a callable routine; retail enters this directly from
 ; mroute_steerprep and returns to the $04:c933 avoidance pass.
-; TODO: Connect the enclosing dispatcher to mroute_avoidcars.
+; mroute_drivestep joins this to steering and avoidance.
+; TODO: Restore the enclosing mode dispatcher.
 mroute_controls
 	mpush	r11
 	ibt	r9,#0
@@ -872,7 +875,8 @@ mroute_controls
 ; r4/r8/r10-r14 and ROM bank preserved; r0-r3/r5-r7/r9 and flags scratch.
 ; RAM bank 0. Only the current car's CAR_CONTROL is written.
 ; FIXME: List/flag names reconstructed; no early mixed-list substitution.
-; TODO: Restore the retail skip-flag producer and enclosing AI dispatcher.
+; mread_carflags restores the definition-word reader for the skip flag.
+; TODO: Restore its constructor caller and the enclosing AI dispatcher.
 mroute_avoidcars
 	mpush	r11
 	mloadw	r9,CAR_CONTROL,r8
@@ -1259,7 +1263,8 @@ mfind_nearroute
 ; All arithmetic wraps at 16 bits; no null/count/range guards in retail.
 ; The retail car-$70 direction selector is restored as mselect_routepoint.
 ; CAR_ROUTEMODE is appended to the early car, not aliased to CAR_FLAGS.
-; TODO: Restore its producer and the steering/automatic-motion callers.
+; Steering and target-velocity callers are restored below.
+; TODO: Restore mode producers and the live mode/render integration.
 mselect_routepoint
 	move	r6,r0
 	lm	r0,[m_routebank]
@@ -1398,7 +1403,7 @@ mroutepointptr
 ; index on failure. r8/r10 preserved; search scratch and r11 destroyed.
 ; FIXME: Extracted as a callable block with its own push/return. Retail
 ; continues to next-point/steering on success and $04:c933 on both paths.
-; TODO: Restore those consumers and the enclosing retail mode dispatcher.
+; mroute_drivestep restores those consumers; the mode dispatcher is TODO.
 mtrack_carroute
 	mpush	r11
 	mloadw	r1,OBJ_WORLDX,r8
@@ -1434,5 +1439,447 @@ mupdate_carroute
 	move	r7,r0
 	mstorew	r7,CAR_ROUTEINDEX,r8
 	ibt	r0,#1
+	mpop	pc
+	nop
+
+
+; Normal driving branch, US $04:c478-$04:c4b6. r8 = car, RAM bank 0.
+; Failed searches preserve the old index and still run avoidance. On a
+; successful search select the next point, prepare steering, choose the
+; control word, then avoid cars. Return one, including search failure.
+; r8/r10 preserved; route/math scratch, r0-r7/r9/r11-r14/flags destroyed.
+; Shares mcar2point_Yangle's documented -32768 ROM-layout edge case.
+; FIXME: The entry push and calls join the previously extracted blocks.
+; TODO: Restore the enclosing mode/skip dispatcher before live scheduling.
+mroute_drivestep
+	mpush	r11
+	mcall	mtrack_carroute
+	nop
+	mtest	r0
+	beq	.avoid
+	nop
+	mcall	mselect_routepoint
+	nop
+	mcall	mroute_steerprep
+	nop
+	mcall	mroute_controls
+	nop
+.avoid
+	mcall	mroute_avoidcars
+	nop
+	ibt	r0,#1
+	mpop	pc
+	nop
+
+
+; Car approach rejection, US $04:ca99-$04:cb7d. r7/r8 = objects.
+; Return one when the projected planar gap exceeds the radius/closing
+; margin, zero otherwise. Preserve r1-r5/r7/r8/r10/r14 and ROM bank.
+; m_x1/m_z1/m_x2 and r0/r6/r9/r11-r13/flags are scratch. Arithmetic
+; wraps at 16 bits, including doubled deltas and the native signed test.
+; Keep mnormalise16's 16-bit square-root remainder and approximate divide.
+; The collision broad-phase caller at $04:a29a is not restored yet.
+mcheck_carapproach
+	mpush	r11
+	mpush	r1
+	mpush	r2
+	mpush	r3
+	mpush	r4
+	mpush	r5
+	mloadw	r1,OBJ_WORLDX,r7
+	mloadw	r0,OBJ_WORLDX,r8
+	with	r1
+	sub	r0
+	sm	[m_x1],r1
+	mloadw	r3,OBJ_WORLDZ,r7
+	mloadw	r0,OBJ_WORLDZ,r8
+	with	r3
+	sub	r0
+	sm	[m_z1],r3
+	ibt	r2,#0
+	mpush	r8
+	mpush	r7
+	mcall	mnormalise16
+	nop
+	mpop	r7
+	mpop	r8
+	lm	r0,[m_x1]
+	add	r0
+	move	r6,r1
+	fmult
+	move	r5,r0
+	lm	r0,[m_z1]
+	add	r0
+	move	r6,r3
+	fmult
+	add	r5
+	sm	[m_x1],r0
+	mloadw	r0,OBJ_VELX,r7
+	mloadw	r4,OBJ_VELX,r8
+	sub	r4
+	div2
+	move	r6,r1
+	fmult
+	move	r5,r0
+	mloadw	r0,OBJ_VELZ,r7
+	mloadw	r4,OBJ_VELZ,r8
+	sub	r4
+	div2
+	move	r6,r3
+	fmult
+	add	r5
+	mneg	r0
+	sm	[m_x2],r0
+	mloadw	r0,OBJ_RADX,r7
+	mloadw	r1,OBJ_RADX,r8
+	add	r1
+	iwt	r1,#$0294
+	sub	r1
+	bpl	.margin
+	nop
+	sub	r0
+.margin
+	lm	r1,[m_x2]
+	add	r1
+	lm	r1,[m_x1]
+	cmp	r1
+	bmi	.apart
+	nop
+	sub	r0
+	mpop	r5
+	mpop	r4
+	mpop	r3
+	mpop	r2
+	mpop	r1
+	mpop	pc
+	nop
+.apart
+	ibt	r0,#1
+	mpop	r5
+	mpop	r4
+	mpop	r3
+	mpop	r2
+	mpop	r1
+	mpop	pc
+	nop
+
+
+; Legacy marker turn block, US $04:cb7e-$04:cbe7. r8 = car,
+; r5 = supplied marker (zero returns r1=0), r1 = signed turn limit.
+; Nonzero marker links replace r5; the selected pointer is stored in
+; CAR_ROUTEINDEX, as in retail. This is NOT a packed-route query.
+; FIXME: Retail uses the car+$58 store address as the yaw operand,
+; not a calculated bearing. Preserve that value despite field relocation.
+; This entry has no direct call found in bank 4 and is not scheduled.
+mroute_markerturn
+	mpush	r11
+	mpush	r1
+	mloadw	r1,OBJ_WORLDX,r8
+	mloadw	r2,OBJ_WORLDY,r8
+	mloadw	r3,OBJ_WORLDZ,r8
+	mtest	r5
+	beq	.none
+	nop
+	mloadw	r1,TOBJ_NEXT,r5
+	mtest	r1
+	beq	.last
+	nop
+	move	r5,r1
+.last
+	mstorew	r5,CAR_ROUTEINDEX,r8
+	ibt	r1,#$58
+	with	r1
+	add	r8
+	mloadw	r0,OBJ_ROTY,r8
+	with	r1
+	sub	r0
+	mpop	r3
+	move	r2,r3
+	mneg	r2
+	mtest	r1
+	bmi	.negative
+	nop
+	with	r1
+	cmp	r3
+	bmi	.done
+	nop
+	move	r1,r3
+	bra	.done
+	nop
+.negative
+	with	r1
+	cmp	r2
+	bpl	.done
+	nop
+	move	r1,r2
+.done
+	mpop	pc
+	nop
+.none
+	mpop	r0
+	iwt	r1,#0
+	mpop	pc
+	nop
+
+
+; Per-map frozen-route timing data, US $04:c4d1-$04:c594. Each pointer
+; selects the zero-difference entry of seven (count, product-high step)
+; pairs, indexed by car slot minus player slot in the range -3..3.
+; The table is data, not executable alternate-mode code.
+mroute_timings
+	rept	4
+	dw	mroute_timing00&WM
+	endr
+	rept	4
+	dw	mroute_timing04&WM
+	endr
+	rept	4
+	dw	mroute_timing08&WM
+	endr
+	rept	30
+	dw	mroute_timing12&WM
+	endr
+	dw	6,$2aaa,6,$2aaa,6,$2aaa
+mroute_timing12
+	dw	0,0,6,$2aaa,6,$2aaa,6,$2aaa
+	dw	8,$1fff,9,$1c71,10,$1999
+mroute_timing00
+	dw	0,0,5,$3333,7,$2492,8,$1fff
+	dw	7,$2492,7,$2492,8,$1fff
+mroute_timing04
+	dw	0,0,5,$3333,6,$2aaa,7,$2492
+	dw	6,$2aaa,6,$2aaa,7,$2492
+mroute_timing08
+	dw	0,0,4,$3fff,6,$2aaa,6,$2aaa
+mroute_timings_end
+
+
+; Read frozen-route timing, from US $04:c599-$04:c5ad and c5be-c5d0.
+; r4 = signed car-slot difference; m_mapnumber low byte selects the map.
+; Return r3=count, r6=step; r0/r14/flags scratch, other regs preserved.
+; r14 ends one byte past the pair; ROM bank becomes the table's bank.
+; mread_carroutetiming supplies the difference from CAR_ROUTESLOT words.
+; FIXME: Retail slot assignment/player binding remain; no bounds guard.
+; Retail maps 0..41 and differences -3..3 address these exact data.
+mread_routetiming
+	ibt	r0,#mroute_timings>>16
+	romb
+	miwt	r14,mroute_timings
+	lm	r0,[m_mapnumber]
+	lob
+	add	r0
+	with	r14
+	add	r0
+	mgetw	r0
+	move	r14,r0
+	from	r4
+	add	r4
+	add	r0
+	with	r14
+	add	r0
+	mgetwi	r3
+	mgetwi	r6
+	move	pc,r11
+	nop
+
+
+; Advance car and wheel positions, US $04:c60f-$04:c659.
+; r8=car, r6=signed multiplier. Add high16(velocity*step) to XYZ, then
+; copy the car position from before the step to every wheel, as in retail.
+; r8/r10/r11 preserved; r0-r3/r6/flags scratch, other regs/ROM bank preserved.
+; FIXME: Added push supplies the enclosing frozen-mode routine's frame.
+mroute_advancecar
+	mpush	r11
+	mloadw	r0,OBJ_VELX,r8
+	mloadw	r1,OBJ_WORLDX,r8
+	fmult
+	add	r1
+	sbk
+	mloadw	r0,OBJ_VELY,r8
+	mloadw	r2,OBJ_WORLDY,r8
+	fmult
+	add	r2
+	sbk
+	mloadw	r0,OBJ_VELZ,r8
+	mloadw	r3,OBJ_WORLDZ,r8
+	fmult
+	add	r3
+	sbk
+	mloadw	r0,CAR_WHEELS,r8
+.nextwheel
+	moves	r6,r0
+	beq	.done
+	nop
+	mstorew	r1,OBJ_WORLDX,r6
+	mstorew	r2,OBJ_WORLDY,r6
+	mstorew	r3,OBJ_WORLDZ,r6
+	mloadw	r0,WHL_NEXT,r6
+	bra	.nextwheel
+	nop
+.done
+	mpop	pc
+	nop
+
+
+; Prepare velocity/heading toward the current route anchor, extracted
+; from US $04:c65a-$04:c6e3. r8=car; index zero leaves car/anchor state.
+; Save anchor XYZ (Y-160) and set velocity to anchor minus position.
+; Clear roll/pitch and torque; aim yaw at the selected next route point.
+; r8/r10 preserved; math/route scratch, r0-r7/r9/r11-r14/flags destroyed.
+; FIXME: Callable return replaces the following attached-render-list
+; updates at $04:c6e4-$04:c729. Their native object layout is pending.
+; No car/wheel position integration is performed by this helper.
+; Shares mcar2point_Yangle's documented -32768 ROM-layout edge case.
+mroute_targetvelocity
+	mpush	r11
+	mloadw	r0,CAR_ROUTEINDEX,r8
+	mtest	r0
+	bne	.route
+	nop
+	miwt	pc,.done&WM
+	nop
+.route
+	mcall	mroutepointptr
+	nop
+	mcall	mreadroutepoint
+	nop
+	mpush	r0
+	iwt	r0,#-160
+	with	r2
+	add	r0
+	sm	[m_avoidcarx],r1
+	sm	[m_avoidcary],r2
+	sm	[m_avoidcarz],r3
+	mloadw	r0,OBJ_WORLDX,r8
+	sub	r1
+	mneg	r0
+	move	r4,r0
+	mstorew	r4,OBJ_VELX,r8
+	mloadw	r0,OBJ_WORLDY,r8
+	sub	r2
+	mneg	r0
+	move	r4,r0
+	mstorew	r4,OBJ_VELY,r8
+	mloadw	r0,OBJ_WORLDZ,r8
+	sub	r3
+	mneg	r0
+	move	r4,r0
+	mstorew	r4,OBJ_VELZ,r8
+	ibt	r1,#0
+	mstorew	r1,OBJ_ROTZ,r8
+	mstorew	r1,OBJ_ROTX,r8
+	mstorew	r1,CAR_TORQUEY,r8
+	mstorew	r1,CAR_TORQUEX,r8
+	mstorew	r1,CAR_TORQUEZ,r8
+	mpop	r0
+	mcall	mselect_routepoint
+	nop
+	mcall	mcar2point_Yangle
+	nop
+	move	r1,r0
+	mstorew	r1,OBJ_ROTY,r8
+	move	r0,r1
+.done
+	mpop	pc
+	nop
+
+
+; Car definition flags, US $04:8ded-$04:8e04. r1 = cleared car,
+; r14 = first flag word in the definition, ROM bank already selected.
+; Read the full avoidance/collision flags and initial driving flags.
+; CARaiflag_skipavoid is supplied by this first word, not inferred from
+; the early object type. r1/r3-r13 preserved; r0/r2/flags scratch,
+; r14 advances four bytes, ROM/RAM banks unchanged.
+; FIXME: Callable return added. The early cardef format is different;
+; TODO: Restore the retail constructor caller and remaining definition.
+mread_carflags
+	mgetwi	r2
+	iwt	r0,#CAR_AIFLAGS
+	add	r1
+	from	r2
+	stw	[r0]
+	mgetwi	r2
+	mstorew	r2,CAR_FLAGS,r1
+	move	pc,r11
+	nop
+
+
+; Frozen-route timing with car slots, from US $04:c5b2-$04:c5c0.
+; r8 = car, r2 = reference car (normally the player), RAM bank 0.
+; Return r3 = count, r6 = step, r4 = signed slot difference.
+; r0/r1/r11/r14/flags scratch; r2/r5/r7-r10/r12-r13 preserved.
+; ROM bank becomes the timing table's bank, as in mread_routetiming.
+; FIXME: Reference pointer is an argument instead of retail global $2476.
+; TODO: Restore that global's producer and CAR_ROUTESLOT assignment.
+; Valid maps 0..41 and slot differences -3..3; no bounds guard in retail.
+mread_carroutetiming
+	mpush	r11
+	iwt	r1,#CAR_ROUTESLOT
+	with	r1
+	add	r2
+	to	r1
+	ldw	[r1]
+	iwt	r0,#CAR_ROUTESLOT
+	add	r8
+	ldw	[r0]
+	sub	r1
+	move	r4,r0
+	mcall	mread_routetiming
+	nop
+	mpop	pc
+	nop
+
+
+; Frozen-route countdown and movement, US $04:c595-$04:c659.
+; r8 = car, r2 = reference car; map/slot requirements as above.
+; Increment the 16-bit counter; zero wrap or signed count comparison
+; reaching the timing threshold selects/stores the adjacent route point
+; and prepares velocity/heading, unless the current index is zero.
+; Always advance car/wheels with the saved fraction, even on no update.
+; r8/r10 preserved; r0-r7/r9/r11-r14/flags destroyed, RAM bank 0.
+; FIXME: Joins extracted helpers with calls, supplies reference car as
+; an argument, and stops target preparation before attached render lists.
+; TODO: Restore $04:c6e4-$04:c729 and the enclosing mode dispatcher.
+; Not scheduled by the early car tick. Retains native signed overflow
+; behavior and mcar2point_Yangle's documented -32768 ROM-layout edge.
+mroute_frozenstep
+	mpush	r11
+	mcall	mread_carroutetiming
+	nop
+	mpush	r6
+	iwt	r0,#CAR_ROUTECOUNT
+	add	r8
+	ldw	[r0]
+	inc	r0
+	beq	.update
+	sbk
+	cmp	r3
+	bpl	.reset
+	nop
+	miwt	pc,.advance&WM
+	nop
+.reset
+	sub	r0
+	sbk
+.update
+	mloadw	r0,CAR_ROUTEINDEX,r8
+	mtest	r0
+	bne	.route
+	nop
+	miwt	pc,.advance&WM
+	nop
+.route
+	mcall	mroutepointptr
+	nop
+	mcall	mselect_routepoint
+	nop
+	move	r6,r0
+	mstorew	r6,CAR_ROUTEINDEX,r8
+	mcall	mroute_targetvelocity
+	nop
+.advance
+	mpop	r6
+	mcall	mroute_advancecar
+	nop
 	mpop	pc
 	nop

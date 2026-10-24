@@ -181,10 +181,18 @@ CARroutemode_slowspeed	equ	32
 ; separate from the early mixed object list and OBJ_TYPE field.
 ; FIXME: Names reconstructed; only flag $0400 is identified here.
 ; mlink_avoidcar restores list insertion; early lifetime hooks maintain it.
-; TODO: Restore the retail skip-flag producer.
+; mread_carflags reads the retail definition's flags, including $0400.
+; TODO: Restore its constructor caller; the early cardef format differs.
 CARaiflag_skipavoid	equ	$0400
 	struct		CAR_AINEXT,2
 	struct		CAR_AIFLAGS,2
+
+; Retail car $72/$88 frozen-route countdown and slot index.
+; Appended to retain all early offsets; mmake_obj clears both words.
+; FIXME: Names reconstructed. Slots must differ by -3..3 for the timing
+; table. TODO: Restore the retail slot assignment and mode dispatcher.
+	struct		CAR_ROUTECOUNT,2
+	struct		CAR_ROUTESLOT,2
 
  	
 	struct		CAR_LEN,0	
@@ -206,6 +214,10 @@ WHLflag_power		EQU	16
 WHLflag_ongnd		EQU	32	; if wheel IS on a ground polygon.
 WHLflag_skid		EQU	64
 WHLflag_onslope		EQU	128
+
+; Retail wheel $46 bit $0400: retain pose and zero velocity.
+; TODO: Restore the retail flag producer.
+WHLflag_routehold	EQU	$0400
 
 
 	structure	OBJ1_LEN

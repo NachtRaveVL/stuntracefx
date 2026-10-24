@@ -5723,5 +5723,140 @@ car1_anims
 	db	4,4,9,9,10,10,11,11
 
 
+; US $04:b9ac-$04:ba04. r8 = car, RAM bank 0.
+; Build the matrix from negated Z/Y/X angles, transpose, save world XYZ
+; and update wheel poses. r8/r10 preserved; other regs/flags scratch.
+; Uses all three angles; the early wheel tick's zero-roll path differs.
+; TODO: Connect the retail route-mode transition caller.
+mroute_setupcar
+	mpush	r11
+	mpush	r8
+	mloadw	r0,OBJ_ROTZ,r8
+	mneg	r0
+	sms	[m_rotx],r0
+	mloadw	r0,OBJ_ROTY,r8
+	mneg	r0
+	sms	[m_roty],r0
+	mloadw	r0,OBJ_ROTX,r8
+	mneg	r0
+	sms	[m_rotz],r0
+	iwt	r9,#m_wmat11&WM
+	mcall	mcrotmatzxy16
+	nop
+	iwt	r9,#m_wmat11&WM
+	mcall	mtransmat16
+	nop
+	mpop	r8
+	mloadw	r0,OBJ_WORLDX,r8
+	sm	[m_carworldx],r0
+	mloadw	r0,OBJ_WORLDY,r8
+	sm	[m_carworldy],r0
+	mloadw	r0,OBJ_WORLDZ,r8
+	sm	[m_carworldz],r0
+	mcall	mroute_wheelpose
+	nop
+	mpop	pc
+	nop
+
+
+; US $04:a4ed-$04:a606. r8 = car, m_wmat/m_carworldXYZ prepared.
+; Rotate WHL_NOFFSET into WHL_ROTOFF, add car XYZ and set velocity to
+; eight times the position delta. WHLflag_routehold keeps the old pose
+; and zeros velocity. r8/r10 preserved; other registers/flags scratch.
+; RAM bank 0; ROM bank unchanged. This does not update render lists.
+mroute_wheelpose
+	mpush	r11
+	mloadw	r0,CAR_WHEELS,r8
+	mcache
+.next
+	moves	r9,r0
+	bne	.wheel
+	nop
+	miwt	pc,.done&WM
+	nop
+.wheel
+	nop
+	mloadw	r1,WHL_FLAGS,r9
+	iwt	r0,#WHLflag_routehold
+	and	r1
+	beq	.rotate
+	nop
+	miwt	pc,.hold&WM
+	nop
+.rotate
+	move	r12,r8
+	iwt	r8,#WHL_NOFFSETX
+	with	r8
+	add	r9
+	iwt	r11,#WHL_ROTOFFX
+	with	r11
+	add	r9
+	to	r1
+	mldwi	r8
+	to	r2
+	mldwi	r8
+	to	r3
+	mldwi	r8
+	mdotprod16mq	m_wmat11,m_wmat21,m_wmat31
+	mstwi	r11
+	mdotprod16mq	m_wmat12,m_wmat22,m_wmat32
+	mstwi	r11
+	mdotprod16mq	m_wmat13,m_wmat23,m_wmat33
+	mstwi	r11
+	move	r8,r12
+	iwt	r6,#1<<dynshift
+	mloadw	r1,WHL_ROTOFFX,r9
+	lm	r0,[m_carworldx]
+	mloadw	r2,OBJ_WORLDX,r9
+	with	r1
+	add	r0
+	mstorew	r1,OBJ_WORLDX,r9
+	with	r1
+	sub	r2
+	with	r1
+	lmult
+	mstorew	r4,OBJ_VELX,r9
+	mloadw	r1,WHL_ROTOFFY,r9
+	lm	r0,[m_carworldy]
+	mloadw	r2,OBJ_WORLDY,r9
+	with	r1
+	add	r0
+	mstorew	r1,OBJ_WORLDY,r9
+	with	r1
+	sub	r2
+	with	r1
+	lmult
+	mstorew	r4,OBJ_VELY,r9
+	mloadw	r1,WHL_ROTOFFZ,r9
+	lm	r0,[m_carworldz]
+	mloadw	r2,OBJ_WORLDZ,r9
+	with	r1
+	add	r0
+	mstorew	r1,OBJ_WORLDZ,r9
+	with	r1
+	sub	r2
+	with	r1
+	lmult
+	mstorew	r4,OBJ_VELZ,r9
+	mloadw	r0,WHL_NEXT,r9
+	miwt	pc,.next&WM
+	nop
+	nop
+	bra	.done
+	nop
+.hold
+	ibt	r1,#0
+	mstorew	r1,OBJ_VELX,r9
+	mstorew	r1,OBJ_VELY,r9
+	mstorew	r1,OBJ_VELZ,r9
+	mloadw	r0,WHL_NEXT,r9
+	miwt	pc,.next&WM
+	nop
+	nop
+.done
+	mpop	pc
+	nop
+
+
 
 

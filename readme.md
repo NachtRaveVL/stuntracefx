@@ -66,9 +66,9 @@ pie showData
 | --- | ---: | ---: | ---: | --- |
 | CPU platform, startup, NMI, display and object runtime | 10% | 10-25% | 75-90% | `XLSTART`, `XLIRQ`, `RAMSTUFF`, `XLMAIN`, `XLTRANS`, `STRATROU`: retail hardware initialization and selected callback helpers recovered; complete retail initialization chain, NMI modes, scheduler, object lifetime and display transitions still need reconciliation. Retail anchors: `$02:8000`, `$03:89B4`, `$03:D388`, `$0B:B479`. |
 | Math, GSU rendering, clipping, sprites and effects | 15% | 15-35% | 65-85% | `MMATHS`, `MWROT`, `MWCROT`, `MOBJ`, `MCLIP`, `MDRAW*`, `MSPRITE`, `MDSPRITE`, `MPART`, `MDATA`: substantial early engine survives, with matching arithmetic and table spans; audit the rest of retail bank `$01`, material/draw paths, road rendering and the `$01:D12F` camera-flag consumer. |
-| Vehicle dynamics, wheels, physics and collision | 20% | 5-15% | 85-95% | `MDYNAMIC`, `DYNSTRUC`, `DYNPARMS`, car strategies in `GASTRATS`: early cars/wheels/physics survive; list registration now works, but final retail constructor/layout, all vehicle types, collision behavior and frame integration remain. Retail anchors: `$04:8800`, `$04:8E59`, `$04:BCBA`, `$08:CC7C`. |
+| Vehicle dynamics, wheels, physics and collision | 20% | 5-15% | 85-95% | `MDYNAMIC`, `DYNSTRUC`, `DYNPARMS`, car strategies in `GASTRATS`: early cars/wheels/physics survive; list registration, definition-flag reads and approach rejection are restored, but final retail constructor/layout, all vehicle types, collision dispatch and frame integration remain. Retail anchors: `$04:8800`, `$04:8E59`, `$04:BCBA`, `$08:CC7C`. |
 | Camera records, animation and camera strategies | 10% | 55-75% | 25-45% | `GAME`, `GASTRATS`, `WORLD`: largest concentration of reconstructed retail behavior; finish remaining scene/mode selection, animation-15 initialization, camera/owner teardown, sound and draw consumers, and all race/attract/split-screen contexts. Anchors: `$02:DAD6-$02:DF78`, `$08:8525-$08:9BD8`, `$09:8090`. |
-| Route access, AI and driving controls | 10% | 35-55% | 45-65% | `MAI`, route helpers in `GASTRATS`, `WORLD`: lookup, traversal, speed, steering and avoidance reconstructed; dispatcher, alternate modes, flag producers, additional car helpers and live AI scheduling remain. The bounded byte milestone below is further along than the entire subsystem. |
+| Route access, AI and driving controls | 10% | 35-55% | 45-65% | `MAI`, route helpers in `GASTRATS`, `WORLD`: normal driving, slot timing, frozen-route countdown and car/wheel movement reconstructed; dispatcher, slot assignment/player binding, attached render lists and live AI scheduling remain. |
 | Race rules, frontend, menus and game flow | 15% | 0-10% | 90-100% | `XLMAIN`, `XLTITLE`, `XLINIT`, `PSTRATS`, `GSTRATS`, `GASTRATS`, `ENDSEQ`: early behavior is a starting point; final race progression, timing/results, vehicle/course selection, attract/demo, two-player flow and endings need retail mapping and restoration. Anchors include `$0B:AE0A` and `$0B:FB26`. |
 | Courses, scene streams, models, graphics and text | 15% | 5-15% | 85-95% | `MAPS`, shape sources, `MSPRITES`, `DATA`, `XLDATA`, `MDATA`, `SHBANKS`, `INCBINS`: inherited assets and some identical tables exist, but the built map includes an early fallback route, not the full retail course set. Restore final scene/course inventory, object placement, routes, model/texture/background differences and text, then validate references. |
 | Audio driver, command mapping, music and samples | 5% | 0-10% | 90-100% | `XLSOUND`, `XLSND`, `SND`: early audio binaries survive and contain matching fragments; final driver/data organization, sound IDs, engine sound behavior, music/sample inventory and playback still need reconciliation. CPU audio anchors: `$04:D0DB`, `$04:D44C`, `$04:D649`, `$04:D720`. |
@@ -77,11 +77,11 @@ pie showData
 
 | Retail bank(s) | Restored/adapted | Identical candidates | Uncredited | Mapped content or next investigation |
 | --- | ---: | ---: | ---: | --- |
-| `$00` | 0 | 7,196 | 25,572 | Shared tables, sine/arctangent and early data candidates; reset/header and remaining content audit |
-| `$01` | 128 | 2,206 | 30,434 | GSU math/render engine; two bounded math entries, remaining draw pipeline |
+| `$00` | 514 | 6,682 | 25,572 | Verified sine-interpolation table; other shared-data candidates, reset/header and remaining content audit |
+| `$01` | 765 | 1,953 | 30,050 | GSU math/render engine; verified inherited matrix and math spans, remaining draw pipeline |
 | `$02` | 1,163 | 4,084 | 27,521 | CPU NMI/display and camera records; remaining runtime/control flow |
 | `$03` | 483 | 1,407 | 30,878 | Hardware setup, matrix wrapper and callback/activity helpers; remaining CPU engine |
-| `$04` | 1,575 | 374 | 30,819 | GSU dynamics/AI plus CPU audio routines; constructor, dispatcher, physics and audio audit |
+| `$04` | 3,404 | 262 | 29,102 | GSU dynamics/AI plus CPU audio routines; car matrix/wheel poses restored; constructor, dispatcher, attached render lists, physics and audio audit |
 | `$05-$07` | 0 | 0 | 98,304 | Content/source correspondence still unclassified |
 | `$08` | 3,878 | 65 | 28,825 | Camera/route helpers, map and object systems; remaining vehicle/gameplay logic |
 | `$09` | 164 | 0 | 32,604 | Driving-camera presets; remaining scene/data and WRAM patch content |
@@ -95,7 +95,7 @@ pie showData
 | `$1A` | 0 | 1,713 | 31,055 | Fragments matching early `XLSND0.BIN`; remaining audio/data mapping |
 | `$1B` | 0 | 396 | 32,372 | Fragments matching early `XLSND0.BIN`; remaining audio/data mapping |
 | `$1C-$1F` | 0 | 0 | 131,072 | Content/source correspondence still unclassified |
-| **All 32 banks** | **7,391** | **38,912** | **1,002,273** | **All 1 MiB accounted for exactly once** |
+| **All 32 banks** | **10,371** | **38,033** | **1,000,172** | **All 1 MiB accounted for exactly once** |
 
 ## Building Original
 

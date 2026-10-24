@@ -126,6 +126,11 @@
 	global	mroute_controls
 	global	mroute_avoidcars,m_avoidcarhead
 	global	mlink_avoidcar,munlink_avoidcar
+	global	mroute_drivestep,mcheck_carapproach,mroute_markerturn
+	global	mread_routetiming,mroute_advancecar,mroute_targetvelocity
+	global	mread_carflags
+	global	mread_carroutetiming,mroute_frozenstep
+	global	mroute_setupcar,mroute_wheelpose
 
 
 
