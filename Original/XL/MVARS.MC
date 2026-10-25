@@ -345,7 +345,11 @@ mmaxvistab	=	100	; was 128
 	malc	m_particlesON,2
 	malc	m_defaultID,2
 
-	malc	m_debugchars,8*16	; always last!
+; Keep the complete hex-font copy above the second bitmap, between the
+; fixed backup_check markers at $f849 and $f943. This releases low RAM
+; for the appended wheel contact heads without reducing any buffer.
+m_debugchars	equ	mrambank+bitmap2+usedchar+$80
+m_debugchars_end	equ	m_debugchars+8*16
 
 ;----------------------------------------------------------
 ; dynamic allocs.

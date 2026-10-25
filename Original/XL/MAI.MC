@@ -1264,7 +1264,7 @@ mfind_nearroute
 ; The retail car-$70 direction selector is restored as mselect_routepoint.
 ; CAR_ROUTEMODE is appended to the early car, not aliased to CAR_FLAGS.
 ; Steering and target-velocity callers are restored below.
-; TODO: Restore mode producers and the live mode/render integration.
+; TODO: Restore mode producers and the live mode/collision integration.
 mselect_routepoint
 	move	r6,r0
 	lm	r0,[m_routebank]
@@ -1722,12 +1722,12 @@ mroute_advancecar
 
 
 ; Prepare velocity/heading toward the current route anchor, extracted
-; from US $04:c65a-$04:c6e3. r8=car; index zero leaves car/anchor state.
+; from US $04:c65a-$04:c72e. r8=car; index zero leaves all state.
 ; Save anchor XYZ (Y-160) and set velocity to anchor minus position.
 ; Clear roll/pitch and torque; aim yaw at the selected next route point.
 ; r8/r10 preserved; math/route scratch, r0-r7/r9/r11-r14/flags destroyed.
-; FIXME: Callable return replaces the following attached-render-list
-; updates at $04:c6e4-$04:c729. Their native object layout is pending.
+; Invalidate wheel/car contact caches after preparing a nonzero index.
+; FIXME: r5 saves each owner around the head-address helper ABI.
 ; No car/wheel position integration is performed by this helper.
 ; Shares mcar2point_Yangle's documented -32768 ROM-layout edge case.
 mroute_targetvelocity
@@ -1779,6 +1779,49 @@ mroute_targetvelocity
 	move	r1,r0
 	mstorew	r1,OBJ_ROTY,r8
 	move	r0,r1
+	mpush	r8
+	mloadw	r0,CAR_WHEELS,r8
+.nextcontacts
+	moves	r6,r0
+	beq	.carcontacts
+	nop
+	mloadw	r0,WHL_CONTACTS,r6
+	mtest	r0
+	beq	.nextcontactwheel
+	nop
+	move	r5,r6
+	ibt	r0,#WHL_CONTACTS
+	add	r6
+	move	r6,r0
+	mcall	mclear_contacts
+	nop
+	mcall	msweep_contacts
+	nop
+	move	r6,r5
+.nextcontactwheel
+	mloadw	r0,WHL_NEXT,r6
+	bra	.nextcontacts
+	nop
+.carcontacts
+	mpop	r6
+	mpush	r6
+	iwt	r0,#CAR_CONTACTS
+	add	r6
+	ldw	[r0]
+	mtest	r0
+	beq	.contactsdone
+	nop
+	move	r5,r6
+	iwt	r0,#CAR_CONTACTS
+	add	r6
+	move	r6,r0
+	mcall	mclear_contacts
+	nop
+	mcall	msweep_contacts
+	nop
+	move	r6,r5
+.contactsdone
+	mpop	r8
 .done
 	mpop	pc
 	nop
@@ -1837,9 +1880,8 @@ mread_carroutetiming
 ; and prepares velocity/heading, unless the current index is zero.
 ; Always advance car/wheels with the saved fraction, even on no update.
 ; r8/r10 preserved; r0-r7/r9/r11-r14/flags destroyed, RAM bank 0.
-; FIXME: Joins extracted helpers with calls, supplies reference car as
-; an argument, and stops target preparation before attached render lists.
-; TODO: Restore $04:c6e4-$04:c729; mroute_modestep supplies dispatch.
+; FIXME: Joins extracted helpers with calls and supplies the reference
+; car as an argument; the target helper invalidates contact caches.
 ; Not scheduled by the early car tick. Retains native signed overflow
 ; behavior and mcar2point_Yangle's documented -32768 ROM-layout edge.
 mroute_frozenstep
@@ -1894,7 +1936,7 @@ mroute_frozenstep
 ; and returns velocity's r0 to that caller, skipping further dispatch.
 ; r8 preserved; r10 preserved except thaw (-2); other regs/flags scratch.
 ; FIXME: Saved reference argument replaces the unbound player global.
-; TODO: Restore slot/flag/list producers and attached render updates.
+; TODO: Restore slot/flag/list producers and live scheduling.
 mroute_modestep
 	mpush	r11
 	mpush	r2
@@ -1911,7 +1953,7 @@ mroute_modestep
 	nop
 .frozen
 	nop
-	iwt	r0,#CAR_RENDERLINK
+	iwt	r0,#CAR_CONTACTS
 	add	r8
 	ldw	[r0]
 	mtest	r0
@@ -1920,7 +1962,7 @@ mroute_modestep
 	iwt	r0,#CAR_ROUTESTATE
 	add	r8
 	ldw	[r0]
-	iwt	r1,#CARroutestate_attached
+	iwt	r1,#CARroutestate_contacts
 	or	r1
 	sbk
 .checkinit

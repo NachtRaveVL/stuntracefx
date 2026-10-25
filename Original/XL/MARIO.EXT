@@ -133,8 +133,9 @@
 	global	mroute_setupcar,mroute_wheelpose
 	global	mroute_modestep
 	global	mcoalesce_dynamics
-	global	mput_carrenderlink,mput_renderlink
-	global	mclear_renderlist,msweep_renderlist
+	global	mput_carcontact,mput_contact
+	global	mclear_contacts,msweep_contacts
+	global	mread_contactvelocity,mrelease_contacts
 
 
 

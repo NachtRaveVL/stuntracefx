@@ -365,7 +365,7 @@ mmake_obj
 ;
 ; exit:
 ;
-; trashes: r0-r3
+; trashes: r0-r4,r7,r9,r11,r12 (car/wheel contact cleanup included)
 ;
 
 
@@ -387,10 +387,24 @@ mrem_obj
 	and	r2
 	beq	.ncar
 	nop
+	iwt	r2,#CAR_CONTACTS
+	mcall	mrelease_contacts
+	nop
 	mcall	mrem_car
+	nop
+	miwt	pc,.contacts_done&WM
 	nop
 
 .ncar
+	mloadw	r0,OBJ_TYPE,r1
+	iwt	r2,#OBJTYPE_wheel
+	and	r2
+	beq	.contacts_done
+	nop
+	ibt	r2,#WHL_CONTACTS
+	mcall	mrelease_contacts
+	nop
+.contacts_done
 
 
 	
@@ -5857,6 +5871,66 @@ mroute_wheelpose
 	mpop	pc
 	nop
 
+; Contact velocity, US $04:a301-$04:a344.
+; r7 = object, r6 = address of its contact-head word; RAM bank 0.
+; A cache supplies X/Z velocity and zero Y; without one use the object.
+; Store the result in m_x1/m_y1/m_z1. r0/r1/r11/flags scratch;
+; other registers and banks preserved. FIXME: Head-address argument
+; replaces retail's shared object+$18 field.
+mread_contactvelocity
+	mpush	r11
+	to	r1
+	ldw	[r6]
+	mtest	r1
+	beq	.object
+	nop
+	mloadw	r0,CT_VELX,r1
+	sm	[m_x1],r0
+	mloadw	r0,CT_VELZ,r1
+	sm	[m_z1],r0
+	sub	r0
+	sm	[m_y1],r0
+	bra	.done
+	nop
+.object
+	mloadw	r0,OBJ_VELX,r7
+	sm	[m_x1],r0
+	mloadw	r0,OBJ_VELY,r7
+	sm	[m_y1],r0
+	mloadw	r0,OBJ_VELZ,r7
+	sm	[m_z1],r0
+.done
+	mpop	pc
+	nop
+
+
+; Release an object's own contact cache, US $04:8a08-$04:8a28.
+; r1 = object, r2 = contact-head offset. RAM bank 0.
+; r1/r4-r6/r8/r10 preserved; r0/r2/r7/r9/r11/r12/flags scratch.
+; FIXME: Offset argument and saved r6 adapt retail's common layout;
+; callable return replaces continuation into retail object removal.
+mrelease_contacts
+	mpush	r11
+	mpush	r6
+	move	r0,r2
+	add	r1
+	move	r6,r0
+	ldw	[r6]
+	mtest	r0
+	beq	.done
+	nop
+	mpush	r8
+	mcall	mclear_contacts
+	nop
+	mcall	msweep_contacts
+	nop
+	mpop	r8
+.done
+	mpop	r6
+	mpop	pc
+	nop
+
+
 ; Coalesce the dynamics heap, US $04:8898-$04:88d4.
 ; The surviving macro matches retail's first-heap pass. Negative blocks
 ; and nonadjacent free links are retained. A pass does not necessarily
@@ -5870,17 +5944,17 @@ mcoalesce_dynamics
 	nop
 
 
-; Car render-record gate, US $04:a345-$04:a353.
+; Car contact-record gate, US $04:a345-$04:a353.
 ; r6 = owner car, r8 = source object; RAM bank 0.
 ; AIFLAGS $0080 suppresses both lookup and allocation.
 ; r6/r8/r10 preserved; r0/r7/r9/r11/flags scratch.
 ; FIXME: The shared retail owner layout is adapted to CAR_AIFLAGS and
-; CAR_RENDERLINK. Wheel callers need their own head/flag mapping.
-mput_carrenderlink
+; CAR_CONTACTS. Wheel definition flags and broad-phase callers remain.
+mput_carcontact
 	iwt	r0,#CAR_AIFLAGS
 	add	r6
 	ldw	[r0]
-	iwt	r9,#CARaiflag_skiprenderlink
+	iwt	r9,#CARaiflag_skipcontact
 	and	r9
 	beq	.put
 	nop
@@ -5889,42 +5963,42 @@ mput_carrenderlink
 .put
 	mpush	r11
 	mpush	r6
-	iwt	r0,#CAR_RENDERLINK
+	iwt	r0,#CAR_CONTACTS
 	add	r6
 	move	r6,r0
-	mcall	mput_renderlink
+	mcall	mput_contact
 	nop
 	mpop	r6
 	mpop	pc
 	nop
 
 
-; Attached render records, US $04:a354-$04:a440.
-; r6 = address of the owner's render-head word, r8 = source object.
-; Reuse the record keyed by r8, or allocate RL_LEN from m_dynmem and
-; prepend it. Copy source X/Z velocity/position unless RLflag_hold;
-; always set RLflag_used. Exhaustion leaves the owner list unchanged.
+; Collision-contact records, US $04:a354-$04:a440.
+; r6 = address of the owner's contact-head word, r8 = source object.
+; Reuse the record keyed by r8, or allocate CT_LEN from m_dynmem and
+; prepend it. Copy source X/Z velocity/position unless CTflag_hold;
+; always set CTflag_used. Exhaustion leaves the owner list unchanged.
 ; r6/r8/r10/r11 preserved; r0/r7/r9/flags scratch; RAM bank 0.
 ; FIXME: Head-word argument replaces retail owner+$18. The caller must
 ; apply retail $a345's owner flag $0080 exclusion before this entry.
-; TODO: Restore wheel head storage, producers and scene/frame consumers.
+; TODO: Restore broad-phase producers and collision-frame consumers.
 ; Records share the dynamics heap but do not join m_objects. No extra
 ; capacity is reserved here; the existing allocation-failure path applies.
-mput_renderlink
+mput_contact
 	to	r7
 	ldw	[r6]
 	mtest	r7
 	beq	.allocate
 	nop
 .find
-	mloadw	r0,RL_OBJECT,r7
+	mloadw	r0,CT_OBJECT,r7
 	cmp	r8
 	bne	.next
 	nop
 	miwt	pc,.update&WM
 	nop
 .next
-	mloadw	r0,RL_NEXT,r7
+	mloadw	r0,CT_NEXT,r7
 	moves	r7,r0
 	bne	.find
 	nop
@@ -5932,7 +6006,7 @@ mput_renderlink
 	mpush	r8
 	iwt	r9,#m_dynmem&WM
 	cache
-	ibt	r7,#RL_LEN
+	ibt	r7,#CT_LEN
 	mpush	r9
 .exact
 	to	r8
@@ -5998,32 +6072,32 @@ mput_renderlink
 	nop
 .attach
 	nop
-	iwt	r9,#RL_LEN
-	mstorew	r8,RL_OBJECT,r7
+	iwt	r9,#CT_LEN
+	mstorew	r8,CT_OBJECT,r7
 	to	r9
 	ldw	[r6]
-	mstorew	r9,RL_NEXT,r7
+	mstorew	r9,CT_NEXT,r7
 	from	r7
 	stw	[r6]
 	ibt	r9,#0
-	mstorew	r9,RL_FLAGS,r7
+	mstorew	r9,CT_FLAGS,r7
 .update
-	mloadw	r9,RL_FLAGS,r7
-	iwt	r0,#RLflag_hold
+	mloadw	r9,CT_FLAGS,r7
+	iwt	r0,#CTflag_hold
 	and	r9
 	bne	.mark
 	nop
 	mloadw	r9,OBJ_VELX,r8
-	mstorew	r9,RL_VELX,r7
+	mstorew	r9,CT_VELX,r7
 	mloadw	r9,OBJ_VELZ,r8
-	mstorew	r9,RL_VELZ,r7
+	mstorew	r9,CT_VELZ,r7
 	mloadw	r9,OBJ_WORLDX,r8
-	mstorew	r9,RL_WORLDX,r7
+	mstorew	r9,CT_WORLDX,r7
 	mloadw	r9,OBJ_WORLDZ,r8
-	mstorew	r9,RL_WORLDZ,r7
+	mstorew	r9,CT_WORLDZ,r7
 .mark
-	mloadw	r0,RL_FLAGS,r7
-	iwt	r9,#RLflag_used
+	mloadw	r0,CT_FLAGS,r7
+	iwt	r9,#CTflag_used
 	or	r9
 	sbk
 	move	pc,r11
@@ -6033,23 +6107,23 @@ mput_renderlink
 	nop
 
 
-; Clear render usage marks, US $04:a441-$04:a461.
-; r6 = address of the owner's render-head word; RAM bank 0.
+; Clear contact usage marks, US $04:a441-$04:a461.
+; r6 = address of the owner's contact-head word; RAM bank 0.
 ; Preserve every other flag and all list/header/data words.
 ; r6/r10/r11 preserved; r0/r8/r12/flags scratch.
 ; FIXME: Head-word argument replaces retail owner+$18.
-mclear_renderlist
+mclear_contacts
 	to	r8
 	ldw	[r6]
 	mtest	r8
 	beq	.done
 	nop
-	iwt	r12,#RLflag_used
+	iwt	r12,#CTflag_used
 .next
-	mloadw	r0,RL_FLAGS,r8
+	mloadw	r0,CT_FLAGS,r8
 	bic	r12
 	sbk
-	mloadw	r0,RL_NEXT,r8
+	mloadw	r0,CT_NEXT,r8
 	moves	r8,r0
 	bne	.next
 	nop
@@ -6058,23 +6132,23 @@ mclear_renderlist
 	nop
 
 
-; Sweep render records, US $04:a462-$04:a4d4.
-; r6 = address of the owner's render-head word; RAM bank 0.
+; Sweep contact records, US $04:a462-$04:a4d4.
+; r6 = address of the owner's contact-head word; RAM bank 0.
 ; Keep marked records in order, clear their usage bit, unlink unmarked
 ; records and return them to m_dynmem. Negative sizes become positive;
 ; positive-size records are reinserted at the heap head, as in mfree_mem.
 ; r6/r10/r11 preserved; r0/r2/r7-r9/r12/flags scratch.
 ; FIXME: Head-word argument replaces retail owner+$18. No coalescing.
-msweep_renderlist
+msweep_contacts
 	to	r8
 	ldw	[r6]
 	mtest	r8
 	beq	.done
 	nop
-	iwt	r12,#RLflag_used
+	iwt	r12,#CTflag_used
 	ibt	r2,#0
 .next
-	mloadw	r0,RL_FLAGS,r8
+	mloadw	r0,CT_FLAGS,r8
 	to	r9
 	and	r12
 	beq	.remove
@@ -6083,7 +6157,7 @@ msweep_renderlist
 	sbk
 	move	r2,r8
 .follow
-	mloadw	r0,RL_NEXT,r8
+	mloadw	r0,CT_NEXT,r8
 .advance
 	moves	r8,r0
 	bne	.next
@@ -6092,7 +6166,7 @@ msweep_renderlist
 	move	pc,r11
 	nop
 .remove
-	mloadw	r7,RL_NEXT,r8
+	mloadw	r7,CT_NEXT,r8
 	mtest	r2
 	bne	.previous
 	nop
@@ -6101,7 +6175,7 @@ msweep_renderlist
 	bra	.free
 	nop
 .previous
-	mstorew	r7,RL_NEXT,r2
+	mstorew	r7,CT_NEXT,r2
 .free
 	mpush	r7
 	inc	r8

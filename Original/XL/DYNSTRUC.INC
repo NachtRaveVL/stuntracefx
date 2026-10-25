@@ -184,7 +184,7 @@ CARroutemode_slowspeed	equ	32
 ; mlink_avoidcar restores list insertion; early lifetime hooks maintain it.
 ; mread_carflags reads the retail definition's flags, including $0400.
 ; TODO: Restore its constructor caller; the early cardef format differs.
-CARaiflag_skiprenderlink	equ	$0080
+CARaiflag_skipcontact	equ	$0080
 CARaiflag_skipavoid	equ	$0400
 	struct		CAR_AINEXT,2
 	struct		CAR_AIFLAGS,2
@@ -196,15 +196,15 @@ CARaiflag_skipavoid	equ	$0400
 	struct		CAR_ROUTECOUNT,2
 	struct		CAR_ROUTESLOT,2
 
-; Retail car $1c/$2c/$18 state, motion flags and attached render list.
+; Retail car $1c/$2c/$18 state, motion flags and contact list.
 ; Keep these separate from early object type/collision fields.
 ; FIXME: Names reconstructed. TODO: Restore flag/list producers.
 CARroutestate_frozen	equ	$0010
-CARroutestate_attached	equ	$0040
+CARroutestate_contacts	equ	$0040
 CARmotion_skiproute	equ	$0040
 	struct		CAR_ROUTESTATE,2
 	struct		CAR_MOTIONFLAGS,2
-	struct		CAR_RENDERLINK,2
+	struct		CAR_CONTACTS,2
 
  	
 	struct		CAR_LEN,0	
@@ -268,6 +268,10 @@ WHLflag_routehold	EQU	$0400
 
 	struct		WHL_DAMAGE,2
 
+; Retail wheel $18 collision-contact cache, separate from collision
+; object pointers and early scratch. mmake_obj clears the enlarged block.
+	struct		WHL_CONTACTS,2
+
 	struct		WHL_LEN,0
 
 
@@ -326,21 +330,21 @@ TOBJflag_stratflag1	equ	2
 
 	PRINTF	"hand obj struct size = ",HANDOBJ_LEN,"%n"
 
-; Retail attached render records. The first four bytes are the existing
+; Retail collision-contact records. The first four bytes are the existing
 ; dynamics allocator's next/size header; ownership uses a separate link.
 ; FIXME: Names reconstructed. These are not early OBJ/CAR/WHL offsets.
-RL_NEXTFREE	equ	0
-RL_SIZE		equ	2
-RL_VELX		equ	4
-RL_VELZ		equ	6
-RL_WORLDX	equ	8
-RL_WORLDZ	equ	10
-RL_OBJECT	equ	12
-RL_NEXT		equ	14
-RL_FLAGS	equ	16
-RL_LEN		equ	18
-RLflag_used	equ	1
-RLflag_hold	equ	4
+CT_NEXTFREE	equ	0
+CT_SIZE		equ	2
+CT_VELX		equ	4
+CT_VELZ		equ	6
+CT_WORLDX	equ	8
+CT_WORLDZ	equ	10
+CT_OBJECT	equ	12
+CT_NEXT		equ	14
+CT_FLAGS	equ	16
+CT_LEN		equ	18
+CTflag_used	equ	1
+CTflag_hold	equ	4
 
 
 ;******************************************************************************************
