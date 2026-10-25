@@ -71,17 +71,17 @@ pie showData
 | Route access, AI and driving controls | 10% | 35-55% | 45-65% | `MAI`, route helpers in `GASTRATS`, `WORLD`: normal driving, mode dispatch, lap/rank producers, player-bound timing, frozen-route motion and contact-cache invalidation reconstructed; remaining mode/flag producers, retail multiplayer lifetime, collision-frame integration and live AI scheduling remain. |
 | Race rules, frontend, menus and game flow | 15% | 0-10% | 90-100% | `XLMAIN`, `XLTITLE`, `XLINIT`, `PSTRATS`, `GSTRATS`, `GASTRATS`, `ENDSEQ`: early behavior is a starting point; final race progression, timing/results, vehicle/course selection, attract/demo, two-player flow and endings need retail mapping and restoration. Anchors include `$0B:AE0A` and `$0B:FB26`. |
 | Courses, scene streams, models, graphics and text | 15% | 5-15% | 85-95% | `MAPS`, shape sources, `MSPRITES`, `DATA`, `XLDATA`, `MDATA`, `SHBANKS`, `INCBINS`: inherited assets and some identical tables exist, but the built map includes an early fallback route, not the full retail course set. Restore final scene/course inventory, object placement, routes, model/texture/background differences and text, then validate references. |
-| Audio driver, command mapping, music and samples | 5% | 0-10% | 90-100% | `MAI`, `MWROT`, `XLSOUND`, `XLSND`, `SND`: nearby-car audio, command queues/ports, controller/effect commands, engine parameter/filter and five curves, plus SPC IPL transport are reconstructed. Retail driver/data assembly, reload selection, callers/NMI scheduling, definition producers, music/sample inventory and playback integration remain; the early SPC path is still active. Remaining CPU anchors: `$04:D0DB`, `$04:D44C`. |
+| Audio driver, command mapping, music and samples | 5% | 0-10% | 90-100% | `MAI`, `MWROT`, `XLSOUND`, `XLSLOAD`, `MDECRU`, `XLSND`, `SND`: nearby-car audio, commands/ports, engine curves, reload/scene/instrument selection, unpacking and SPC transport are reconstructed or verified. Retail driver/data assembly and placement, callers/NMI scheduling, definition producers, music/sample inventory and playback integration remain; the early SPC path is still active. |
 
 #### Retail Bank Map
 
 | Retail bank(s) | Restored/adapted | Identical candidates | Uncredited | Mapped content or next investigation |
 | --- | ---: | ---: | ---: | --- |
 | `$00` | 834 | 6,362 | 25,572 | Verified byte sine/cosine and sine-interpolation tables; other shared-data candidates, reset/header and remaining content audit |
-| `$01` | 765 | 1,953 | 30,050 | GSU math/render engine; verified inherited matrix and math spans, remaining draw pipeline |
+| `$01` | 1,258 | 1,775 | 29,735 | GSU math/render engine; verified inherited matrix, math and backward-decompression spans, remaining draw pipeline |
 | `$02` | 1,319 | 4,084 | 27,365 | CPU NMI/display, camera records and retail audio port service; remaining runtime/control flow and SPC integration |
-| `$03` | 483 | 1,407 | 30,878 | Hardware setup, matrix wrapper and callback/activity helpers; remaining CPU engine |
-| `$04` | 5,952 | 263 | 26,553 | GSU dynamics/AI plus CPU audio; route modes/ranks, nearby-car state, controller/effect commands, queues/ports and SPC upload transport restored; remaining constructor, collision-frame integration, physics and audio reload/callers/driver |
+| `$03` | 613 | 1,407 | 30,748 | Hardware setup, matrix/callback helpers and audio unpack/upload wrapper; remaining CPU engine |
+| `$04` | 6,856 | 263 | 25,649 | GSU dynamics/AI plus CPU audio; route modes/ranks, nearby-car state, commands/ports, reload catalogues and instrument selection restored; remaining constructor, collision-frame integration, physics and audio assets/callers/driver |
 | `$05-$06` | 0 | 0 | 65,536 | Content/source correspondence still unclassified |
 | `$07` | 80 | 0 | 32,688 | Nearby-car CPU audio consumer; remaining content/source correspondence audit |
 | `$08` | 3,905 | 65 | 28,798 | Camera/route helpers, first-player car binding, map and object systems; remaining vehicle/gameplay logic |
@@ -92,11 +92,13 @@ pie showData
 | `$0D-$13` | 0 | 0 | 229,376 | Content/source correspondence still unclassified |
 | `$14` | 0 | 19,905 | 12,863 | `MDATA` wipe/Z-table/effect data candidates; validate table boundaries and consumers |
 | `$15-$18` | 0 | 0 | 131,072 | Content/source correspondence still unclassified |
-| `$19` | 0 | 844 | 31,924 | Fragments matching early `XLSND0.BIN`; remaining audio/data mapping |
-| `$1A` | 0 | 1,713 | 31,055 | Fragments matching early `XLSND0.BIN`; remaining audio/data mapping |
-| `$1B` | 0 | 396 | 32,372 | Fragments matching early `XLSND0.BIN`; remaining audio/data mapping |
-| `$1C-$1F` | 0 | 0 | 131,072 | Content/source correspondence still unclassified |
-| **All 32 banks** | **14,583** | **37,714** | **996,279** | **All 1 MiB accounted for exactly once** |
+| `$19` | 0 | 844 | 31,924 | Initial driver and first-player instrument IPL streams identified; early `XLSND0.BIN` fragments match, but retail driver/sample assembly and placement remain |
+| `$1A` | 0 | 1,713 | 31,055 | Second-player instrument and other IPL streams identified; early `XLSND0.BIN` fragments match, remaining audio/data mapping |
+| `$1B` | 0 | 396 | 32,372 | Scene music and extra instrument IPL streams identified; early `XLSND0.BIN` fragments match, remaining audio/data assembly and placement |
+| `$1C` | 0 | 0 | 32,768 | Content/source correspondence still unclassified |
+| `$1D-$1E` | 0 | 0 | 65,536 | Packed song/upload streams and raw-copy resources identified through reload catalogues and literal callers; decoder/stream boundaries verified, retail asset assembly and placement remain |
+| `$1F` | 0 | 0 | 32,768 | Content/source correspondence still unclassified |
+| **All 32 banks** | **16,110** | **37,536** | **994,930** | **All 1 MiB accounted for exactly once** |
 
 ## Building Original
 

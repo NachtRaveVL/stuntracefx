@@ -16,11 +16,14 @@
 	include	continue.ext
 	include	coltabs.ext
 	include	mem.ext
+	include	xlsound.ext
+	include	mkmacs.inc
 
 ;------------------------------------------------------------------
 	bank	4
 ;	incfile	paths.asm
 ;	incfile	d2strats.asm
+	incfile	xlsload.asm
 	bankend	4
 ;------------------------------------------------------------------
 

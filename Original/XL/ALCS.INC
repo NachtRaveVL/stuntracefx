@@ -828,6 +828,12 @@ mio_mode	equ	$303a
 	alc	racesound_revs,2
 	alc	racesound_engineowner,2
 
+; Retail audio scene/reload state; scene is read as a full word.
+	alc	racesound_reloadonce,1
+	alc	racesound_scene,2
+	alc	racesound_playmode,1
+	alc	racesound_extraoff,1
+
 	IFGT	wmempt-$2000
 	printf	"%n%nTOO MANY ALCS USED%n%n"
 	fail
