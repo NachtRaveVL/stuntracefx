@@ -481,6 +481,10 @@ viewrouteptr	=	m_routeptr
 ; TODO: Restore the GSU draw consumer.
 	malc	m_viewroadflags,2
 
+; Retail $2476: first player's GSU car, bound by the CPU player strategy.
+; This is independent of m_testcar1 (the first car allocated).
+	malc	m_playercar,2
+
 ; Current map number for retail route-speed and AI tables.
 ; Retail copies CPU $0e3d to GSU RAM $26f4 while loading the scene.
 	zmalc	m_mapnumber,2

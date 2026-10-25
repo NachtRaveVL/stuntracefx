@@ -1105,6 +1105,14 @@ mlink_avoidcar
 ; frees it; retail's insertion block has no corresponding removal here.
 ; r1 = car, preserved. r0/r2-r4 and flags scratch.
 munlink_avoidcar
+; Early lifetime adaptation: a removed player must not remain bound.
+	lm	r0,[m_playercar]
+	cmp	r1
+	bne	.list
+	nop
+	sub	r0
+	sm	[m_playercar],r0
+.list
 	lm	r3,[m_avoidcarhead]
 	ibt	r2,#0
 .next
@@ -1659,7 +1667,8 @@ mroute_timings_end
 ; Return r3=count, r6=step; r0/r14/flags scratch, other regs preserved.
 ; r14 ends one byte past the pair; ROM bank becomes the table's bank.
 ; mread_carroutetiming supplies the difference from CAR_ROUTESLOT words.
-; FIXME: Retail slot assignment/player binding remain; no bounds guard.
+; mrank_routecars supplies ranks; bindplayercar supplies the reference.
+; No bounds guard is present in retail.
 ; Retail maps 0..41 and differences -3..3 address these exact data.
 mread_routetiming
 	ibt	r0,#mroute_timings>>16
@@ -1847,16 +1856,16 @@ mread_carflags
 	nop
 
 
-; Frozen-route timing with car slots, from US $04:c5b2-$04:c5c0.
-; r8 = car, r2 = reference car (normally the player), RAM bank 0.
+; Frozen-route timing with car ranks, from US $04:c5ae-$04:c5c0.
+; r8 = car; m_playercar supplies the reference car, RAM bank 0.
 ; Return r3 = count, r6 = step, r4 = signed slot difference.
-; r0/r1/r11/r14/flags scratch; r2/r5/r7-r10/r12-r13 preserved.
+; r0/r1/r2/r11/r14/flags scratch; r5/r7-r10/r12-r13 preserved.
 ; ROM bank becomes the timing table's bank, as in mread_routetiming.
-; FIXME: Reference pointer is an argument instead of retail global $2476.
-; TODO: Restore that global's producer and CAR_ROUTESLOT assignment.
+; The player must be bound before frozen timing is read, as in retail.
 ; Valid maps 0..41 and slot differences -3..3; no bounds guard in retail.
 mread_carroutetiming
 	mpush	r11
+	lm	r2,[m_playercar]
 	iwt	r1,#CAR_ROUTESLOT
 	with	r1
 	add	r2
@@ -1874,14 +1883,14 @@ mread_carroutetiming
 
 
 ; Frozen-route countdown and movement, US $04:c595-$04:c659.
-; r8 = car, r2 = reference car; map/slot requirements as above.
+; r8 = car; bound-player/map/rank requirements as above.
 ; Increment the 16-bit counter; zero wrap or signed count comparison
 ; reaching the timing threshold selects/stores the adjacent route point
 ; and prepares velocity/heading, unless the current index is zero.
 ; Always advance car/wheels with the saved fraction, even on no update.
 ; r8/r10 preserved; r0-r7/r9/r11-r14/flags destroyed, RAM bank 0.
-; FIXME: Joins extracted helpers with calls and supplies the reference
-; car as an argument; the target helper invalidates contact caches.
+; FIXME: Joins extracted helpers with calls; the target helper invalidates
+; contact caches. The reference is read from the bound player global.
 ; Not scheduled by the early car tick. Retains native signed overflow
 ; behavior and mcar2point_Yangle's documented -32768 ROM-layout edge.
 mroute_frozenstep
@@ -1928,18 +1937,16 @@ mroute_frozenstep
 
 
 ; Route modes, US $04:c3d5-$04:c477 and $04:c4b7-$04:c4bd.
-; r8 = car, r2 = reference car for frozen timing; RAM bank 0.
+; r8 = car; bound player supplies frozen timing's reference; RAM bank 0.
 ; AIFLAGS $0400 selects frozen motion, ROUTEMODE $0004 query-only.
 ; Preserve native initialization/thaw ordering and skip-route avoidance.
 ; Return zero after frozen motion, one after normal/query-only work.
 ; Thaw consumes an extra caller return word, as in retail $04:c72f,
 ; and returns velocity's r0 to that caller, skipping further dispatch.
 ; r8 preserved; r10 preserved except thaw (-2); other regs/flags scratch.
-; FIXME: Saved reference argument replaces the unbound player global.
-; TODO: Restore slot/flag/list producers and live scheduling.
+; TODO: Restore remaining mode/flag producers and live AI scheduling.
 mroute_modestep
 	mpush	r11
-	mpush	r2
 	iwt	r1,#CAR_AIFLAGS
 	with	r1
 	add	r8
@@ -1994,7 +2001,6 @@ mroute_modestep
 	miwt	pc,.query&WM
 	nop
 .frozenmove
-	mpop	r2
 	mcall	mroute_frozenstep
 	nop
 	miwt	pc,.frozenreturn&WM
@@ -2012,8 +2018,6 @@ mroute_modestep
 	sbk
 	mcall	mroute_setupcar
 	nop
-	dec	r10
-	dec	r10
 	mpop	r11
 	mcall	mroute_carvelocity
 	nop
@@ -2049,8 +2053,6 @@ mroute_modestep
 	nop
 	ibt	r0,#1
 .done
-	dec	r10
-	dec	r10
 	mpop	pc
 	nop
 .frozenreturn
@@ -2061,4 +2063,303 @@ mroute_modestep
 	mcall	mupdate_carroute
 	nop
 	miwt	pc,.done&WM
+	nop
+
+
+; Initial lap/accepted-point/current-point words, US $04:8fac-$04:8fc4.
+; r1 = cleared car, preserved; r0/r2/flags scratch. No bank/stack change.
+; FIXME: Callable return replaces the retail constructor continuation.
+minit_routeprogress
+	iwt	r2,#0
+	iwt	r0,#CAR_ROUTELAPS
+	add	r1
+	from	r2
+	stw	[r0]
+	iwt	r2,#2
+	iwt	r0,#CAR_ROUTESEEN
+	add	r1
+	from	r2
+	stw	[r0]
+	iwt	r2,#1
+	ibt	r0,#CAR_ROUTEINDEX
+	add	r1
+	from	r2
+	stw	[r0]
+	move	pc,r11
+	nop
+
+
+; Accept route progress and count laps, US $04:cdca-$04:ce1c.
+; r8 = car; RAM bank 0. Retain signed 16-bit comparisons: a backward
+; change is accepted only from the table's last point; forward jumps
+; of five or more are rejected. Accepted point 1 increments the lap word.
+; r0-r4/r14/flags scratch; r5-r13 preserved, no stack use.
+; A null table leaves progress unchanged; no count/index range guard.
+mtrack_routeprogress
+	ibt	r0,#CAR_ROUTEINDEX
+	add	r8
+	ldw	[r0]
+	iwt	r1,#CAR_ROUTESEEN
+	with	r1
+	add	r8
+	to	r1
+	ldw	[r1]
+	with	r0
+	to	r3
+	cmp	r1
+	beq	.done
+	nop
+	lm	r0,[m_routebank]
+	romb
+	lm	r0,[m_routeptr]
+	with	r14
+	from	r0
+	beq	.done
+	nop
+	to	r4
+	getb
+	inc	r14
+	with	r4
+	getbh
+	from	r3
+	sub	r1
+	bpl	.forward
+	nop
+	with	r1
+	cmp	r4
+	beq	.accept
+	nop
+	bra	.done
+	nop
+.forward
+	ibt	r2,#5
+	cmp	r2
+	bpl	.done
+	nop
+.accept
+	iwt	r0,#CAR_ROUTESEEN
+	add	r8
+	from	r3
+	stw	[r0]
+	ibt	r2,#1
+	with	r3
+	cmp	r2
+	bne	.done
+	nop
+	iwt	r0,#CAR_ROUTELAPS
+	add	r8
+	ldw	[r0]
+	inc	r0
+	sbk
+.done
+	with	r11
+	to	pc
+	nop
+
+
+; Rebuild one-based race ranks, US $04:ce1d-$04:ce64.
+; Clear every CAR_ROUTESLOT, then select the next unranked car for
+; each list entry. RAM bank 0; null list is valid. r10/r12-r14 preserved;
+; r0-r9/r11/flags scratch, r8 is not preserved. No list sorting occurs.
+mrank_routecars
+	mpush	r11
+	cache
+	ibt	r5,#0
+	lm	r0,[m_avoidcarhead]
+	mtest	r0
+	beq	.done
+	nop
+.clear
+	with	r8
+	from	r0
+	beq	.select
+	nop
+	iwt	r0,#CAR_ROUTESLOT
+	add	r8
+	from	r5
+	stw	[r0]
+	iwt	r0,#CAR_AINEXT
+	add	r8
+	ldw	[r0]
+	bra	.clear
+	nop
+.select
+	lm	r0,[m_avoidcarhead]
+	ibt	r9,#1
+	cache
+.next
+	with	r8
+	from	r0
+	beq	.done
+	nop
+	mpush	r8
+	mcall	mrank_nextroutecar
+	nop
+	mpop	r8
+	inc	r9
+	iwt	r0,#CAR_AINEXT
+	add	r8
+	ldw	[r0]
+	bra	.next
+	nop
+.done
+	mpop	pc
+	nop
+
+
+; Select one unranked car, US $04:ce65-$04:ced5. r9 = rank to assign.
+; Prefer more laps, then larger accepted point, then smaller distance.
+; Exact ties keep the first list entry. All comparisons retain native
+; subtraction/sign behavior, including pathological negative lap words
+; and the head fallback if no candidate improves the initial tuple.
+; The caller supplies a nonempty list; an empty list writes at owner zero.
+; r0-r8/flags scratch; r9-r14 preserved. RAM bank 0, no stack use.
+mrank_nextroutecar
+	sub	r0
+	with	r0
+	to	r2
+	with	r0
+	to	r3
+	ibt	r1,#-1
+	lm	r0,[m_avoidcarhead]
+	with	r4
+	from	r0
+.next
+	with	r8
+	from	r0
+	beq	.assign
+	nop
+	iwt	r0,#CAR_ROUTESLOT
+	add	r8
+	ldw	[r0]
+	mtest	r0
+	bne	.follow
+	nop
+	iwt	r5,#CAR_ROUTELAPS
+	with	r5
+	add	r8
+	to	r5
+	ldw	[r5]
+	iwt	r6,#CAR_ROUTESEEN
+	with	r6
+	add	r8
+	to	r6
+	ldw	[r6]
+	iwt	r7,#CAR_ROUTEDIST
+	with	r7
+	add	r8
+	to	r7
+	ldw	[r7]
+	mtest	r5
+	bne	.compare
+	nop
+; Retain this retail self-comparison, even though it cannot decrement r5.
+	iwt	r0,#CAR_ROUTESEEN
+	add	r8
+	ldw	[r0]
+	sub	r6
+	add	#5
+	bpl	.compare
+	nop
+	dec	r5
+.compare
+	with	r5
+	cmp	r1
+	bmi	.follow
+	nop
+	bne	.best
+	nop
+	with	r6
+	cmp	r2
+	bmi	.follow
+	nop
+	bne	.best
+	nop
+	with	r7
+	cmp	r3
+	bpl	.follow
+	nop
+.best
+	with	r8
+	to	r4
+	with	r5
+	to	r1
+	with	r6
+	to	r2
+	with	r7
+	to	r3
+.follow
+	iwt	r0,#CAR_AINEXT
+	add	r8
+	ldw	[r0]
+	bra	.next
+	nop
+.assign
+	iwt	r0,#CAR_ROUTESLOT
+	add	r4
+	from	r9
+	stw	[r0]
+	with	r11
+	to	pc
+	nop
+
+
+; Distance to the selected adjacent point, US $04:ced6-$04:cf07.
+; r8 = car, r0 = accepted point index. Return r0 = |dx|/4 + |dz|/4
+; using wrapped subtraction and native DIV2, not Euclidean distance.
+; r8/r10/r12-r13 preserved; r0-r7/r11/r14/flags scratch. No index guard.
+mroute_pointdistance
+	mpush	r11
+	mcall	mroutepointptr
+	nop
+	mcall	mselect_routepoint
+	nop
+	ibt	r0,#OBJ_WORLDX
+	add	r8
+	ldw	[r0]
+	sub	r1
+	bpl	.xpositive
+	nop
+	not
+	inc	r0
+.xpositive
+	div2
+	div2
+	with	r0
+	to	r4
+	ibt	r0,#OBJ_WORLDZ
+	add	r8
+	ldw	[r0]
+	sub	r3
+	bpl	.zpositive
+	nop
+	not
+	inc	r0
+.zpositive
+	div2
+	div2
+	add	r4
+	mpop	pc
+	nop
+
+
+; End-of-car progress update, US $04:b990-$04:b9ab.
+; r8 = car, preserved; r10/r12-r13 preserved; other scratch as above.
+; FIXME: Added entry push makes the extracted enclosing tail callable.
+mupdate_routeprogress
+	mpush	r11
+	mcall	mtrack_routeprogress
+	nop
+	iwt	r0,#CAR_ROUTESEEN
+	add	r8
+	ldw	[r0]
+	mcall	mroute_pointdistance
+	nop
+	with	r0
+	to	r1
+	iwt	r0,#CAR_ROUTEDIST
+	add	r8
+	from	r1
+	stw	[r0]
+	mpop	pc
 	nop

@@ -136,6 +136,10 @@
 	global	mput_carcontact,mput_contact
 	global	mclear_contacts,msweep_contacts
 	global	mread_contactvelocity,mrelease_contacts
+	global	m_playercar
+	global	minit_routeprogress,mtrack_routeprogress
+	global	mrank_routecars,mrank_nextroutecar,mroute_pointdistance
+	global	mupdate_routeprogress
 
 
 

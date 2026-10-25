@@ -448,6 +448,7 @@ car1_Istrat			; player car.
 
 
 	jsl	makecar2_l
+	jsr	bindplayercar
 
 	s_set_strat	x,car1_strat
 
@@ -513,6 +514,26 @@ car1_strat
 
 	a8
 	s_end_strat
+
+
+;*****************************************************************************
+; First-player binding, US $08:af48-$08:af62. A8/I16, D=0, DB=$7e.
+; X = CPU car; preserve X/Y, return A8. A null car leaves the previous
+; binding unchanged. FIXME: RTS extracts the retail inline block.
+bindplayercar
+	a16
+	lda	al_collobjptr,x
+	beq	.done
+	phx
+	tax
+	sta.l	m_playercar
+	lda.l	mrambank+CAR_ROUTESTATE,x
+	ora	#CARroutestate_player
+	sta.l	mrambank+CAR_ROUTESTATE,x
+	plx
+.done
+	a8
+	rts
 
 
 ;*****************************************************************************

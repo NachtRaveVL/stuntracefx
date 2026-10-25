@@ -256,6 +256,7 @@ minit_dynamics	; INITIALISE DYNAMICS.
 	sm	[m_avoidcarhead&WM],r0
 	sm	[m_dynframe],r0
 	sm	[m_testcar1],r0
+	sm	[m_playercar],r0
 	sm	[m_test1],r0
 ; FIXME: Early dynamics initialization is the retail GSU reset boundary.
 	sm	[m_viewroadflags],r0
@@ -649,6 +650,8 @@ mmake_car
 ; Initialise the new camera alignment field before the first dynamics tick.
 	iwt	r2,#32767
 	mstorew	r2,CAR_VELALIGN,r1
+	mcall	minit_routeprogress
+	nop
 
 ; set car flag
 	mloadw	r2,OBJ_TYPE,r1
@@ -823,6 +826,8 @@ mdo_dynamics
 	bra	.loop
 	nop
 .noobjs
+	mcall	mrank_routecars
+	nop
 
 
 ;----------------------------------------
@@ -2518,13 +2523,19 @@ rounddown	=	64
 ; Use normal-mode index tracking when maproute has bound a table, after
 ; movement and before the CPU camera pass. This includes dynoff cars.
 ; Failed searches retain the last index, as in retail's normal branch.
-; TODO: Connect mroute_modestep after field/render-list integration.
+; TODO: Connect mroute_modestep after mode/collision integration.
 ; The separate mupdate_carroute entry retains query-only zero-on-failure.
 	lm	r0,[m_routeptr]
 	mtest	r0
 	beq	.nroute
 	nop
 	mcall	mtrack_carroute
+	nop
+	mtest	r0
+	beq	.nroute
+	nop
+; The early bridge updates progress only after a successful route search.
+	mcall	mupdate_routeprogress
 	nop
 .nroute
 	mpop	pc

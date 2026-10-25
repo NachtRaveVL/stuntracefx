@@ -189,22 +189,30 @@ CARaiflag_skipavoid	equ	$0400
 	struct		CAR_AINEXT,2
 	struct		CAR_AIFLAGS,2
 
-; Retail car $72/$88 frozen-route countdown and slot index.
+; Retail car $72/$88 frozen-route countdown and race rank.
 ; Appended to retain all early offsets; mmake_obj clears both words.
 ; FIXME: Names reconstructed. Slots must differ by -3..3 for the timing
-; table. TODO: Restore the retail slot assignment.
+; table. mrank_routecars assigns the one-based ranks.
 	struct		CAR_ROUTECOUNT,2
 	struct		CAR_ROUTESLOT,2
 
 ; Retail car $1c/$2c/$18 state, motion flags and contact list.
 ; Keep these separate from early object type/collision fields.
 ; FIXME: Names reconstructed. TODO: Restore flag/list producers.
+CARroutestate_player	equ	$0008
 CARroutestate_frozen	equ	$0010
 CARroutestate_contacts	equ	$0040
 CARmotion_skiproute	equ	$0040
 	struct		CAR_ROUTESTATE,2
 	struct		CAR_MOTIONFLAGS,2
 	struct		CAR_CONTACTS,2
+
+; Retail car $7a/$86/$84 progress used by the race-rank scan.
+; Keep accepted route position separate from CAR_ROUTEINDEX, which
+; nearest-point/query paths may change without advancing lap progress.
+	struct		CAR_ROUTELAPS,2
+	struct		CAR_ROUTESEEN,2
+	struct		CAR_ROUTEDIST,2
 
  	
 	struct		CAR_LEN,0	
