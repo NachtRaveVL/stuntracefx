@@ -71,7 +71,7 @@ pie showData
 | Route access, AI and driving controls | 10% | 35-55% | 45-65% | `MAI`, route helpers in `GASTRATS`, `WORLD`: normal driving, mode dispatch, lap/rank producers, player-bound timing, frozen-route motion and contact-cache invalidation reconstructed; remaining mode/flag producers, retail multiplayer lifetime, collision-frame integration and live AI scheduling remain. |
 | Race rules, frontend, menus and game flow | 15% | 0-10% | 90-100% | `XLMAIN`, `XLTITLE`, `XLINIT`, `PSTRATS`, `GSTRATS`, `GASTRATS`, `ENDSEQ`: early behavior is a starting point; final race progression, timing/results, vehicle/course selection, attract/demo, two-player flow and endings need retail mapping and restoration. Anchors include `$0B:AE0A` and `$0B:FB26`. |
 | Courses, scene streams, models, graphics and text | 15% | 5-15% | 85-95% | `MAPS`, shape sources, `MSPRITES`, `DATA`, `XLDATA`, `MDATA`, `SHBANKS`, `INCBINS`: inherited assets and some identical tables exist, but the built map includes an early fallback route, not the full retail course set. Restore final scene/course inventory, object placement, routes, model/texture/background differences and text, then validate references. |
-| Audio driver, command mapping, music and samples | 5% | 0-10% | 90-100% | `MAI`, `MWROT`, `XLSOUND`, `XLSND`, `SND`: early audio binaries survive; nearby-car selection, approach filtering, pan and distance-band state are reconstructed. Retail CPU consumers, driver/data organization, sound IDs, engine sound behavior, music/sample inventory and playback still need reconciliation. CPU audio anchors: `$04:D0DB`, `$04:D44C`, `$04:D649`, `$04:D720`. |
+| Audio driver, command mapping, music and samples | 5% | 0-10% | 90-100% | `MAI`, `MWROT`, `XLSOUND`, `XLSND`, `SND`: nearby-car selection/filter/pan, CPU audio consumer, start/stop, command queues and port service are reconstructed. Retail driver/data, callers/NMI scheduling, definition identities, engine sound, music/sample inventory and playback remain; the early SPC path is still active. Remaining CPU anchors: `$04:D0DB`, `$04:D44C`, `$04:D720`. |
 
 #### Retail Bank Map
 
@@ -79,10 +79,11 @@ pie showData
 | --- | ---: | ---: | ---: | --- |
 | `$00` | 834 | 6,362 | 25,572 | Verified byte sine/cosine and sine-interpolation tables; other shared-data candidates, reset/header and remaining content audit |
 | `$01` | 765 | 1,953 | 30,050 | GSU math/render engine; verified inherited matrix and math spans, remaining draw pipeline |
-| `$02` | 1,163 | 4,084 | 27,521 | CPU NMI/display and camera records; remaining runtime/control flow |
+| `$02` | 1,319 | 4,084 | 27,365 | CPU NMI/display, camera records and retail audio port service; remaining runtime/control flow and SPC integration |
 | `$03` | 483 | 1,407 | 30,878 | Hardware setup, matrix wrapper and callback/activity helpers; remaining CPU engine |
-| `$04` | 4,978 | 263 | 27,527 | GSU dynamics/AI plus CPU audio routines; route modes, lap/rank progress, nearby-car audio state, car/wheel poses and contact-cache lifecycle restored; remaining constructor, collision-frame integration, physics and CPU audio audit |
-| `$05-$07` | 0 | 0 | 98,304 | Content/source correspondence still unclassified |
+| `$04` | 5,309 | 263 | 27,196 | GSU dynamics/AI plus CPU audio routines; route modes, lap/rank progress, nearby-car state/start/stop, command queues/reset, car/wheel poses and contact-cache lifecycle restored; remaining constructor, collision-frame integration, physics and audio callers/driver |
+| `$05-$06` | 0 | 0 | 65,536 | Content/source correspondence still unclassified |
+| `$07` | 80 | 0 | 32,688 | Nearby-car CPU audio consumer; remaining content/source correspondence audit |
 | `$08` | 3,905 | 65 | 28,798 | Camera/route helpers, first-player car binding, map and object systems; remaining vehicle/gameplay logic |
 | `$09` | 164 | 0 | 32,604 | Driving-camera presets; remaining scene/data and WRAM patch content |
 | `$0A` | 0 | 0 | 32,768 | Content/source correspondence still unclassified |
@@ -95,7 +96,7 @@ pie showData
 | `$1A` | 0 | 1,713 | 31,055 | Fragments matching early `XLSND0.BIN`; remaining audio/data mapping |
 | `$1B` | 0 | 396 | 32,372 | Fragments matching early `XLSND0.BIN`; remaining audio/data mapping |
 | `$1C-$1F` | 0 | 0 | 131,072 | Content/source correspondence still unclassified |
-| **All 32 banks** | **12,292** | **37,714** | **998,570** | **All 1 MiB accounted for exactly once** |
+| **All 32 banks** | **12,859** | **37,714** | **998,003** | **All 1 MiB accounted for exactly once** |
 
 ## Building Original
 

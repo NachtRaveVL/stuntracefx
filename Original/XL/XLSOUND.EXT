@@ -14,3 +14,7 @@
 	global	nomal_engine_call
 	global	core_engine_call
 	global	tunnel_engine_call
+
+	global	update_nearsound_l,start_nearsound_l,stop_nearsound_l
+	global	queue_racesound0_l,queue_raceplayer_l,queue_racesound1_l
+	global	clear_racesound_l,racesound_ports_l

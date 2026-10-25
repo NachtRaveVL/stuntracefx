@@ -526,3 +526,348 @@ get_data
 	ldy	#0
 get_exit
 	rts
+
+
+; Retail nearby-car audio consumer, US $07:edc1-$07:ee10.
+; A8, D=0, DB=0; P restored, A/X/Y and x1 scratch. Uses the retail
+; queues below. TODO: Bind gameplay callers with the retail SPC driver.
+; The cached level is retained on stop, including the native same-level
+; re-entry behavior; muted updates leave all state untouched.
+update_nearsound_l
+	php
+	lda	racesound_mute
+	bne	.done
+	ai16
+	lda.l	m_nearcarapproach
+	bmi	.off
+	lsr	a
+	lsr	a
+	lsr	a
+	lsr	a
+	sta	x1
+	lda.l	m_nearcarpan
+	asl	a
+	asl	a
+	asl	a
+	asl	a
+	ora	x1
+	a8
+	sta.l	racesound_nearparam
+	a16
+	lda	#$31
+	sec
+	sbc.l	m_nearcarband
+	cmp	racesound_nearlevel
+	beq	.ret
+	sta	racesound_nearlevel
+	jsl	queue_racesound1_l
+	stz	racesound_nearoff
+	jsl	start_nearsound_l
+.ret
+	plp
+	rtl
+.off
+	a8
+	lda	#1
+	sta	racesound_nearoff
+	jsl	stop_nearsound_l
+.done
+	plp
+	rtl
+
+
+; Retail nearby-car start/voice check, US $04:d533-$04:d5a1.
+; A8, D=0, DB=0; P restored, A/X/Y scratch (native I8 truncation).
+; Nonnegative GSU approach and valid bound player/selected car required.
+; CAR_RETAILDEF remains unbound for early-format definitions.
+start_nearsound_l
+	php
+	ai8
+	lda	racesound_nearactive
+	bne	.done
+	dec	racesound_nearactive
+	lda	#$1d
+	jsl	queue_racesound1_l
+	a8
+	lda.l	racesound_voiceoff
+	bne	.done
+	ai16
+	phx
+	lda.l	m_playercar
+	tax
+	lda.l	mrambank+CAR_ROUTESLOT,x
+	sta.l	racesound_rank
+	lda.l	m_nearcar
+	tax
+	lda.l	mrambank+CAR_ROUTESLOT,x
+	cmp.l	racesound_rank
+	bcc	.skipvoice
+	lda.l	mrambank+CAR_RETAILDEF,x
+	plx
+	cmp	#CARsounddef_1
+	beq	.voice1
+	cmp	#CARsounddef_2
+	beq	.voice2
+	cmp	#CARsounddef_3
+	beq	.voice3
+	bra	.done
+.voice1
+	a8
+	lda	#$1d
+	jsl	queue_raceplayer_l
+	bra	.done
+.voice2
+	a8
+	lda	#$1f
+	jsl	queue_raceplayer_l
+	bra	.done
+.voice3
+	a8
+	lda	#$1e
+	jsl	queue_raceplayer_l
+.done
+	plp
+	rtl
+.skipvoice
+	plx
+	plp
+	rtl
+
+
+; Retail nearby-car stop, US $04:d5a2-$04:d5b2.
+; A8, D=0, DB=0; P restored, A scratch. Queue rejection still clears
+; the active byte, as in the native start/stop bookkeeping.
+stop_nearsound_l
+	php
+	lda	racesound_nearactive
+	beq	.done
+	stz	racesound_nearactive
+	lda	#8
+	jsl	queue_racesound1_l
+.done
+	plp
+	rtl
+
+
+; Retail command queues, US $04:d649-$04:d6e0. D=0; A/X/Y/DB and
+; entry widths restored; final N/Z follow PLB. Full queues drop commands.
+; The player-routed entry ORs $80 for a nonzero player selector.
+; Indices/counts are bytes with native one-subtraction wrap behavior.
+queue_racesound0_l
+	phb
+	pha
+	phy
+	phx
+	php
+	ai8
+	ldy	#0
+	phy
+	plb
+	bra	racesound0_put
+queue_raceplayer_l
+	phb
+	pha
+	phy
+	phx
+	php
+	ai8
+	ldy	#0
+	phy
+	plb
+	ldx	racesound_player
+	beq	racesound0_put
+	ora	#$80
+racesound0_put
+	ldx	racesound_gate
+	bne	.done
+	ldy	racesound0number
+	beq	.first
+	cpy	#$10
+	bcs	.done
+	pha
+	tya
+	clc
+	adc	racesound0pointer
+	cmp	#$10
+	bcc	.wrap
+	sbc	#$10
+.wrap
+	tay
+	pla
+	sta	racesound0buffer,y
+	inc	racesound0number
+	plp
+	plx
+	ply
+	pla
+	plb
+	rtl
+.first
+	inc	racesound0number
+	ldy	racesound0pointer
+	sta	racesound0buffer,y
+.done
+	plp
+	plx
+	ply
+	pla
+	plb
+	rtl
+queue_racesound1_l
+	phb
+	pha
+	phy
+	phx
+	php
+	ai8
+	ldx	#0
+	phx
+	plb
+	ldx	racesound_gate
+	bne	.done
+	ldx	racesound1number
+	beq	.first
+	cpx	#$10
+	bcs	.done
+	pha
+	txa
+	clc
+	adc	racesound1pointer
+	cmp	#$10
+	bcc	.wrap
+	sbc	#$10
+.wrap
+	tax
+	pla
+	sta	racesound1buffer,x
+	inc	racesound1number
+	plp
+	plx
+	ply
+	pla
+	plb
+	rtl
+.first
+	inc	racesound1number
+	ldx	racesound1pointer
+	sta	racesound1buffer,x
+.done
+	plp
+	plx
+	ply
+	pla
+	plb
+	rtl
+
+
+; Retail queue/port reset, US $04:d6e1-$04:d713.
+; P restored; A/X/Y scratch. Does not reset the near-level/active cache.
+clear_racesound_l
+	php
+	ai8
+	lda	#0
+	sta.l	racesound_gate
+	sta.l	racesound0stock
+	sta.l	racesound1stock
+	sta.l	racesound0pointer
+	sta.l	racesound1pointer
+	sta.l	racesound1number
+	sta.l	racesound0number
+	sta.l	racesound_dart
+	sta.l	racesound_brake
+	sta.l	apu_port3
+	sta.l	apu_port2
+	plp
+	rtl
+
+
+; Retail port service, US $02:8e39-$02:8ed4. D=0, DB=0.
+; P restored; A/X/Y scratch. Pending direct writes precede blocking/frame
+; gates. Queued commands advance only on a zero SPC input port.
+; FIXME: RTL replaces the native local RTS at each exit.
+; TODO: Bind NMI service with retail driver data and engine parameter.
+racesound_ports_l
+	php
+	ai8
+	lda	racesound_pending0
+	beq	.pending1
+	sta	apu_port0
+	stz	racesound_pending0
+	plp
+	rtl
+.pending1
+	lda	racesound_pending1
+	beq	.gates
+	sta	apu_port1
+	stz	racesound_pending1
+	plp
+	rtl
+.gates
+	lda	racesound_block0
+	bne	.done
+	lda	racesound_block1
+	bne	.done
+	lda	framecounter
+	bit	#1
+	bne	.port0
+.done
+	plp
+	rtl
+.port0
+	lda	apu_port0
+	bne	.busy0
+	lda	racesound0number
+	beq	.port1
+	ldx	racesound0pointer
+	lda	racesound0buffer,x
+	dec	racesound0number
+	beq	.write0
+	inx
+	cpx	#$10
+	bcc	.pointer0
+	ldx	#0
+.pointer0
+	stx	racesound0pointer
+.write0
+	bra	.send0
+.busy0
+	lda	#0
+.send0
+	sta	apu_port0
+.port1
+	lda	apu_port1
+	bne	.busy1
+	lda	racesound1number
+	beq	.parameters
+	ldx	racesound1pointer
+	lda	racesound1buffer,x
+	dec	racesound1number
+	beq	.write1
+	inx
+	cpx	#$10
+	bcc	.pointer1
+	ldx	#0
+.pointer1
+	stx	racesound1pointer
+.write1
+	bra	.send1
+.busy1
+	lda	#0
+.send1
+	sta	apu_port1
+	sta	racesound1stock
+.parameters
+	lda	racesound_mute
+	bne	.muted
+	lda	racesound_nearparam
+	sta	apu_port2
+	lda	racesound_engineparam
+	sta	apu_port3
+	plp
+	rtl
+.muted
+	lda	#0
+	sta	apu_port2
+	sta	apu_port3
+	plp
+	rtl

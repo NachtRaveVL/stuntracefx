@@ -1112,6 +1112,10 @@ munlink_avoidcar
 	nop
 	sub	r0
 	sm	[m_playercar],r0
+; The CPU nearby-sound consumer requires both listener and selected car.
+	sm	[m_nearcar],r0
+	ibt	r0,#-1
+	sm	[m_nearcarapproach],r0
 .list
 ; Do not leave a removed nearby car bound between early CPU/GSU ticks.
 	lm	r0,[m_nearcar]

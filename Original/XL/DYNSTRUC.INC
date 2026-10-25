@@ -222,6 +222,14 @@ CARsceneflag_cameralistener	equ	$0008
 	struct		CAR_SCENEFLAGS,2
 	struct		CAR_NEARDIST,2
 
+; Retail car $66 definition offset in ROM bank 9. The early definition
+; format/bank differs; leave zero until its retail constructor is bound.
+; These three native identities are used by the nearby-car voice check.
+CARsounddef_1	equ	$876e
+CARsounddef_2	equ	$8aa8
+CARsounddef_3	equ	$8990
+	struct		CAR_RETAILDEF,2
+
  	
 	struct		CAR_LEN,0	
 
