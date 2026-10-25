@@ -814,6 +814,20 @@ mio_mode	equ	$303a
 	alc	racesound_block0,1
 	alc	racesound_block1,1
 
+; Retail controller/effect/engine state; adjacent player bytes are indexed.
+	alc	racesound_mode0,1
+	alc	racesound_mode1,1
+	alc	racesound_held0,1
+	alc	racesound_held1,1
+	alc	racesound_trigger0,2
+	alc	racesound_trigger1,2
+	alc	racesound_kind0,1
+	alc	racesound_kind1,1
+	alc	racesound_effect0,1
+	alc	racesound_effect1,1
+	alc	racesound_revs,2
+	alc	racesound_engineowner,2
+
 	IFGT	wmempt-$2000
 	printf	"%n%nTOO MANY ALCS USED%n%n"
 	fail
