@@ -140,6 +140,9 @@
 	global	minit_routeprogress,mtrack_routeprogress
 	global	mrank_routecars,mrank_nextroutecar,mroute_pointdistance
 	global	mupdate_routeprogress
+	global	mrotate_xz8,minit_nearcardistance,mupdate_nearcar
+	global	m_nearcarapproach,m_nearcarpan,m_nearcarband
+	global	m_nearcar,m_nearcarside,m_nearcardepth
 
 
 

@@ -485,6 +485,17 @@ viewrouteptr	=	m_routeptr
 ; This is independent of m_testcar1 (the first car allocated).
 	malc	m_playercar,2
 
+; Nearby-car audio state, retail $2642-$264c. Names reconstructed.
+; Approach is biased by $80; -1 disables it. Pan is 0..15; normal
+; distance bands are 0..7, with native signed/overflow behavior retained.
+; Side/depth retain the camera-space projection.
+	malc	m_nearcarapproach,2
+	malc	m_nearcarpan,2
+	malc	m_nearcarband,2
+	malc	m_nearcar,2
+	malc	m_nearcarside,2
+	malc	m_nearcardepth,2
+
 ; Current map number for retail route-speed and AI tables.
 ; Retail copies CPU $0e3d to GSU RAM $26f4 while loading the scene.
 	zmalc	m_mapnumber,2

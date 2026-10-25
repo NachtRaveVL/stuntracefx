@@ -57,6 +57,66 @@ mwmatrotp16t
 	nop
 
 
+; Coarse planar projection, US $04:c15c-$04:c19c.
+; r1/r3 = X/Z, r2 = unsigned byte yaw; ROM bank 0 already selected.
+; Return r1/r2 = forward, r3 = side, at approximately quarter scale.
+; Preserve the native high-word subtraction and its borrow from the
+; opposite low-word subtraction. Coefficients are signed table bytes;
+; both results use the signed high-word shift.
+; r0/r4-r9/r14/flags scratch; r10-r13 preserved, RAM bank unchanged.
+; r14 ends at sintab+yaw. No angle masking or bank selection is added.
+mrotate_xz8
+	mpush	r11
+	miwt	r0,costab
+	to	r14
+	add	r2
+	getb
+	to	r5
+	swap
+	miwt	r0,sintab
+	to	r14
+	add	r2
+	getb
+	to	r9
+	swap
+	with	r1
+	to	r6
+	from	r9
+	to	r8
+	lmult
+	with	r4
+	to	r7
+	with	r3
+	to	r6
+	from	r5
+	lmult
+	with	r7
+	add	r4
+	adc	r8
+	to	r2
+	asr
+	with	r3
+	to	r6
+	from	r9
+	to	r8
+	lmult
+	with	r4
+	to	r7
+	with	r1
+	to	r6
+	from	r5
+	lmult
+	with	r7
+	sub	r4
+	sbc	r8
+	to	r3
+	asr
+	with	r2
+	to	r1
+	mpop	pc
+	nop
+
+
 	ifeq	1
 
 rsumhi	equr	0

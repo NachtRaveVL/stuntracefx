@@ -1113,6 +1113,16 @@ munlink_avoidcar
 	sub	r0
 	sm	[m_playercar],r0
 .list
+; Do not leave a removed nearby car bound between early CPU/GSU ticks.
+	lm	r0,[m_nearcar]
+	cmp	r1
+	bne	.scan
+	nop
+	sub	r0
+	sm	[m_nearcar],r0
+	ibt	r0,#-1
+	sm	[m_nearcarapproach],r0
+.scan
 	lm	r3,[m_avoidcarhead]
 	ibt	r2,#0
 .next
@@ -2361,5 +2371,232 @@ mupdate_routeprogress
 	add	r8
 	from	r1
 	stw	[r0]
+	mpop	pc
+	nop
+
+
+; Initial nearby-car distance, US $04:8f99-$04:8fa1.
+; r1 = car, preserved; r0/r2/flags scratch, banks/stack unchanged.
+; FIXME: Callable return replaces the retail constructor continuation.
+minit_nearcardistance
+	iwt	r2,#$1000
+	iwt	r0,#CAR_NEARDIST
+	add	r1
+	from	r2
+	stw	[r0]
+	move	pc,r11
+	nop
+
+
+; Nearby-car audio state, US $04:cf08-$04:d03f. RAM bank 0.
+; Use the bound player as listener, unless its scene word selects the
+; camera. Skip the player only for the player-position listener.
+; Retain first distance tie, wrapped abs/signed comparisons, overflow
+; skips and each eligible car's distance history. Zero previous distance
+; disables output for that frame. Failure writes only approach=-1/car=0.
+; r10/r12-r13 preserved; r0-r9/r11/r14/flags scratch. ROM bank becomes
+; 0 only on a successful projection; otherwise it is unchanged.
+; CPU $07:edc7 consumes approach/pan/band; $04:d533 reads the car/rank.
+; TODO: Restore those retail audio consumers and remaining scene flags.
+mupdate_nearcar
+	mpush	r11
+	lm	r3,[m_playercar]
+	mtest	r3
+	bne	.listener
+	nop
+	miwt	pc,.none&WM
+	nop
+.listener
+	ibt	r1,#OBJ_WORLDX
+	with	r1
+	add	r3
+	to	r1
+	ldw	[r1]
+	ibt	r2,#OBJ_WORLDZ
+	with	r2
+	add	r3
+	to	r2
+	ldw	[r2]
+	iwt	r8,#CAR_SCENEFLAGS
+	with	r8
+	add	r3
+	to	r8
+	ldw	[r8]
+	iwt	r0,#CARsceneflag_cameralistener
+	and	r8
+	beq	.start
+	nop
+	ibt	r3,#0
+	lms	r1,[m_viewposx]
+	lms	r2,[m_viewposz]
+.start
+	iwt	r5,#$1000
+	ibt	r6,#0
+	lm	r0,[m_avoidcarhead]
+	mtest	r0
+	bne	.cached
+	nop
+	miwt	pc,.none&WM
+	nop
+.cached
+	cache
+.scan
+	with	r8
+	from	r0
+	beq	.result
+	nop
+	cmp	r3
+	beq	.next
+	nop
+	ibt	r0,#OBJ_WORLDX
+	add	r8
+	ldw	[r0]
+	sub	r1
+	bpl	.xpositive
+	nop
+	not
+	inc	r0
+.xpositive
+	with	r0
+	to	r4
+	ibt	r0,#OBJ_WORLDZ
+	add	r8
+	ldw	[r0]
+	sub	r2
+	bpl	.zpositive
+	nop
+	not
+	inc	r0
+.zpositive
+	with	r4
+	add	r0
+	bvs	.next
+	nop
+	with	r4
+	cmp	r5
+	bpl	.history
+	nop
+	iwt	r6,#CAR_NEARDIST
+	with	r6
+	add	r8
+	to	r6
+	ldw	[r6]
+	with	r4
+	to	r5
+	with	r8
+	to	r7
+.history
+	iwt	r0,#CAR_NEARDIST
+	add	r8
+	from	r4
+	stw	[r0]
+.next
+	iwt	r0,#CAR_AINEXT
+	add	r8
+	ldw	[r0]
+	bra	.scan
+	nop
+.result
+	with	r0
+	from	r6
+	bne	.filter
+	nop
+	miwt	pc,.none&WM
+	nop
+.filter
+	from	r6
+	sub	r5
+	to	r6
+	div2
+	iwt	r0,#$80
+	with	r6
+	add	r0
+	bpl	.checkfilter
+	nop
+	ibt	r6,#0
+.checkfilter
+	lm	r0,[m_nearcarapproach]
+	mtest	r0
+	bpl	.smooth
+	nop
+	with	r6
+	to	r0
+	sm	[m_nearcarapproach],r0
+.smooth
+	sub	r6
+	div2
+	div2
+	lm	r8,[m_nearcarapproach]
+	from	r8
+	sub	r0
+	sbk
+	iwt	r6,#$80
+	from	r5
+	fmult
+	iwt	r8,#7
+	cmp	r8
+	bmi	.band
+	nop
+	with	r8
+	to	r0
+.band
+	sm	[m_nearcarband],r0
+	iwt	r8,#$ff
+	lm	r0,[m_nearcarapproach]
+	cmp	r8
+	bmi	.selected
+	nop
+	from	r8
+	sbk
+.selected
+	sm	[m_nearcar],r7
+	ibt	r0,#OBJ_WORLDX
+	add	r7
+	ldw	[r0]
+	to	r1
+	sub	r1
+	ibt	r0,#OBJ_WORLDZ
+	add	r7
+	ldw	[r0]
+	to	r3
+	sub	r2
+	lms	r0,[m_viewroty]
+	to	r2
+	hib
+	ibt	r0,#0
+	romb
+	mcall	mrotate_xz8
+	nop
+	sm	[m_nearcarside],r3
+	with	r1
+	not
+	inc	r1
+	sm	[m_nearcardepth],r1
+	from	r3
+	div2
+	div2
+	div2
+	div2
+	div2
+	add	#7
+	bpl	.panpositive
+	nop
+	sub	r0
+.panpositive
+	ibt	r3,#15
+	cmp	r3
+	bmi	.pan
+	nop
+	with	r3
+	to	r0
+.pan
+	sm	[m_nearcarpan],r0
+	mpop	pc
+	nop
+.none
+	ibt	r0,#-1
+	sm	[m_nearcarapproach],r0
+	sub	r0
+	sm	[m_nearcar],r0
 	mpop	pc
 	nop

@@ -260,6 +260,14 @@ minit_dynamics	; INITIALISE DYNAMICS.
 	sm	[m_test1],r0
 ; FIXME: Early dynamics initialization is the retail GSU reset boundary.
 	sm	[m_viewroadflags],r0
+	sm	[m_nearcarpan],r0
+	sm	[m_nearcarband],r0
+	sm	[m_nearcar],r0
+	sm	[m_nearcarside],r0
+	sm	[m_nearcardepth],r0
+; Nearby audio starts disabled, as in retail $04:8846-$04:884b.
+	ibt	r0,#-1
+	sm	[m_nearcarapproach],r0
 
 	minit_mem	m_dynmem,totaldynmem,r1
 ;	minit_mem	m_dynmem,1000,r1
@@ -652,6 +660,8 @@ mmake_car
 	mstorew	r2,CAR_VELALIGN,r1
 	mcall	minit_routeprogress
 	nop
+	mcall	minit_nearcardistance
+	nop
 
 ; set car flag
 	mloadw	r2,OBJ_TYPE,r1
@@ -827,6 +837,8 @@ mdo_dynamics
 	nop
 .noobjs
 	mcall	mrank_routecars
+	nop
+	mcall	mupdate_nearcar
 	nop
 
 

@@ -214,6 +214,14 @@ CARmotion_skiproute	equ	$0040
 	struct		CAR_ROUTESEEN,2
 	struct		CAR_ROUTEDIST,2
 
+; Retail $64 constructor/scene word and $8c nearby-car distance history.
+; Only scene bit $0008 is interpreted here: listen from the camera and
+; include the player in the scan. Remaining scene-word producers await
+; the retail constructor/scene integration; do not alias CAR_FLAGS.
+CARsceneflag_cameralistener	equ	$0008
+	struct		CAR_SCENEFLAGS,2
+	struct		CAR_NEARDIST,2
+
  	
 	struct		CAR_LEN,0	
 
