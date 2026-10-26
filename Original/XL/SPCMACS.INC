@@ -1,0 +1,390 @@
+; SPC700 encodings for the original SASMX build. Address modes are explicit.
+; All instructions affect SPC registers, never the host 65816 assembler mode.
+
+spc_or_a_i	macro
+	db	$08
+	db	\1
+	endm
+
+spc_asl_dp	macro
+	db	$0b
+	db	\1
+	endm
+
+spc_bpl	macro
+	db	$10
+	db	((\1)-(*+1))&$ff
+	endm
+
+spc_asl_a	macro
+	db	$1c
+	endm
+
+spc_dec_x	macro
+	db	$1d
+	endm
+
+spc_jmp_abs_x	macro
+	db	$1f
+	dw	\1
+	endm
+
+spc_clrp	macro
+	db	$20
+	endm
+
+spc_and_a_dp	macro
+	db	$24
+	db	\1
+	endm
+
+spc_and_a_i	macro
+	db	$28
+	db	\1
+	endm
+
+spc_push_a	macro
+	db	$2d
+	endm
+
+spc_bra	macro
+	db	$2f
+	db	((\1)-(*+1))&$ff
+	endm
+
+spc_bmi	macro
+	db	$30
+	db	((\1)-(*+1))&$ff
+	endm
+
+spc_incw_dp	macro
+	db	$3a
+	db	\1
+	endm
+
+spc_inc_x	macro
+	db	$3d
+	endm
+
+spc_call	macro
+	db	$3f
+	dw	\1
+	endm
+
+spc_eor_a_dp	macro
+	db	$44
+	db	\1
+	endm
+
+spc_push_x	macro
+	db	$4d
+	endm
+
+spc_lsr_a	macro
+	db	$5c
+	endm
+
+spc_mov_x_a	macro
+	db	$5d
+	endm
+
+spc_cmp_y_abs	macro
+	db	$5e
+	dw	\1
+	endm
+
+spc_jmp	macro
+	db	$5f
+	dw	\1
+	endm
+
+spc_clrc	macro
+	db	$60
+	endm
+
+spc_cmp_a_dp	macro
+	db	$64
+	db	\1
+	endm
+
+spc_cmp_a_i	macro
+	db	$68
+	db	\1
+	endm
+
+spc_cmp_dp_dp	macro
+	db	$69
+	db	\2,\1
+	endm
+
+spc_ror_dp	macro
+	db	$6b
+	db	\1
+	endm
+
+spc_push_y	macro
+	db	$6d
+	endm
+
+spc_ret	macro
+	db	$6f
+	endm
+
+spc_cmp_a_abs_x	macro
+	db	$75
+	dw	\1
+	endm
+
+spc_cmp_dp_i	macro
+	db	$78
+	db	\2,\1
+	endm
+
+spc_addw_ya_dp	macro
+	db	$7a
+	db	\1
+	endm
+
+spc_setc	macro
+	db	$80
+	endm
+
+spc_adc_a_dp	macro
+	db	$84
+	db	\1
+	endm
+
+spc_mov_y_i	macro
+	db	$8d
+	db	\1
+	endm
+
+spc_mov_dp_i	macro
+	db	$8f
+	db	\2,\1
+	endm
+
+spc_bcc	macro
+	db	$90
+	db	((\1)-(*+1))&$ff
+	endm
+
+spc_subw_ya_dp	macro
+	db	$9a
+	db	\1
+	endm
+
+spc_dec_a	macro
+	db	$9c
+	endm
+
+spc_sbc_a_i	macro
+	db	$a8
+	db	\1
+	endm
+
+spc_inc_dp	macro
+	db	$ab
+	db	\1
+	endm
+
+spc_cmp_y_i	macro
+	db	$ad
+	db	\1
+	endm
+
+spc_pop_a	macro
+	db	$ae
+	endm
+
+spc_mov_xinc_a	macro
+	db	$af
+	endm
+
+spc_bcs	macro
+	db	$b0
+	db	((\1)-(*+1))&$ff
+	endm
+
+spc_inc_a	macro
+	db	$bc
+	endm
+
+spc_mov_sp_x	macro
+	db	$bd
+	endm
+
+spc_mov_dp_a	macro
+	db	$c4
+	db	\1
+	endm
+
+spc_mov_abs_a	macro
+	db	$c5
+	dw	\1
+	endm
+
+spc_cmp_x_i	macro
+	db	$c8
+	db	\1
+	endm
+
+spc_mov_abs_x	macro
+	db	$c9
+	dw	\1
+	endm
+
+spc_mov_dp_y	macro
+	db	$cb
+	db	\1
+	endm
+
+spc_mov_abs_y	macro
+	db	$cc
+	dw	\1
+	endm
+
+spc_mov_x_i	macro
+	db	$cd
+	db	\1
+	endm
+
+spc_pop_x	macro
+	db	$ce
+	endm
+
+spc_mul_ya	macro
+	db	$cf
+	endm
+
+spc_bne	macro
+	db	$d0
+	db	((\1)-(*+1))&$ff
+	endm
+
+spc_mov_abs_x_a	macro
+	db	$d5
+	dw	\1
+	endm
+
+spc_mov_dpi_y_a	macro
+	db	$d7
+	db	\1
+	endm
+
+spc_mov_dp_ya	macro
+	db	$da
+	db	\1
+	endm
+
+spc_mov_a_dp	macro
+	db	$e4
+	db	\1
+	endm
+
+spc_mov_a_abs	macro
+	db	$e5
+	dw	\1
+	endm
+
+spc_mov_a_x	macro
+	db	$e6
+	endm
+
+spc_mov_a_i	macro
+	db	$e8
+	db	\1
+	endm
+
+spc_mov_y_abs	macro
+	db	$ec
+	dw	\1
+	endm
+
+spc_notc	macro
+	db	$ed
+	endm
+
+spc_pop_y	macro
+	db	$ee
+	endm
+
+spc_beq	macro
+	db	$f0
+	db	((\1)-(*+1))&$ff
+	endm
+
+spc_mov_a_dp_x	macro
+	db	$f4
+	db	\1
+	endm
+
+spc_mov_a_abs_x	macro
+	db	$f5
+	dw	\1
+	endm
+
+spc_mov_a_abs_y	macro
+	db	$f6
+	dw	\1
+	endm
+
+spc_mov_a_dpi_y	macro
+	db	$f7
+	db	\1
+	endm
+
+spc_mov_dp_dp	macro
+	db	$fa
+	db	\2,\1
+	endm
+
+spc_inc_y	macro
+	db	$fc
+	endm
+
+spc_mov_y_a	macro
+	db	$fd
+	endm
+
+spc_dbnz_y	macro
+	db	$fe
+	db	((\1)-(*+1))&$ff
+	endm
+
+spc_set	macro
+	db	$02+((\1)*$20),\2
+	endm
+
+spc_clr	macro
+	db	$12+((\1)*$20),\2
+	endm
+
+spc_bbs	macro
+	db	$03+((\1)*$20),\2
+	db	((\3)-(*+1))&$ff
+	endm
+
+spc_bbc	macro
+	db	$13+((\1)*$20),\2
+	db	((\3)-(*+1))&$ff
+	endm
+
+; Emit an IPL block while assembling its code at the SPC RAM address.
+; The enclosing bank determines physical placement; return to its ROM PC.
+spc_block	macro
+\1
+	dw	\3,\2
+spc_rompc	=	*
+spc_objpc	=	$8000*banknum+(spc_rompc&$7fff)
+spc_rampc	=	\2
+	org	spc_rampc,spc_objpc
+	endm
+
+spc_endblock	macro
+	ifne	*-spc_rampc-\1
+	fail
+	endc
+spc_blocklen	=	*-spc_rampc
+	org	spc_rompc+spc_blocklen,spc_objpc+spc_blocklen
+	endm
