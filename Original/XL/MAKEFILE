@@ -5,7 +5,7 @@ ASM=sasmx
 ASMFLAGS=-efilelist=0
 include symson.mak
 LINK=SL
-LOPTS=-b30 -h512 -t7d
+LOPTS=-b30 -h512 -t7d -m4
 EXTEND=EXTEND
 EXTOPTS=8 ff
 CHECK=SFCHECK
@@ -67,7 +67,7 @@ stratrou.asm draw.asm endseq.asm data\f-1.pcr
 
 
 ## Bank 4
-bank4.sob: bank4.asm xlsload.asm xlsload.ext xlspc.asm xlspcm.asm xlspc.ext spcmacs.inc \
+bank4.sob: bank4.asm xlsload.asm xlsload.ext xlspc.asm xlspcm.asm xlspcv.asm xlspc.ext spcmacs.inc \
 xlsound.ext mario.ext mkmacs.inc \
 $(STDFILES) $(STRATFILES) 
 

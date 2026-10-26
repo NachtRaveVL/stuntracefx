@@ -559,3 +559,53 @@ spc_mov_y_dp_x	macro
 	db	$fb
 	db	\1
 	endm
+
+; Effect/voice instruction forms.
+spc_or_a_dp	macro
+	db	$04
+	db	\1
+	endm
+
+spc_rol_a	macro
+	db	$3c
+	endm
+
+spc_bvs	macro
+	db	$70
+	db	((\1)-(*+1))&$ff
+	endm
+
+spc_cmp_a_abs_y	macro
+	db	$76
+	dw	\1
+	endm
+
+spc_adc_a_abs	macro
+	db	$85
+	dw	\1
+	endm
+
+spc_dec_abs	macro
+	db	$8c
+	dw	\1
+	endm
+
+spc_sbc_a_abs	macro
+	db	$a5
+	dw	\1
+	endm
+
+spc_inc_abs	macro
+	db	$ac
+	dw	\1
+	endm
+
+spc_sbc_dp_i	macro
+	db	$b8
+	db	\2,\1
+	endm
+
+spc_mov_x_abs	macro
+	db	$e9
+	dw	\1
+	endm
