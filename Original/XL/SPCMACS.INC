@@ -388,3 +388,174 @@ spc_endblock	macro
 spc_blocklen	=	*-spc_rampc
 	org	spc_rompc+spc_blocklen,spc_objpc+spc_blocklen
 	endm
+
+; Music-sequencer instruction forms.
+spc_or_dp_dp	macro
+	db	$09
+	db	\2,\1
+	endm
+
+spc_tset1_abs	macro
+	db	$0e
+	dw	\1
+	endm
+
+spc_rol_dp	macro
+	db	$2b
+	db	\1
+	endm
+
+spc_and_dp_i	macro
+	db	$38
+	db	\2,\1
+	endm
+
+spc_setp	macro
+	db	$40
+	endm
+
+spc_eor_a_i	macro
+	db	$48
+	db	\1
+	endm
+
+spc_lsr_dp	macro
+	db	$4b
+	db	\1
+	endm
+
+spc_tclr1_abs	macro
+	db	$4e
+	dw	\1
+	endm
+
+spc_cmp_a_abs	macro
+	db	$65
+	dw	\1
+	endm
+
+spc_dbnz_dp	macro
+	db	$6e
+	db	\1
+	db	((\2)-(*+1))&$ff
+	endm
+
+spc_ror_a	macro
+	db	$7c
+	endm
+
+spc_mov_a_xreg	macro
+	db	$7d
+	endm
+
+spc_adc_a_i	macro
+	db	$88
+	db	\1
+	endm
+
+spc_dec_dp	macro
+	db	$8b
+	db	\1
+	endm
+
+spc_adc_a_abs_x	macro
+	db	$95
+	dw	\1
+	endm
+
+spc_adc_a_abs_y	macro
+	db	$96
+	dw	\1
+	endm
+
+spc_adc_dp_i	macro
+	db	$98
+	db	\2,\1
+	endm
+
+spc_dec_dp_x	macro
+	db	$9b
+	db	\1
+	endm
+
+spc_div_ya_x	macro
+	db	$9e
+	endm
+
+spc_xcn_a	macro
+	db	$9f
+	endm
+
+spc_sbc_a_dp	macro
+	db	$a4
+	db	\1
+	endm
+
+spc_sbc_a_abs_x	macro
+	db	$b5
+	dw	\1
+	endm
+
+spc_sbc_a_abs_y	macro
+	db	$b6
+	dw	\1
+	endm
+
+spc_mov_ya_dp	macro
+	db	$ba
+	db	\1
+	endm
+
+spc_inc_dp_x	macro
+	db	$bb
+	db	\1
+	endm
+
+spc_mov_dp_x_a	macro
+	db	$d4
+	db	\1
+	endm
+
+spc_mov_abs_y_a	macro
+	db	$d6
+	dw	\1
+	endm
+
+spc_mov_dp_xreg	macro
+	db	$d8
+	db	\1
+	endm
+
+spc_dec_y	macro
+	db	$dc
+	endm
+
+spc_mov_a_y	macro
+	db	$dd
+	endm
+
+spc_cbne_dp_x	macro
+	db	$de
+	db	\1
+	db	((\2)-(*+1))&$ff
+	endm
+
+spc_mov_a_dpi_x	macro
+	db	$e7
+	db	\1
+	endm
+
+spc_mov_y_dp	macro
+	db	$eb
+	db	\1
+	endm
+
+spc_mov_x_dp	macro
+	db	$f8
+	db	\1
+	endm
+
+spc_mov_y_dp_x	macro
+	db	$fb
+	db	\1
+	endm
