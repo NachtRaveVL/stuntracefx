@@ -3,11 +3,6 @@
 ; remain at their native SPC addresses until their source is restored.
 
 spc_0bc1	equ	$0bc1
-spc_ca75	equ	$ca75
-spc_ca89	equ	$ca89
-spc_ca96	equ	$ca96
-spc_ca9f	equ	$ca9f
-spc_edf0	equ	$edf0
 
 	spc_block	spc_parameterblock,$112f,$0676
 spc_112f
@@ -1507,9 +1502,9 @@ spc_1fcc
 	spc_mov_a_y
 	spc_asl_a
 	spc_mov_x_a
-	spc_mov_a_abs_x	$caa8
+	spc_mov_a_abs_x	spc_effectpitches
 	spc_mov_dp_a	$22
-	spc_mov_a_abs_x	$caa9
+	spc_mov_a_abs_x	spc_effectpitches+1
 	spc_mov_dp_a	$23
 	spc_pop_a
 	spc_setc
@@ -2445,10 +2440,10 @@ spc_265c
 spc_2666
 	spc_asl_a
 	spc_mov_y_a
-	spc_mov_a_abs_y	$ee20
+	spc_mov_a_abs_y	spc_nearpitches
 	spc_mov_dp_a	$20
 	spc_inc_y
-	spc_mov_a_abs_y	$ee20
+	spc_mov_a_abs_y	spc_nearpitches
 	spc_mov_dp_a	$21
 	spc_mov_a_abs_x	$04a0
 	spc_mov_y_a
@@ -2468,11 +2463,11 @@ spc_2683
 	spc_bbs	7,$02,spc_26a8
 	spc_asl_a
 	spc_mov_y_a
-	spc_mov_a_abs_y	$ee30
+	spc_mov_a_abs_y	spc_nearvolumes
 	spc_call	spc_scaleparameter
 	spc_mov_abs_x_a	$0398
 	spc_inc_y
-	spc_mov_a_abs_y	$ee30
+	spc_mov_a_abs_y	spc_nearvolumes
 	spc_call	spc_scaleparameter
 	spc_mov_abs_x_a	$03a0
 	spc_ret
@@ -2480,11 +2475,11 @@ spc_26a8
 	spc_eor_a_i	$0f
 	spc_asl_a
 	spc_mov_y_a
-	spc_mov_a_abs_y	$ee30
+	spc_mov_a_abs_y	spc_nearvolumes
 	spc_call	spc_scaleparameter
 	spc_mov_abs_x_a	$03a0
 	spc_inc_y
-	spc_mov_a_abs_y	$ee30
+	spc_mov_a_abs_y	spc_nearvolumes
 	spc_call	spc_scaleparameter
 	spc_mov_abs_x_a	$0398
 	spc_ret

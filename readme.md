@@ -71,7 +71,7 @@ pie showData
 | Route access, AI and driving controls | 10% | 35-55% | 45-65% | `MAI`, route helpers in `GASTRATS`, `WORLD`: normal driving, mode dispatch, lap/rank producers, player-bound timing, frozen-route motion and contact-cache invalidation reconstructed; remaining mode/flag producers, retail multiplayer lifetime, collision-frame integration and live AI scheduling remain. |
 | Race rules, frontend, menus and game flow | 15% | 0-10% | 90-100% | `XLMAIN`, `XLTITLE`, `XLINIT`, `PSTRATS`, `GSTRATS`, `GASTRATS`, `ENDSEQ`: early behavior is a starting point; final race progression, timing/results, vehicle/course selection, attract/demo, two-player flow and endings need retail mapping and restoration. Anchors include `$0B:AE0A` and `$0B:FB26`. |
 | Courses, scene streams, models, graphics and text | 15% | 5-15% | 85-95% | `MAPS`, shape sources, `MSPRITES`, `DATA`, `XLDATA`, `MDATA`, `SHBANKS`, `INCBINS`: inherited assets and some identical tables exist, but the built map includes an early fallback route, not the full retail course set. Restore final scene/course inventory, object placement, routes, model/texture/background differences and text, then validate references. |
-| Audio driver, command mapping, music and samples | 5% | 10-25% | 75-90% | `XLSOUND`, `XLSLOAD`, `XLSPC`, `XLSPCM`, `XLSPCV`, `MAI`, `MDECRU`: CPU audio/loaders and both large SPC core blocks, including music/effect dispatch, voice state and parameter updates, are reconstructed or verified. Effect scripts/separate helpers, sample directory/BRR data, asset placement, callers/NMI scheduling and definition producers remain; the early SPC path is still active. |
+| Audio driver, command mapping, music and samples | 5% | 10-25% | 75-90% | `XLSOUND`, `XLSLOAD`, `XLSPC`, `XLSPCM`, `XLSPCV`, `XLSPCS`, `MAI`, `MDECRU`: CPU loaders, SPC core, all 121 initial effect IDs, bundled music, helpers, instruments and initial sample directory reconstructed or verified. Initial upload payload: 12,821/39,061 bytes restored (32.82%); the 26,240-byte sample block remains. Scene-specific streams, sample bodies, asset placement, callers/NMI scheduling and definition producers remain; the early SPC path is still active. |
 
 #### Retail Bank Map
 
@@ -92,13 +92,13 @@ pie showData
 | `$0D-$13` | 0 | 0 | 229,376 | Content/source correspondence still unclassified |
 | `$14` | 0 | 19,905 | 12,863 | `MDATA` wipe/Z-table/effect data candidates; validate table boundaries and consumers |
 | `$15-$18` | 0 | 0 | 131,072 | Content/source correspondence still unclassified |
-| `$19` | 8,422 | 6 | 24,340 | SPC core blocks `$0670-$10A9` and `$10B0-$26FB`, plus DSP tables restored; remaining effect scripts/helpers, sample data and placement |
+| `$19` | 12,821 | 26 | 19,921 | All non-BRR initial-driver payload restored, including core, scripts/music, helpers, instruments and directory; remaining BRR bodies, other streams and placement |
 | `$1A` | 0 | 2,351 | 30,417 | Second-player instrument and other IPL streams identified; exact-byte candidates include early audio fragments and shared driver sequences, remaining audio/data mapping |
 | `$1B` | 0 | 472 | 32,296 | Scene music and extra instrument IPL streams identified; early audio fragments and shared driver sequences match, remaining audio/data assembly and placement |
 | `$1C` | 0 | 0 | 32,768 | Content/source correspondence still unclassified |
 | `$1D-$1E` | 0 | 0 | 65,536 | Packed song/upload streams and raw-copy resources identified through reload catalogues and literal callers; decoder/stream boundaries verified, retail asset assembly and placement remain |
 | `$1F` | 0 | 0 | 32,768 | Content/source correspondence still unclassified |
-| **All 32 banks** | **24,532** | **37,412** | **986,632** | **All 1 MiB accounted for exactly once** |
+| **All 32 banks** | **28,931** | **37,432** | **982,213** | **All 1 MiB accounted for exactly once** |
 
 ## Building Original
 

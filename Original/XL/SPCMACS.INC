@@ -609,3 +609,239 @@ spc_mov_x_abs	macro
 	db	$e9
 	dw	\1
 	endm
+
+; Native helper and script/data encodings.
+spc_eor1_c	macro
+	db	$8a
+	dw	((\1)&$1fff)+((\2)*$2000)
+	endm
+
+spc_mov1_c	macro
+	db	$aa
+	dw	((\1)&$1fff)+((\2)*$2000)
+	endm
+
+spc_instrumentdef	macro
+	db	\1,\2,\3,\4
+	db	((\5)>>8)&$ff,(\5)&$ff
+	endm
+
+spc_sampledef	macro
+	dw	\1,\2
+	endm
+
+; Effect E5/E6 select ADSR1 attack/decay; E7/E8 select ADSR2 level/rate.
+; E1 skips key-off at the next wait, E2 ties it, FB requests key-off.
+; EA/EB toggle the voice's DSP echo-enable bit.
+spc_fxheader	macro
+	db	\1
+	endm
+
+spc_fxwait	macro
+	db	\1
+	endm
+
+spc_fxnote	macro
+	db	\1
+	endm
+
+spc_fxskip	macro
+	db	0
+	endm
+
+spc_fxend	macro
+	db	$e0
+	endm
+
+spc_fxskipkeyoff	macro
+	db	$e1
+	endm
+
+spc_fxtie	macro
+	db	$e2
+	endm
+
+spc_fxsample	macro
+	db	$e3
+	db	\1
+	endm
+
+spc_fxvolume	macro
+	db	$e4
+	db	\1,\2
+	endm
+
+spc_fxattack	macro
+	db	$e5
+	db	\1
+	endm
+
+spc_fxdecay	macro
+	db	$e6
+	db	\1
+	endm
+
+spc_fxsustainlevel	macro
+	db	$e7
+	db	\1
+	endm
+
+spc_fxsustainrate	macro
+	db	$e8
+	db	\1
+	endm
+
+spc_fxpitchramp	macro
+	db	$e9
+	db	\1,\2
+	endm
+
+spc_fxechoon	macro
+	db	$ea
+	endm
+
+spc_fxechooff	macro
+	db	$eb
+	endm
+
+spc_fxspawn	macro
+	db	$ec
+	dw	\1
+	endm
+
+spc_fxvolumeramp	macro
+	db	$ed
+	db	\1,\2,\3,\4
+	endm
+
+spc_fxdetune	macro
+	db	$ee
+	db	\1
+	endm
+
+spc_fxpitchrampoff	macro
+	db	$f1
+	endm
+
+spc_fxvolumerampoff	macro
+	db	$f2
+	endm
+
+spc_fxjump	macro
+	db	$f3
+	dw	\1
+	endm
+
+spc_fxtimeout	macro
+	db	$f8
+	db	\1
+	endm
+
+spc_fxkeyoff	macro
+	db	$fb
+	endm
+
+spc_fxmode	macro
+	db	$fc
+	db	\1
+	endm
+
+spc_fxnoise	macro
+	db	$fd
+	db	\1
+	endm
+
+spc_fxmono	macro
+	db	$fe
+	db	\1
+	endm
+
+spc_musicpattern	macro
+	dw	\1
+	endm
+
+spc_musicloop	macro
+	dw	\1,\2
+	endm
+
+spc_musicend	macro
+	dw	0
+	endm
+
+spc_trackend	macro
+	db	0
+	endm
+
+spc_tracktime	macro
+	db	\1
+	endm
+
+; Duration followed by the packed gate/velocity nibbles.
+spc_trackgate	macro
+	db	\1,\2
+	endm
+
+spc_tracknote	macro
+	db	\1
+	endm
+
+spc_musicinstrument	macro
+	db	$e0
+	db	\1
+	endm
+
+spc_musicpan	macro
+	db	$e1
+	db	\1
+	endm
+
+spc_musicvolume	macro
+	db	$e5
+	db	\1
+	endm
+
+spc_musictempo	macro
+	db	$e7
+	db	\1
+	endm
+
+spc_musictrackvolume	macro
+	db	$ed
+	db	\1
+	endm
+
+spc_musictrackvolumeramp	macro
+	db	$ee
+	db	\1,\2
+	endm
+
+spc_musiccall	macro
+	db	$ef
+	dw	\1
+	db	\2
+	endm
+
+spc_musicfinetuning	macro
+	db	$f4
+	db	\1
+	endm
+
+spc_musicecho	macro
+	db	$f5
+	db	\1,\2,\3
+	endm
+
+spc_musicechoconfig	macro
+	db	$f7
+	db	\1,\2,\3
+	endm
+
+spc_musicpitchslide	macro
+	db	$f9
+	db	\1,\2,\3
+	endm
+
+spc_musicpercussionbase	macro
+	db	$fa
+	db	\1
+	endm

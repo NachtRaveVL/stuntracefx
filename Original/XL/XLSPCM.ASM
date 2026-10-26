@@ -22,40 +22,40 @@ spc_pitchscale
 spc_version
 	db	$2a,$56,$65,$72,$20,$53,$31,$2e,$32,$30,$2a
 spc_effectpointers
-	dw	$c694,$c677,$be9c,$c68a
-	dw	$bd73,$c151,$c680,$bda9
-	dw	$bd14,$c69e,$bdb2,$bd3e
-	dw	$c6a8,$bca0,$be7e,$beb5
-	dw	$c463,$c46b,$c473,$c47b
-	dw	$bfd2,$bf21,$bffa,$c5f0
-	dw	$c616,$c639,$c6da,$c653
-	dw	$c5e7,$bfee,$c589,$bf55
-	dw	$bfe1,$c172,$c15f,$c530
-	dw	$bfbf,$c60d,$c6ed,$bfaf
-	dw	$c0f5,$c598,$c1e0,$c454
-	dw	$be00,$bdc1,$be8d,$bed3
-	dw	$bf74,$c01a,$c5a9,$c630
-	dw	$c6ff,$c09d,$bcb0,$bd2c
-	dw	$c714,$c179,$c143,$c10b
-	dw	$c43d,$c4e7,$c17f,$c41a
-	dw	$be23,$be5a,$be67,$bf85
-	dw	$bf9a,$c0b5,$c0c8,$c0d1
-	dw	$c0ec,$c1fa,$c1b1,$c34f
-	dw	$c191,$bddf,$c3ea,$c3f5
-	dw	$c3fb,$c3ff,$c483,$c499
-	dw	$c4c0,$c514,$bce8,$c66e
-	dw	$c726,$c5c9,$c643,$bca0
-	dw	$c4ad,$c56e,$bd05,$c552
-	dw	$c138,$bf11,$bebd,$c1f3
-	dw	$c506,$bf42,$bcc9,$c431
-	dw	$be41,$c03b,$c061,$c37d
-	dw	$c395,$c1c9,$c237,$c287
-	dw	$c2dc,$c6c0,$c6b9,$c6b2
-	dw	$c6c7,$c6ce,$c6d5,$c6d5
-	dw	$c6d5
+	dw	spc_effect_c694,spc_effect_c677,spc_effect_be9c,spc_effect_c68a
+	dw	spc_effect_bd73,spc_effect_c151,spc_effect_c680,spc_effect_bda9
+	dw	spc_effect_bd14,spc_effect_c69e,spc_effect_bdb2,spc_effect_bd3e
+	dw	spc_effect_c6a8,spc_effect_bca0,spc_effect_be7e,spc_effect_beb5
+	dw	spc_effect_c463,spc_effect_c46b,spc_effect_c473,spc_effect_c47b
+	dw	spc_effect_bfd2,spc_effect_bf21,spc_effect_bffa,spc_effect_c5f0
+	dw	spc_effect_c616,spc_effect_c639,spc_effect_c6da,spc_effect_c653
+	dw	spc_effect_c5e7,spc_effect_bfee,spc_effect_c589,spc_effect_bf55
+	dw	spc_effect_bfe1,spc_effect_c172,spc_effect_c15f,spc_effect_c530
+	dw	spc_effect_bfbf,spc_effect_c60d,spc_effect_c6ed,spc_effect_bfaf
+	dw	spc_effect_c0f5,spc_effect_c598,spc_effect_c1e0,spc_effect_c454
+	dw	spc_effect_be00,spc_effect_bdc1,spc_effect_be8d,spc_effect_bed3
+	dw	spc_effect_bf74,spc_effect_c01a,spc_effect_c5a9,spc_effect_c630
+	dw	spc_effect_c6ff,spc_effect_c09d,spc_effect_bcb0,spc_effect_bd2c
+	dw	spc_effect_c714,spc_effect_c179,spc_effect_c143,spc_effect_c10b
+	dw	spc_effect_c43d,spc_effect_c4e7,spc_effect_c17f,spc_effect_c41a
+	dw	spc_effect_be23,spc_effect_be5a,spc_effect_be67,spc_effect_bf85
+	dw	spc_effect_bf9a,spc_effect_c0b5,spc_effect_c0c8,spc_effect_c0d1
+	dw	spc_effect_c0ec,spc_effect_c1fa,spc_effect_c1b1,spc_effect_c34f
+	dw	spc_effect_c191,spc_effect_bddf,spc_effect_c3ea,spc_effect_c3f5
+	dw	spc_effect_c3fb,spc_effect_c3ff,spc_effect_c483,spc_effect_c499
+	dw	spc_effect_c4c0,spc_effect_c514,spc_effect_bce8,spc_effect_c66e
+	dw	spc_effect_c726,spc_effect_c5c9,spc_effect_c643,spc_effect_bca0
+	dw	spc_effect_c4ad,spc_effect_c56e,spc_effect_bd05,spc_effect_c552
+	dw	spc_effect_c138,spc_effect_bf11,spc_effect_bebd,spc_effect_c1f3
+	dw	spc_effect_c506,spc_effect_bf42,spc_effect_bcc9,spc_effect_c431
+	dw	spc_effect_be41,spc_effect_c03b,spc_effect_c061,spc_effect_c37d
+	dw	spc_effect_c395,spc_effect_c1c9,spc_effect_c237,spc_effect_c287
+	dw	spc_effect_c2dc,spc_effect_c6c0,spc_effect_c6b9,spc_effect_c6b2
+	dw	spc_effect_c6c7,spc_effect_c6ce,spc_effect_c6d5,spc_effect_c6d5
+	dw	spc_effect_c6d5
 spc_songpointers
-	dw	$c6d5,$ee40,$c8e2,$c735
-	dw	$e0c0,$cb10
+	dw	spc_effect_c6d5,$ee40,spc_music_c8e2,spc_music_c735
+	dw	$e0c0,spc_music_cb10
 	spc_endblock	$013d
 
 	spc_block	spc_noteblock,$08f3,$00ed

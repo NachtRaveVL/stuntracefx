@@ -16,7 +16,6 @@ spc_timer0target	equ	$00fa
 spc_timer0counter	equ	$00fd
 
 ; Unrestored SPC routines retain their native RAM addresses.
-spc_cac0	equ	$cac0
 spc_ffc0	equ	$ffc0
 
 racesound_spcctrl
@@ -757,6 +756,7 @@ spc_iplrestart
 
 	incfile	xlspcm.asm
 	incfile	xlspcv.asm
+	incfile	xlspcs.asm
 
 	dw	0,spc_boot
 racesound_spcctrlend
