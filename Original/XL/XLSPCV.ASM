@@ -1,6 +1,6 @@
 ; Retail SPC effect/voice engine and parameter control. Native RAM PCs.
-; Included in the partial XLSPC overlay; external script/helpers and samples
-; remain at their native SPC addresses until their source is restored.
+; Included in the XLSPC core export; scripts and BRR data use native RAM PCs.
+; Scene resources and final ROM placement remain separate integration work.
 
 spc_0bc1	equ	$0bc1
 

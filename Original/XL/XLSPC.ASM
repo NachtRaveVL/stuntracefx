@@ -1,6 +1,6 @@
-; Retail SPC700 startup/control fragments, US driver uploaded to $0670/$10b0.
-; Partial driver overlay, not a complete boot image: remaining driver code,
-; tables, samples and scene streams must be assembled before scheduling.
+; Retail SPC700 startup/control fragments at native SPC RAM addresses.
+; Core/script and BRR exports together cover the complete initial payload.
+; Scene resources and ROM placement still require integration.
 ; The early XLSND0.BIN path is unchanged. No host entry point calls SPC PCs.
 
 	incpublics	xlspc.ext

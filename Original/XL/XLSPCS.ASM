@@ -1,6 +1,8 @@
 ; Initial SPC instruments, effect scripts, bundled music and sample directory.
 ; Script addresses and shared continuations are native SPC RAM addresses.
-; BRR sample bodies and scene-specific replacement streams remain external.
+; Scene-specific replacement streams remain external.
+
+	include	xlspcb.ext
 
 
 	spc_block	spc_instrumentblock,$0590,$0078
@@ -33,25 +35,25 @@ spc_instruments
 
 ; Twenty initial DSP directory entries: start and loop addresses.
 spc_sampledirectory
-	spc_sampledef	$4000,$41a7
-	spc_sampledef	$425b,$4a56
-	spc_sampledef	$4add,$4b0a
-	spc_sampledef	$4b25,$4b7f
-	spc_sampledef	$4b9a,$4fb7
-	spc_sampledef	$4fff,$5344
-	spc_sampledef	$565c,$623e
-	spc_sampledef	$6286,$665b
-	spc_sampledef	$6286,$665b
-	spc_sampledef	$6286,$665b
-	spc_sampledef	$665b,$7234
-	spc_sampledef	$7234,$750d
-	spc_sampledef	$750d,$7b8e
-	spc_sampledef	$7bd6,$7fab
-	spc_sampledef	$858a,$85a5
-	spc_sampledef	$8c92,$9109
-	spc_sampledef	$92cb,$92e6
-	spc_sampledef	$9fa0,$9fe8
-	spc_sampledef	$a08a,$a67b
+	spc_sampledef	spc_sample00,spc_sample00loop
+	spc_sampledef	spc_sample01,spc_sample01loop
+	spc_sampledef	spc_sample02,spc_sample02loop
+	spc_sampledef	spc_sample03,spc_sample03loop
+	spc_sampledef	spc_sample04,spc_sample04loop
+	spc_sampledef	spc_sample05,spc_sample05loop
+	spc_sampledef	spc_sample06,spc_sample06loop
+	spc_sampledef	spc_sample07,spc_sample07loop
+	spc_sampledef	spc_sample07,spc_sample07loop
+	spc_sampledef	spc_sample07,spc_sample07loop
+	spc_sampledef	spc_sample0a,spc_sample0aloop
+	spc_sampledef	spc_sample0b,spc_sample0bloop
+	spc_sampledef	spc_sample0c,spc_sample0cloop
+	spc_sampledef	spc_sample0d,spc_sample0dloop
+	spc_sampledef	spc_sample0e,spc_sample0eloop
+	spc_sampledef	spc_sample0f,spc_sample0floop
+	spc_sampledef	spc_sample10,spc_sample10loop
+	spc_sampledef	spc_sample11,spc_sample11loop
+	spc_sampledef	spc_sample12,spc_sample12loop
 	spc_sampledef	$ffff,$ffff
 	spc_endblock	$0050
 

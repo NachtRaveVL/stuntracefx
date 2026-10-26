@@ -1,6 +1,6 @@
 ; Retail SPC music sequencer, pitch/volume updates and driver tables.
 ; Included inside the partial XLSPC overlay; native SPC RAM PCs are retained.
-; Sample directory, BRR data and remaining effect/control code are still required.
+; Scene-specific song/instrument streams and final ROM placement remain.
 
 spc_08f2	equ	$08f2
 

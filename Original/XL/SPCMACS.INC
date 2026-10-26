@@ -845,3 +845,32 @@ spc_musicpercussionbase	macro
 	db	$fa
 	db	\1
 	endm
+
+; BRR: sixteen signed four-bit residuals in four big-endian packed words.
+spc_brrend	equ	1
+spc_brrloop	equ	2
+spc_brrblock	macro
+	iflt	\1
+	fail
+	endc
+	ifgt	(\1)-15
+	fail
+	endc
+	iflt	\2
+	fail
+	endc
+	ifgt	(\2)-3
+	fail
+	endc
+	iflt	\3
+	fail
+	endc
+	ifgt	(\3)-3
+	fail
+	endc
+	db	((\1)*16)+((\2)*4)+(\3)
+	db	((\4)>>8)&$ff,(\4)&$ff
+	db	((\5)>>8)&$ff,(\5)&$ff
+	db	((\6)>>8)&$ff,(\6)&$ff
+	db	((\7)>>8)&$ff,(\7)&$ff
+	endm
