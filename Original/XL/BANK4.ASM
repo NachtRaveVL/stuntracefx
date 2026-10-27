@@ -27,6 +27,8 @@
 	incfile	xlsload.asm
 	incfile	xlspc.asm
 	incfile	xlspca.asm
+	incfile	rcardefs.mc
+	incfile	xlrace.asm
 	bankend	4
 ;------------------------------------------------------------------
 

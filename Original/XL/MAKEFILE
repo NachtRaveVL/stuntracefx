@@ -52,7 +52,7 @@ mvars.mc mmacs.mc mshtab.mc mmaths.mc \
 mwrot.mc mwcrot.mc mobj.mc mclip.mc \
 mdrawc.mc mdrawp.mc msprite.mc mgdots.mc \
 mdrawlis.mc mdecru.mc mdsprite.mc mpart.mc \
-mdynamic.mc mai.mc 
+mdynamic.mc mai.mc mrcar.mc
 
 ## Bank 2, 3
 bank2.sob: bank2.asm bgmacs.inc\
@@ -67,7 +67,7 @@ stratrou.asm draw.asm endseq.asm data\f-1.pcr
 
 
 ## Bank 4
-bank4.sob: bank4.asm xlspca.asm xlspca.ext xlsload.asm xlsload.ext xlspc.asm xlspcm.asm xlspcv.asm xlspcs.asm xlspc.ext xlspcb.ext spcmacs.inc \
+bank4.sob: bank4.asm xlspca.asm xlspca.ext rcardefs.mc rcardefs.ext xlrace.asm xlrace.ext xlsload.asm xlsload.ext xlspc.asm xlspcm.asm xlspcv.asm xlspcs.asm xlspc.ext xlspcb.ext spcmacs.inc \
 xlsound.ext mario.ext mkmacs.inc \
 $(STDFILES) $(STRATFILES) 
 

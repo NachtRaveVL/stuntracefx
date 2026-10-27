@@ -834,6 +834,12 @@ mio_mode	equ	$303a
 	alc	racesound_playmode,1
 	alc	racesound_extraoff,1
 
+; Selected retail definition identities and reload-latched kind.
+; Frontend/retail alien creation supplies these before selection.
+	alc	race_def0,2
+	alc	race_def1,2
+	alc	race_cachedkind,1
+
 	IFGT	wmempt-$2000
 	printf	"%n%nTOO MANY ALCS USED%n%n"
 	fail

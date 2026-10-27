@@ -496,6 +496,16 @@ viewrouteptr	=	m_routeptr
 	malc	m_nearcarside,2
 	malc	m_nearcardepth,2
 
+; Retail constructor-reader outputs and shared wheel descriptor word.
+; Separate from the early object allocator and shape state.
+	malc	m_retailshape,2
+	malc	m_retailshapetag,2
+	malc	m_retailwheelword,2
+	malc	m_retaildefindex,2
+	malc	m_retailparamindex,2
+	malc	m_retailrouteword,2
+	malc	m_retailgearframe,2
+
 ; Current map number for retail route-speed and AI tables.
 ; Retail copies CPU $0e3d to GSU RAM $26f4 while loading the scene.
 	zmalc	m_mapnumber,2

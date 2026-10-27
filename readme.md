@@ -66,12 +66,12 @@ pie showData
 | --- | ---: | ---: | ---: | --- |
 | CPU platform, startup, NMI, display and object runtime | 10% | 10-25% | 75-90% | `XLSTART`, `XLIRQ`, `RAMSTUFF`, `XLMAIN`, `XLTRANS`, `STRATROU`: retail hardware initialization and selected callback helpers recovered; complete retail initialization chain, NMI modes, scheduler, object lifetime and display transitions still need reconciliation. Retail anchors: `$02:8000`, `$03:89B4`, `$03:D388`, `$0B:B479`. |
 | Math, GSU rendering, clipping, sprites and effects | 15% | 15-35% | 65-85% | `MMATHS`, `MWROT`, `MWCROT`, `MOBJ`, `MCLIP`, `MDRAW*`, `MSPRITE`, `MDSPRITE`, `MPART`, `MDATA`: substantial early engine survives, with matching arithmetic and table spans; audit the rest of retail bank `$01`, material/draw paths, road rendering and the `$01:D12F` camera-flag consumer. |
-| Vehicle dynamics, wheels, physics and collision | 20% | 5-15% | 85-95% | `MDYNAMIC`, `DYNSTRUC`, `DYNPARMS`, car strategies in `GASTRATS`: early cars/wheels/physics survive; list registration, definition-flag reads, approach rejection and contact-cache access/cleanup are restored, but final retail constructor/layout, all vehicle types, collision dispatch and frame integration remain. Retail anchors: `$04:8800`, `$04:8E59`, `$04:BCBA`, `$08:CC7C`. |
+| Vehicle dynamics, wheels, physics and collision | 20% | 5-15% | 85-95% | `MDYNAMIC`, `DYNSTRUC`, `DYNPARMS`, `MRCAR`, `RCARDEFS`, car strategies in `GASTRATS`: nine retail vehicle definitions, constructor readers, gear/torque/revs calculations, list registration and avoidance/contact helpers restored. New constructor/physics helpers use retail record layouts; allocation, shape binding, complete physics/collision dispatch and live frame integration remain. Retail anchors: `$04:8800`, `$04:8E59`, `$04:BCBA`, `$08:CC7C`. |
 | Camera records, animation and camera strategies | 10% | 55-75% | 25-45% | `GAME`, `GASTRATS`, `WORLD`: largest concentration of reconstructed retail behavior; finish remaining scene/mode selection, animation-15 initialization, camera/owner teardown, sound and draw consumers, and all race/attract/split-screen contexts. Anchors: `$02:DAD6-$02:DF78`, `$08:8525-$08:9BD8`, `$09:8090`. |
 | Route access, AI and driving controls | 10% | 35-55% | 45-65% | `MAI`, route helpers in `GASTRATS`, `WORLD`: normal driving, mode dispatch, lap/rank producers, player-bound timing, frozen-route motion and contact-cache invalidation reconstructed; remaining mode/flag producers, retail multiplayer lifetime, collision-frame integration and live AI scheduling remain. |
 | Race rules, frontend, menus and game flow | 15% | 0-10% | 90-100% | `XLMAIN`, `XLTITLE`, `XLINIT`, `PSTRATS`, `GSTRATS`, `GASTRATS`, `ENDSEQ`: early behavior is a starting point; final race progression, timing/results, vehicle/course selection, attract/demo, two-player flow and endings need retail mapping and restoration. Anchors include `$0B:AE0A` and `$0B:FB26`. |
 | Courses, scene streams, models, graphics and text | 15% | 5-15% | 85-95% | `MAPS`, shape sources, `MSPRITES`, `DATA`, `XLDATA`, `MDATA`, `SHBANKS`, `INCBINS`: inherited assets and some identical tables exist, but the built map includes an early fallback route, not the full retail course set. Restore final scene/course inventory, object placement, routes, model/texture/background differences and text, then validate references. |
-| Audio driver, command mapping, music and samples | 5% | 50-65% | 35-50% | `XLSOUND`, `XLSLOAD`, `XLSPC*`, `SPCMACS`, `CRUMACS`, `MAI`, `MDECRU`: both SPC cores, all identified scene/sample uploads and 20 songs have assembly correspondence, including 16 byte-exact packed streams. The split-screen core's mode-2 loader is reconstructed; CPU queues and parameter producers match both live SPC profiles. Three additional songs have confirmed bank-separated callers. Remaining work includes final ROM placement, startup/game-frame/NMI scheduling, definition producers and intended callers for the extra sample and three songs; the early SPC path is still active. |
+| Audio driver, command mapping, music and samples | 5% | 50-65% | 35-50% | `XLSOUND`, `XLSLOAD`, `XLRACE`, `XLSPC*`, `SPCMACS`, `CRUMACS`, `MAI`, `MDECRU`: both SPC cores, all identified scene/sample uploads and 20 songs have assembly correspondence, including 16 byte-exact packed streams. The split-screen loader, vehicle-kind selection, CPU queues and parameter producers match both live SPC profiles. Three additional songs have confirmed bank-separated callers. Remaining work includes final ROM placement, startup/game-frame/NMI scheduling, definition ownership/callers and intended callers for the extra sample and three songs; the early SPC path is still active. |
 
 #### Retail Bank Map
 
@@ -80,12 +80,12 @@ pie showData
 | `$00` | 834 | 6,362 | 25,572 | Verified byte sine/cosine and sine-interpolation tables; other shared-data candidates, reset/header and remaining content audit |
 | `$01` | 1,258 | 1,775 | 29,735 | GSU math/render engine; verified inherited matrix, math and backward-decompression spans, remaining draw pipeline |
 | `$02` | 1,319 | 4,084 | 27,365 | CPU NMI/display, camera records and retail audio port service; remaining runtime/control flow and SPC integration |
-| `$03` | 648 | 1,407 | 30,713 | Hardware setup, matrix/callback helpers, audio unpack/upload wrapper and mode-2 SPC driver switch; remaining CPU engine |
-| `$04` | 6,856 | 263 | 25,649 | GSU dynamics/AI plus CPU audio; route modes/ranks, nearby-car state, commands/ports, reload catalogues and instrument selection restored; remaining constructor, collision-frame integration, physics and audio assets/callers/driver |
+| `$03` | 753 | 1,407 | 30,608 | Hardware setup, matrix/callback helpers, audio unpack/upload wrapper, mode-2 SPC driver switch and vehicle-kind/engine-command producers; remaining CPU engine |
+| `$04` | 7,406 | 264 | 25,098 | GSU dynamics/AI plus CPU audio; raw retail constructor readers, gear/torque/revs stage, route modes/ranks, nearby-car state, commands/ports and reload selection restored; remaining allocator/construction, complete physics/collision and runtime integration |
 | `$05-$06` | 0 | 0 | 65,536 | Content/source correspondence still unclassified |
 | `$07` | 80 | 0 | 32,688 | Nearby-car CPU audio consumer; remaining content/source correspondence audit |
 | `$08` | 3,905 | 65 | 28,798 | Camera/route helpers, first-player car binding, map and object systems; remaining vehicle/gameplay logic |
-| `$09` | 164 | 0 | 32,604 | Driving-camera presets; remaining scene/data and WRAM patch content |
+| `$09` | 2,731 | 0 | 30,037 | Driving-camera presets and nine typed vehicle definitions with wheel, auxiliary, physics, shift-threshold and torque-curve data; remaining scene/data and WRAM patch content |
 | `$0A` | 0 | 0 | 32,768 | Content/source correspondence still unclassified |
 | `$0B` | 1,081 | 0 | 31,687 | Engine parameter dispatch, rev/filter/speed logic and five 152-byte curves restored; remaining title/entity/game-frame and audio integration |
 | `$0C` | 0 | 722 | 32,046 | Shape-data candidates; remaining content classification |
@@ -99,16 +99,16 @@ pie showData
 | `$1D` | 8,264 | 0 | 24,504 | Eight packed song streams reconstructed; remaining prefix content, padding, intended callers and final placement |
 | `$1E` | 30,861 | 32 | 1,875 | Four raw and eight packed songs reconstructed; all song content represented. Physical credit counts raw payloads and packed streams once; decoded sizes are not added again. Raw IPL headers, padding and final placement remain outside restoration credit |
 | `$1F` | 0 | 0 | 32,768 | Content/source correspondence still unclassified |
-| **All 32 banks** | **147,282** | **34,873** | **866,421** | **All 1 MiB accounted for exactly once** |
+| **All 32 banks** | **150,504** | **34,874** | **863,198** | **All 1 MiB accounted for exactly once** |
 
-**Measured ROM correspondence: 14.05% restored/adapted, 85.95% not yet credited.** This includes assets; identical candidates receive no restoration credit.
+**Measured ROM correspondence: 14.35% restored/adapted, 85.65% not yet credited.** This includes assets; identical candidates receive no restoration credit.
 
 ```mermaid
 pie showData
     title Retail ROM byte correspondence
-    "Restored/adapted" : 147282
-    "Additional identical candidates" : 34873
-    "Uncredited" : 866421
+    "Restored/adapted" : 150504
+    "Additional identical candidates" : 34874
+    "Uncredited" : 863198
 ```
 
 ## Building Original
