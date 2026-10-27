@@ -1,4 +1,5 @@
 	include	header.inc
+	include	spcmacs.inc
 	include	strathdr.inc
 	include	gstrats.ext
 	include	windows.ext
@@ -10,6 +11,7 @@
 ;	incfile	pistrats.asm
 ;	incfile	pcstrats.asm
 ;	incfile	gb2strats.asm
+	incfile	xlspcp.mc
 	bankend	11
 
 	include	tail.inc

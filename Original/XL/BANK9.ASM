@@ -1,4 +1,5 @@
 	include	header.inc
+	include	spcmacs.inc
 ;	include	strathdr.inc
 	include	gstrats.ext
 	include	pstrats.ext
@@ -15,6 +16,7 @@
 bgm11	incbinfile	snd\sgbgm11.bin
 bgm11len	equ	*-bgm11
 
+	incfile	xlspce.asm
 	bankend	9
 
 	include	tail.inc

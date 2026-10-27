@@ -47,6 +47,7 @@ real_istrats =	0
 	bank	13
 	incfile	maps\maplist2.asm
 
+	incfile	xlspct.asm
 	bankend	13
 ;------------------------------------------------------------------
 

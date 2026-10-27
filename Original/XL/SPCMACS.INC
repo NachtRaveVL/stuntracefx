@@ -874,3 +874,32 @@ spc_brrblock	macro
 	db	((\6)>>8)&$ff,(\6)&$ff
 	db	((\7)>>8)&$ff,(\7)&$ff
 	endm
+
+; Additional commands used by the retail song streams.
+spc_musicpanramp	macro
+	db	$e2
+	db	\1,\2
+	endm
+
+spc_musicvibrato	macro
+	db	$e3
+	db	\1,\2,\3
+	endm
+
+spc_musicvibratooff	macro
+	db	$e4
+	endm
+
+spc_musicvibratofade	macro
+	db	$f0
+	db	\1
+	endm
+
+spc_musicpitchbenddown	macro
+	db	$f2
+	db	\1,\2,\3
+	endm
+
+spc_musicpitchbendoff	macro
+	db	$f3
+	endm
