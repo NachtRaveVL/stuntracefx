@@ -26,6 +26,7 @@
 ;	incfile	d2strats.asm
 	incfile	xlsload.asm
 	incfile	xlspc.asm
+	incfile	xlspca.asm
 	bankend	4
 ;------------------------------------------------------------------
 

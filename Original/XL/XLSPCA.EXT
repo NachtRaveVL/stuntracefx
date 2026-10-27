@@ -1,0 +1,3 @@
+	global	racesound_spcalt,racesound_spcaltend
+	global	racesound_spcr1bdcd8,racesound_spcr1bdcd8end
+	global	racesound_splitdriver_l,racesound_splitdriver_end

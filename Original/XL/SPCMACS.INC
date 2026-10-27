@@ -903,3 +903,9 @@ spc_musicpitchbenddown	macro
 spc_musicpitchbendoff	macro
 	db	$f3
 	endm
+
+; Alternate control-stage absolute shift.
+spc_asl_abs	macro
+	db	$0c
+	dw	\1
+	endm

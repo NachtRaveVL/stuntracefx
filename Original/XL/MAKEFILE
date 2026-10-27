@@ -67,7 +67,7 @@ stratrou.asm draw.asm endseq.asm data\f-1.pcr
 
 
 ## Bank 4
-bank4.sob: bank4.asm xlsload.asm xlsload.ext xlspc.asm xlspcm.asm xlspcv.asm xlspcs.asm xlspc.ext xlspcb.ext spcmacs.inc \
+bank4.sob: bank4.asm xlspca.asm xlspca.ext xlsload.asm xlsload.ext xlspc.asm xlspcm.asm xlspcv.asm xlspcs.asm xlspc.ext xlspcb.ext spcmacs.inc \
 xlsound.ext mario.ext mkmacs.inc \
 $(STDFILES) $(STRATFILES) 
 

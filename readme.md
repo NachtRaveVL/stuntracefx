@@ -51,13 +51,13 @@ Once decompilation is complete, planned enhancements include:
 
 ## Reconstruction Progress
 
-**Overall planning estimate: about 23% complete, about 77% left.** This is the rounded weighted midpoint of the section estimates below; their bounds give approximately **16-31% complete / 69-84% remaining**. It estimates reconstruction and integration effort, not a measured percentage of decompiled instructions. Confidence is low outside the camera and route work and should be revised as the remaining banks are mapped.
+**Overall planning estimate: about 24% complete, about 76% left.** This is the rounded weighted midpoint of the section estimates below; their bounds give approximately **16-31% complete / 69-84% remaining**. It estimates reconstruction and integration effort, not a measured percentage of decompiled instructions. Confidence is low outside the camera and route work and should be revised as the remaining banks are mapped.
 
 ```mermaid
 pie showData
     title Estimated whole-project work
-    "Completed work, approximate" : 23
-    "Work remaining, approximate" : 77
+    "Completed work, approximate" : 24
+    "Work remaining, approximate" : 76
 ```
 
 ### Subsystem Assessment
@@ -71,7 +71,7 @@ pie showData
 | Route access, AI and driving controls | 10% | 35-55% | 45-65% | `MAI`, route helpers in `GASTRATS`, `WORLD`: normal driving, mode dispatch, lap/rank producers, player-bound timing, frozen-route motion and contact-cache invalidation reconstructed; remaining mode/flag producers, retail multiplayer lifetime, collision-frame integration and live AI scheduling remain. |
 | Race rules, frontend, menus and game flow | 15% | 0-10% | 90-100% | `XLMAIN`, `XLTITLE`, `XLINIT`, `PSTRATS`, `GSTRATS`, `GASTRATS`, `ENDSEQ`: early behavior is a starting point; final race progression, timing/results, vehicle/course selection, attract/demo, two-player flow and endings need retail mapping and restoration. Anchors include `$0B:AE0A` and `$0B:FB26`. |
 | Courses, scene streams, models, graphics and text | 15% | 5-15% | 85-95% | `MAPS`, shape sources, `MSPRITES`, `DATA`, `XLDATA`, `MDATA`, `SHBANKS`, `INCBINS`: inherited assets and some identical tables exist, but the built map includes an early fallback route, not the full retail course set. Restore final scene/course inventory, object placement, routes, model/texture/background differences and text, then validate references. |
-| Audio driver, command mapping, music and samples | 5% | 40-55% | 45-60% | `XLSOUND`, `XLSLOAD`, `XLSPC*`, `SPCMACS`, `CRUMACS`, `MAI`, `MDECRU`: initial upload (39,061 payload bytes), 15 catalogued scene/instrument uploads (47,112 bytes) and 20 songs (56,280 decoded payload bytes) have assembly correspondence. All 16 packed songs retain byte-exact native packing through assembly macros. Remaining work includes the alternate SPC-code upload, uncatalogued extra-sound stream, final ROM placement, callers/NMI scheduling, definition producers and intended callers for six additional songs; the early SPC path is still active. |
+| Audio driver, command mapping, music and samples | 5% | 50-65% | 35-50% | `XLSOUND`, `XLSLOAD`, `XLSPC*`, `SPCMACS`, `CRUMACS`, `MAI`, `MDECRU`: both SPC cores, all identified scene/sample uploads and 20 songs have assembly correspondence, including 16 byte-exact packed streams. The split-screen core's mode-2 loader is reconstructed; CPU queues and parameter producers match both live SPC profiles. Three additional songs have confirmed bank-separated callers. Remaining work includes final ROM placement, startup/game-frame/NMI scheduling, definition producers and intended callers for the extra sample and three songs; the early SPC path is still active. |
 
 #### Retail Bank Map
 
@@ -80,7 +80,7 @@ pie showData
 | `$00` | 834 | 6,362 | 25,572 | Verified byte sine/cosine and sine-interpolation tables; other shared-data candidates, reset/header and remaining content audit |
 | `$01` | 1,258 | 1,775 | 29,735 | GSU math/render engine; verified inherited matrix, math and backward-decompression spans, remaining draw pipeline |
 | `$02` | 1,319 | 4,084 | 27,365 | CPU NMI/display, camera records and retail audio port service; remaining runtime/control flow and SPC integration |
-| `$03` | 613 | 1,407 | 30,748 | Hardware setup, matrix/callback helpers and audio unpack/upload wrapper; remaining CPU engine |
+| `$03` | 648 | 1,407 | 30,713 | Hardware setup, matrix/callback helpers, audio unpack/upload wrapper and mode-2 SPC driver switch; remaining CPU engine |
 | `$04` | 6,856 | 263 | 25,649 | GSU dynamics/AI plus CPU audio; route modes/ranks, nearby-car state, commands/ports, reload catalogues and instrument selection restored; remaining constructor, collision-frame integration, physics and audio assets/callers/driver |
 | `$05-$06` | 0 | 0 | 65,536 | Content/source correspondence still unclassified |
 | `$07` | 80 | 0 | 32,688 | Nearby-car CPU audio consumer; remaining content/source correspondence audit |
@@ -93,22 +93,22 @@ pie showData
 | `$14` | 0 | 19,905 | 12,863 | `MDATA` wipe/Z-table/effect data candidates; validate table boundaries and consumers |
 | `$15-$18` | 0 | 0 | 131,072 | Content/source correspondence still unclassified |
 | `$19` | 32,672 | 90 | 6 | Initial SPC and first-player instrument payloads restored; native IPL headers excluded from credit, final placement remains |
-| `$1A` | 28,789 | 773 | 3,206 | Initial BRR and second-player uploads restored; alternate `$10B0` SPC-code upload identified, remaining source/placement |
-| `$1B` | 24,712 | 217 | 7,839 | Catalogued scene instrument/sample uploads restored; alternate SPC-code tail, uncatalogued extra stream, padding and placement remain |
+| `$1A` | 32,736 | 28 | 4 | Initial BRR, second-player samples and split-screen SPC core head restored; native IPL headers and final placement remain |
+| `$1B` | 26,604 | 140 | 6,024 | Split-screen core tail and all identified instrument/sample uploads restored; IPL headers, 6,020-byte tail padding, extra sample's caller and final placement remain |
 | `$1C` | 0 | 0 | 32,768 | Content/source correspondence still unclassified |
 | `$1D` | 8,264 | 0 | 24,504 | Eight packed song streams reconstructed; remaining prefix content, padding, intended callers and final placement |
 | `$1E` | 30,861 | 32 | 1,875 | Four raw and eight packed songs reconstructed; all song content represented. Physical credit counts raw payloads and packed streams once; decoded sizes are not added again. Raw IPL headers, padding and final placement remain outside restoration credit |
 | `$1F` | 0 | 0 | 32,768 | Content/source correspondence still unclassified |
-| **All 32 banks** | **141,408** | **35,695** | **871,473** | **All 1 MiB accounted for exactly once** |
+| **All 32 banks** | **147,282** | **34,873** | **866,421** | **All 1 MiB accounted for exactly once** |
 
-**Measured ROM correspondence: 13.49% restored/adapted, 86.51% not yet credited.** This includes assets; identical candidates receive no restoration credit.
+**Measured ROM correspondence: 14.05% restored/adapted, 85.95% not yet credited.** This includes assets; identical candidates receive no restoration credit.
 
 ```mermaid
 pie showData
     title Retail ROM byte correspondence
-    "Restored/adapted" : 141408
-    "Additional identical candidates" : 35695
-    "Uncredited" : 871473
+    "Restored/adapted" : 147282
+    "Additional identical candidates" : 34873
+    "Uncredited" : 866421
 ```
 
 ## Building Original
