@@ -1,6 +1,6 @@
 ; Retail collision-response stages. Execute in bank 4.
-; Geometry generation must fill the shared twenty-entry, ten-byte group
-; buffer before response; raw bodies/cars do not use the early CAR layout.
+; Shape geometry fills the shared twenty-entry, ten-byte group buffer
+; before response; raw bodies/cars do not use the early CAR layout.
 ; This module shares the dynamics workspace and is not reentrant.
 
 mrcoll_begin
@@ -1362,6 +1362,915 @@ mretail_contactdivide
 	ljmp	r13
 	nop
 mretail_divreturn4
+	mpop	r11
+	move	pc,r11
+	nop
+
+; US $04:9C3D. r7 = other raw body, r9 = probe raw body, r8 preserved.
+; Build groups 1..19 from a raw retail header in ROM bank zero, using the
+; header's byte bank, point/face streams and signed scale shift. Header +0C
+; must be nonzero. Raw body +12 selects frame, +14 supplies the header.
+; Yaw is raw body +24 high byte, with native quarter-turn fast paths.
+; Cache key is header/frame; invalidate m_oldshape after another user of
+; m_rotpnts. Shared points/normal/workspace are not reentrant.
+; Valid streams must fit the existing 70-point buffer and twenty groups.
+; Return r0 = 0/1; r8/r9 and software stack preserved. Other registers,
+; shape cache/scratch and ROM bank are scratch. RAM bank must be zero.
+mretail_shapegroups
+	from	r11
+	stw	[r10]
+	inc	r10
+	inc	r10
+	from	r8
+	stw	[r10]
+	inc	r10
+	inc	r10
+	from	r9
+	stw	[r10]
+	inc	r10
+	inc	r10
+	ibt	r0,#$12
+	add	r7
+	ldw	[r0]
+	sms	[m_framenum],r0
+	iwt	r0,#$0000
+	iwt	r1,#$7d00
+	sm	[m_groupblocks+10],r0
+	sm	[m_groupblocks+12],r1
+	sm	[m_groupblocks+20],r0
+	sm	[m_groupblocks+22],r1
+	sm	[m_groupblocks+30],r0
+	sm	[m_groupblocks+32],r1
+	sm	[m_groupblocks+40],r0
+	sm	[m_groupblocks+42],r1
+	sm	[m_groupblocks+50],r0
+	sm	[m_groupblocks+52],r1
+	sm	[m_groupblocks+60],r0
+	sm	[m_groupblocks+62],r1
+	sm	[m_groupblocks+70],r0
+	sm	[m_groupblocks+72],r1
+	sm	[m_groupblocks+80],r0
+	sm	[m_groupblocks+82],r1
+	sm	[m_groupblocks+90],r0
+	sm	[m_groupblocks+92],r1
+	sm	[m_groupblocks+100],r0
+	sm	[m_groupblocks+102],r1
+	sm	[m_groupblocks+110],r0
+	sm	[m_groupblocks+112],r1
+	sm	[m_groupblocks+120],r0
+	sm	[m_groupblocks+122],r1
+	sm	[m_groupblocks+130],r0
+	sm	[m_groupblocks+132],r1
+	sm	[m_groupblocks+140],r0
+	sm	[m_groupblocks+142],r1
+	sm	[m_groupblocks+150],r0
+	sm	[m_groupblocks+152],r1
+	sm	[m_groupblocks+160],r0
+	sm	[m_groupblocks+162],r1
+	sm	[m_groupblocks+170],r0
+	sm	[m_groupblocks+172],r1
+	sm	[m_groupblocks+180],r0
+	sm	[m_groupblocks+182],r1
+	sm	[m_groupblocks+190],r0
+	sm	[m_groupblocks+192],r1
+	ibt	r0,#$00
+	romb
+	ibt	r1,#$14
+	with	r1
+	add	r7
+	to	r1
+	ldw	[r1]
+	with	r1
+	from	r1
+	bne	mrcoll_shapeheader
+	nop
+	iwt	pc,#mrcoll_noshape&WM
+	nop
+mrcoll_shapeheader
+	with	r1
+	to	r14
+	iwt	r0,#$000c
+	with	r14
+	add	r0
+	getb
+	inc	r14
+	getbh
+	with	r0
+	from	r0
+	bne	mrcoll_relativepoint
+	nop
+	iwt	pc,#mrcoll_noshape&WM
+	nop
+mrcoll_relativepoint
+	with	r1
+	to	r14
+	ibt	r4,#$1e
+	with	r4
+	add	r9
+	to	r4
+	ldw	[r4]
+	ibt	r0,#$1e
+	add	r7
+	ldw	[r0]
+	with	r4
+	sub	r0
+	sms	[m_bigx],r4
+	ibt	r5,#$20
+	with	r5
+	add	r9
+	to	r5
+	ldw	[r5]
+	ibt	r0,#$20
+	add	r7
+	ldw	[r0]
+	with	r5
+	sub	r0
+	sms	[m_bigy],r5
+	ibt	r8,#$22
+	with	r8
+	add	r9
+	to	r8
+	ldw	[r8]
+	ibt	r0,#$22
+	add	r7
+	ldw	[r0]
+	with	r8
+	sub	r0
+	sms	[m_bigz],r8
+	sub	r0
+	sm	[m_retailcontactyaw],r0
+	ibt	r0,#$24
+	add	r7
+	ldw	[r0]
+	with	r0
+	from	r0
+	bne	mrcoll_relativeyaw
+	nop
+	iwt	pc,#mrcoll_shapeformat&WM
+	nop
+mrcoll_relativeyaw
+	hib
+	sm	[m_retailcontactyaw],r0
+	iwt	r7,#$00c0
+	cmp	r7
+	bne	mrcoll_relativeleft
+	nop
+	with	r8
+	to	r0
+	not
+	inc	r0
+	with	r4
+	to	r8
+	with	r0
+	to	r4
+	iwt	pc,#mrcoll_shapeformat&WM
+	nop
+mrcoll_relativeleft
+	iwt	r7,#$0040
+	cmp	r7
+	bne	mrcoll_relativehalf
+	nop
+	with	r4
+	to	r0
+	not
+	inc	r0
+	with	r8
+	to	r4
+	with	r0
+	to	r8
+	bra	mrcoll_shapeformat
+	nop
+mrcoll_relativehalf
+	iwt	r7,#$0080
+	cmp	r7
+	bne	mrcoll_relativegeneral
+	nop
+	with	r4
+	not
+	inc	r4
+	with	r8
+	not
+	inc	r8
+	bra	mrcoll_shapeformat
+	nop
+mrcoll_relativegeneral
+	from	r14
+	stw	[r10]
+	inc	r10
+	inc	r10
+	from	r1
+	stw	[r10]
+	inc	r10
+	inc	r10
+	from	r2
+	stw	[r10]
+	inc	r10
+	inc	r10
+	from	r3
+	stw	[r10]
+	inc	r10
+	inc	r10
+	from	r5
+	stw	[r10]
+	inc	r10
+	inc	r10
+	from	r7
+	stw	[r10]
+	inc	r10
+	inc	r10
+	from	r9
+	stw	[r10]
+	inc	r10
+	inc	r10
+	with	r4
+	to	r1
+	with	r8
+	to	r3
+	not
+	inc	r0
+	iwt	r2,#$00ff
+	to	r2
+	and	r2
+	ibt	r0,#$00
+	romb
+	link	#4
+	iwt	pc,#mretail_contactrotate&WM
+	nop
+	with	r1
+	add	r1
+	with	r1
+	add	r1
+	with	r3
+	add	r3
+	with	r3
+	add	r3
+	with	r3
+	to	r4
+	with	r1
+	to	r8
+	dec	r10
+	dec	r10
+	to	r9
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	r7
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	r5
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	r3
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	r2
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	r1
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	r14
+	ldw	[r10]
+	ibt	r0,#$00
+	romb
+mrcoll_shapeformat
+	iwt	r0,#$0003
+	with	r14
+	add	r0
+	to	r2
+	getb
+	inc	r14
+	with	r2
+	getbh
+	iwt	r0,#$0000
+	with	r1
+	to	r14
+	with	r14
+	add	r0
+	to	r9
+	getb
+	inc	r14
+	with	r9
+	getbh
+	iwt	r0,#$0007
+	with	r1
+	to	r14
+	with	r14
+	add	r0
+	getbs
+	with	r0
+	to	r12
+	ibt	r0,#$01
+	with	pc
+	to	r13
+	add	r0
+	loop
+	nop
+	sm	[m_shapescale],r0
+	iwt	r0,#$0002
+	with	r1
+	to	r14
+	with	r14
+	add	r0
+	getb
+	romb
+	lm	r3,[m_framenum]
+	lm	r0,[m_oldshape]
+	cmp	r1
+	bne	mrcoll_newpoints
+	nop
+	lm	r0,[m_oldframenum]
+	cmp	r3
+	beq	mrcoll_facesbegin
+	nop
+mrcoll_newpoints
+	sm	[m_oldshape],r1
+	sm	[m_oldframenum],r3
+	link	#4
+	iwt	pc,#mretail_copypoints&WM
+	nop
+mrcoll_facesbegin
+	iwt	r9,#m_rotpnts&WM
+	with	r2
+	to	r14
+	inc	r14
+	getb
+	inc	r14
+	umult	#3
+	with	r14
+	add	r0
+	cache
+	getbs
+	ibt	r13,#$3c
+	cmp	r13
+	bne	mrcoll_nextface
+	inc	r14
+	ibt	r1,#$28
+	ibt	r7,#$05
+	ibt	r2,#$44
+	ibt	r12,#$03
+	ibt	r3,#$40
+mrcoll_skipbsp
+	getbs
+	cmp	r3
+	bne	mrcoll_bspnode
+	nop
+	bra	mrcoll_skipbsp
+	inc	r14
+mrcoll_bspnode
+	cmp	r1
+	bne	mrcoll_bspelse
+	nop
+	with	r14
+	bra	mrcoll_skipbsp
+	add	r7
+mrcoll_bspelse
+	cmp	r2
+	bne	mrcoll_groupmarker
+	with	r14
+	bra	mrcoll_skipbsp
+	add	r12
+mrcoll_nextgroup
+	getbs
+mrcoll_groupmarker
+	inc	r14
+	with	r0
+	from	r0
+	bne	mrcoll_groupcache
+	nop
+	iwt	pc,#mrcoll_scanresult&WM
+	nop
+mrcoll_groupcache
+	cache
+mrcoll_nextface
+	to	r13
+	getbs
+	with	r13
+	from	r13
+	bmi	mrcoll_nextgroup
+	inc	r14
+	sub	r0
+	to	r11
+	getbs
+	inc	r14
+	with	r11
+	from	r11
+	bne	mrcoll_facegroup
+	nop
+	iwt	pc,#mrcoll_skipface&WM
+	nop
+mrcoll_facegroup
+	with	r11
+	to	r0
+	sm	[m_groupPtype],r0
+	iwt	r1,#$00e0
+	with	r11
+	bic	r1
+	ibt	r0,#$0a
+	to	r11
+	mult	r11
+	iwt	r0,#m_groupblocks&WM
+	with	r11
+	add	r0
+	ldw	[r11]
+	hib
+	beq	mrcoll_facenormal
+	nop
+	iwt	pc,#mrcoll_skipface&WM
+	nop
+mrcoll_facenormal
+	inc	r14
+	inc	r14
+	lms	r0,[m_framenum]
+	with	r0
+	from	r0
+	bne	mrcoll_frameflags
+	nop
+	iwt	pc,#mrcoll_romnormal&WM
+	nop
+mrcoll_frameflags
+	lm	r7,[m_groupPtype]
+	iwt	r0,#$0040
+	and	r7
+	bne	mrcoll_animatednormal
+	nop
+	iwt	pc,#mrcoll_romnormal&WM
+	nop
+mrcoll_animatednormal
+	with	r14
+	add	#3
+	from	r14
+	stw	[r10]
+	inc	r10
+	inc	r10
+	with	r9
+	to	r12
+	getb
+	inc	r14
+	umult	#6
+	to	r9
+	add	r12
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	sms	[m_x1],r0
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	sms	[m_y1],r0
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	sms	[m_z1],r0
+	getb
+	inc	r14
+	umult	#6
+	to	r9
+	add	r12
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	sms	[m_x2],r0
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	sms	[m_y2],r0
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	sms	[m_z2],r0
+	getb
+	inc	r14
+	umult	#6
+	to	r9
+	add	r12
+	to	r1
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	to	r2
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	to	r3
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	lms	r0,[m_x1]
+	lms	r9,[m_x2]
+	sub	r9
+	sms	[m_x1],r0
+	lms	r0,[m_y1]
+	lms	r9,[m_y2]
+	sub	r9
+	sms	[m_y1],r0
+	lms	r0,[m_z1]
+	lms	r9,[m_z2]
+	sub	r9
+	sms	[m_z1],r0
+	lms	r0,[m_x2]
+	sub	r1
+	sms	[m_x2],r0
+	lms	r0,[m_y2]
+	sub	r2
+	sms	[m_y2],r0
+	lms	r0,[m_z2]
+	sub	r3
+	sms	[m_z2],r0
+	from	r4
+	stw	[r10]
+	inc	r10
+	inc	r10
+	from	r5
+	stw	[r10]
+	inc	r10
+	inc	r10
+	from	r8
+	stw	[r10]
+	inc	r10
+	inc	r10
+	from	r12
+	stw	[r10]
+	inc	r10
+	inc	r10
+	from	r13
+	stw	[r10]
+	inc	r10
+	inc	r10
+	from	r11
+	stw	[r10]
+	inc	r10
+	inc	r10
+	lms	r1,[m_x1]
+	lms	r2,[m_y1]
+	lms	r3,[m_z1]
+	link	#4
+	iwt	pc,#mretail_normalise&WM
+	nop
+	sms	[m_x1],r1
+	sms	[m_y1],r2
+	sms	[m_z1],r3
+	lms	r1,[m_x2]
+	lms	r2,[m_y2]
+	lms	r3,[m_z2]
+	link	#4
+	iwt	pc,#mretail_normalise&WM
+	nop
+	lms	r6,[m_y1]
+	from	r3
+	lmult
+	with	r4
+	to	r7
+	lms	r6,[m_z1]
+	from	r2
+	to	r5
+	lmult
+	with	r7
+	sub	r4
+	sbc	r5
+	with	r7
+	add	r7
+	rol
+	sms	[m_x2],r0
+	lms	r6,[m_z1]
+	from	r1
+	lmult
+	with	r4
+	to	r7
+	lms	r6,[m_x1]
+	from	r3
+	to	r5
+	lmult
+	with	r7
+	sub	r4
+	sbc	r5
+	with	r7
+	add	r7
+	rol
+	sms	[m_y2],r0
+	lms	r6,[m_x1]
+	from	r2
+	lmult
+	with	r4
+	to	r7
+	lms	r6,[m_y1]
+	from	r1
+	to	r5
+	lmult
+	with	r7
+	sub	r4
+	sbc	r5
+	with	r7
+	add	r7
+	rol
+	sms	[m_z2],r0
+	lms	r1,[m_x2]
+	lms	r2,[m_y2]
+	lms	r3,[m_z2]
+	dec	r10
+	dec	r10
+	to	r11
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	r13
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	r12
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	r8
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	r5
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	r4
+	ldw	[r10]
+	with	r12
+	to	r9
+	dec	r10
+	dec	r10
+	to	r14
+	ldw	[r10]
+	bra	mrcoll_facepoint
+	nop
+mrcoll_romnormal
+	getb
+	inc	r14
+	to	r1
+	swap
+	with	r1
+	not
+	inc	r1
+	getb
+	inc	r14
+	to	r2
+	swap
+	with	r2
+	not
+	inc	r2
+	getb
+	inc	r14
+	to	r3
+	swap
+	with	r3
+	not
+	inc	r3
+mrcoll_facepoint
+	lm	r7,[m_shapescale]
+	getbs
+	with	r14
+	add	r13
+	with	r9
+	to	r13
+	umult	#6
+	with	r9
+	add	r0
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	mult	r7
+	sm	[m_facePX],r0
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	mult	r7
+	sm	[m_facePY],r0
+	ldw	[r9]
+	mult	r7
+	sm	[m_facePZ],r0
+	with	r13
+	to	r9
+	ldw	[r11]
+	hib
+	beq	mrcoll_planedistance
+	nop
+	iwt	pc,#mrcoll_nextface&WM
+	nop
+mrcoll_planedistance
+	with	r4
+	to	r6
+	from	r1
+	to	r7
+	fmult
+	with	r5
+	to	r6
+	from	r2
+	fmult
+	with	r7
+	add	r0
+	with	r8
+	to	r6
+	from	r3
+	fmult
+	add	r7
+	sm	[m_faceD],r0
+	lm	r6,[m_facePX]
+	from	r1
+	to	r7
+	fmult
+	lm	r6,[m_facePY]
+	from	r2
+	fmult
+	with	r7
+	add	r0
+	lm	r6,[m_facePZ]
+	from	r3
+	fmult
+	add	r7
+	lm	r7,[m_faceD]
+	sub	r7
+	bpl	mrcoll_insideface
+	nop
+	with	r0
+	to	r12
+	lm	r0,[m_groupPtype]
+	swap
+	to	r7
+	ldw	[r11]
+	or	r7
+	iwt	r7,#$ff00
+	and	r7
+	sbk
+	iwt	pc,#mrcoll_nextface&WM
+	nop
+mrcoll_insideface
+	lm	r7,[m_groupPtype]
+	iwt	r12,#$0080
+	with	r12
+	and	r7
+	beq	mrcoll_minimumdistance
+	nop
+	lm	r0,[m_groupPtype]
+	iwt	r7,#$00ff
+	to	r7
+	and	r7
+	ldw	[r11]
+	or	r7
+	sbk
+	iwt	pc,#mrcoll_nextface&WM
+	nop
+mrcoll_minimumdistance
+	inc	r11
+	inc	r11
+	to	r12
+	ldw	[r11]
+	with	r7
+	from	r12
+	bpl	mrcoll_newdistance
+	nop
+	with	r7
+	not
+	inc	r7
+mrcoll_newdistance
+	with	r12
+	from	r0
+	bpl	mrcoll_comparedistance
+	nop
+	with	r12
+	not
+	inc	r12
+mrcoll_comparedistance
+	with	r7
+	cmp	r12
+	bpl	mrcoll_storeplane
+	nop
+	iwt	pc,#mrcoll_nextface&WM
+	nop
+mrcoll_storeplane
+	stw	[r11]
+	dec	r11
+	dec	r11
+	lm	r0,[m_groupPtype]
+	stw	[r11]
+	with	r11
+	add	#4
+	from	r1
+	stw	[r11]
+	inc	r11
+	inc	r11
+	from	r2
+	stw	[r11]
+	inc	r11
+	inc	r11
+	from	r3
+	stw	[r11]
+	iwt	pc,#mrcoll_nextface&WM
+	nop
+mrcoll_skipface
+	with	r14
+	add	r13
+	with	r14
+	add	#5
+	iwt	pc,#mrcoll_nextface&WM
+	nop
+mrcoll_scanresult
+	iwt	r11,#m_groupblocks&WM
+	iwt	r12,#$0013
+	with	pc
+	to	r13
+	with	r11
+	add	#10
+	ldw	[r11]
+	with	r0
+	from	r0
+	beq	mrcoll_resultnext
+	nop
+	to	r7
+	hib
+	beq	mrcoll_resulthit
+	nop
+mrcoll_resultnext
+	loop
+	nop
+	ibt	r0,#$00
+	bra	mrcoll_shapereturn
+	nop
+mrcoll_resulthit
+	ibt	r0,#$01
+mrcoll_shapereturn
+	dec	r10
+	dec	r10
+	to	r9
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	r8
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	pc
+	ldw	[r10]
+	nop
+
+; Retained native alternate exits; no caller is selected by this entry.
+mrcoll_offroadreturn
+	bra	mrcoll_scanresult
+	nop
+mrcoll_bumpyground
+	iwt	r11,#m_groupblocks&WM
+	ibt	r0,#$1e
+	add	r9
+	ldw	[r0]
+	ibt	r2,#$22
+	with	r2
+	add	r9
+	to	r2
+	ldw	[r2]
+	add	r2
+	ibt	r2,#$7f
+	and	r2
+	not
+	inc	r0
+	ibt	r2,#$20
+	with	r2
+	add	r9
+	to	r2
+	ldw	[r2]
+	add	r2
+	stw	[r11]
+	bra	mrcoll_scanresult
+	nop
+mrcoll_noshape
+	ibt	r0,#$00
+	dec	r10
+	dec	r10
+	to	r9
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	r8
+	ldw	[r10]
+	dec	r10
+	dec	r10
+	to	pc
+	ldw	[r10]
+	nop
+
+; US $04:A154 is the surviving mcopy_pnts in bank 1. Reuse it through
+; a far-call bridge, retaining the shape ROM bank and copied-point cursor.
+; r9 = point-command stream; m_framenum selects frames. Positive counts and
+; valid terminating streams must fit the existing 70-point buffer.
+; r1/r2/r3/r8/r11 preserved; r0/r12/r13/flags scratch, r14 = stream cursor.
+mretail_copypoints
+	mpush	r11
+	iwt	r11,#mretail_pointsreturn1&WM
+	iwt	r13,#mcopy_pnts>>16
+	iwt	r0,#mcopy_pnts&WM
+	from	r0
+	ljmp	r13
+	nop
+mretail_pointsreturn4
 	mpop	r11
 	move	pc,r11
 	nop

@@ -10,3 +10,5 @@
 	global	mretail_recoverboost
 	global	mretail_repairdamage
 	global	mretail_peerimpulse
+	global	mretail_shapegroups,mretail_copypoints
+	global	mretail_pointsreturn4

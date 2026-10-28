@@ -1385,3 +1385,12 @@ mretail_divreturn1
 	from	r0
 	ljmp	r13
 	nop
+
+; Bank-4 collision geometry shares the original point-stream copier.
+	extern	mretail_pointsreturn4
+mretail_pointsreturn1
+	iwt	r13,#mretail_pointsreturn4>>16
+	iwt	r0,#mretail_pointsreturn4&WM
+	from	r0
+	ljmp	r13
+	nop
