@@ -50,6 +50,9 @@ alcon	=	1
 ; Separate camera requests from the early build's occupied strategy flags.
 ; Appended so every existing alien field retains its offset.
 	defalx	viewflags,1
+; Bank-9 retail car definition for engine curves; early shape differs.
+; Leave unbound until retail vehicle construction/callers are restored.
+	defalx	retaildef,2
 	struct	alx_end,0
 
 alx_size	=	alx_end-alx_start

@@ -786,6 +786,60 @@ mio_mode	equ	$303a
 	include	dalcs.inc
 	include	ealcs.inc
 
+; Retail audio CPU state. Separate queues preserve the early SPC path;
+; bind these callers/ports only with the corresponding retail driver.
+; Appended so every existing CPU allocation retains its address.
+	alc	racesound0buffer,16
+	alc	racesound1buffer,16
+	alc	racesound0pointer,2
+	alc	racesound1pointer,2
+	alc	racesound0number,2
+	alc	racesound1number,2
+	alc	racesound0stock,2
+	alc	racesound1stock,2
+	alc	racesound_gate,1
+	alc	racesound_player,1
+	alc	racesound_mute,1
+	alc	racesound_nearactive,1
+	alc	racesound_voiceoff,1
+	alc	racesound_nearlevel,2
+	alc	racesound_nearoff,2
+	alc	racesound_rank,2
+	alc	racesound_nearparam,1
+	alc	racesound_engineparam,1
+	alc	racesound_dart,1
+	alc	racesound_brake,1
+	alc	racesound_pending0,1
+	alc	racesound_pending1,1
+	alc	racesound_block0,1
+	alc	racesound_block1,1
+
+; Retail controller/effect/engine state; adjacent player bytes are indexed.
+	alc	racesound_mode0,1
+	alc	racesound_mode1,1
+	alc	racesound_held0,1
+	alc	racesound_held1,1
+	alc	racesound_trigger0,2
+	alc	racesound_trigger1,2
+	alc	racesound_kind0,1
+	alc	racesound_kind1,1
+	alc	racesound_effect0,1
+	alc	racesound_effect1,1
+	alc	racesound_revs,2
+	alc	racesound_engineowner,2
+
+; Retail audio scene/reload state; scene is read as a full word.
+	alc	racesound_reloadonce,1
+	alc	racesound_scene,2
+	alc	racesound_playmode,1
+	alc	racesound_extraoff,1
+
+; Selected retail definition identities and reload-latched kind.
+; Frontend/retail alien creation supplies these before selection.
+	alc	race_def0,2
+	alc	race_def1,2
+	alc	race_cachedkind,1
+
 	IFGT	wmempt-$2000
 	printf	"%n%nTOO MANY ALCS USED%n%n"
 	fail

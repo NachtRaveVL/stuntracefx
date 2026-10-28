@@ -1,0 +1,10 @@
+	global	racesound_song1e8000,racesound_song1e8000end
+	global	racesound_song1e91bc,racesound_song1e91bcend
+	global	racesound_song1eafc6,racesound_song1eafc6end
+	global	racesound_song1ecffd,racesound_song1ecffdend
+	global	racesound_song1ddeb4,racesound_song1ddeb4end
+	global	racesound_song1df018,racesound_song1df018end
+	global	racesound_song1ef8ad,racesound_song1ef8adend
+	global	racesound_song1ed7a9,racesound_song1ed7a9end
+	global	racesound_song1dec10,racesound_song1dec10end
+	global	racesound_song1ee90d,racesound_song1ee90dend

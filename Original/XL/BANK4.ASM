@@ -16,11 +16,19 @@
 	include	continue.ext
 	include	coltabs.ext
 	include	mem.ext
+	include	xlsound.ext
+	include	mkmacs.inc
+	include	spcmacs.inc
 
 ;------------------------------------------------------------------
 	bank	4
 ;	incfile	paths.asm
 ;	incfile	d2strats.asm
+	incfile	xlsload.asm
+	incfile	xlspc.asm
+	incfile	xlspca.asm
+	incfile	rcardefs.mc
+	incfile	xlrace.asm
 	bankend	4
 ;------------------------------------------------------------------
 

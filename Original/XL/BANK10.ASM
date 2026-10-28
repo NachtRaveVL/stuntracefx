@@ -1,4 +1,5 @@
 	include	header.inc
+	include	spcmacs.inc
 	include	strathdr.inc
 	include	gstrats.ext
 	include	pstrats.ext	
@@ -14,6 +15,8 @@
 	public	bgmllen
 bgml	incbinfile	snd\sgbgml.bin
 bgmllen	equ	*-bgml
+	incfile	xlspcr.asm
+	incfile	xlspcq.mc
 	bankend	10
 
 	include	tail.inc

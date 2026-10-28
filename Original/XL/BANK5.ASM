@@ -1,6 +1,7 @@
 
 
 	include	header.inc
+	include	spcmacs.inc
 	incfile	mdynmacs.mc
 	incfile	dynstruc.inc
 	include	mapmacs.inc
@@ -40,11 +41,13 @@ real_istrats =	0
 	inccru	bgandccr,data\and.ccr
 
 
+	incfile	xlspcb.asm
 	bankend	5
 ;------------------------------------------------------------------
 	bank	13
 	incfile	maps\maplist2.asm
 
+	incfile	xlspct.asm
 	bankend	13
 ;------------------------------------------------------------------
 

@@ -256,9 +256,18 @@ minit_dynamics	; INITIALISE DYNAMICS.
 	sm	[m_avoidcarhead&WM],r0
 	sm	[m_dynframe],r0
 	sm	[m_testcar1],r0
+	sm	[m_playercar],r0
 	sm	[m_test1],r0
 ; FIXME: Early dynamics initialization is the retail GSU reset boundary.
 	sm	[m_viewroadflags],r0
+	sm	[m_nearcarpan],r0
+	sm	[m_nearcarband],r0
+	sm	[m_nearcar],r0
+	sm	[m_nearcarside],r0
+	sm	[m_nearcardepth],r0
+; Nearby audio starts disabled, as in retail $04:8846-$04:884b.
+	ibt	r0,#-1
+	sm	[m_nearcarapproach],r0
 
 	minit_mem	m_dynmem,totaldynmem,r1
 ;	minit_mem	m_dynmem,1000,r1
@@ -365,7 +374,7 @@ mmake_obj
 ;
 ; exit:
 ;
-; trashes: r0-r3
+; trashes: r0-r4,r7,r9,r11,r12 (car/wheel contact cleanup included)
 ;
 
 
@@ -387,10 +396,24 @@ mrem_obj
 	and	r2
 	beq	.ncar
 	nop
+	iwt	r2,#CAR_CONTACTS
+	mcall	mrelease_contacts
+	nop
 	mcall	mrem_car
+	nop
+	miwt	pc,.contacts_done&WM
 	nop
 
 .ncar
+	mloadw	r0,OBJ_TYPE,r1
+	iwt	r2,#OBJTYPE_wheel
+	and	r2
+	beq	.contacts_done
+	nop
+	ibt	r2,#WHL_CONTACTS
+	mcall	mrelease_contacts
+	nop
+.contacts_done
 
 
 	
@@ -635,6 +658,10 @@ mmake_car
 ; Initialise the new camera alignment field before the first dynamics tick.
 	iwt	r2,#32767
 	mstorew	r2,CAR_VELALIGN,r1
+	mcall	minit_routeprogress
+	nop
+	mcall	minit_nearcardistance
+	nop
 
 ; set car flag
 	mloadw	r2,OBJ_TYPE,r1
@@ -809,6 +836,10 @@ mdo_dynamics
 	bra	.loop
 	nop
 .noobjs
+	mcall	mrank_routecars
+	nop
+	mcall	mupdate_nearcar
+	nop
 
 
 ;----------------------------------------
@@ -2500,17 +2531,23 @@ rounddown	=	64
 
 .end
 
-; FIXME: The early car tick has no retail $70 route-mode flags yet.
+; FIXME: The early car tick lacks the retail route-mode producers.
 ; Use normal-mode index tracking when maproute has bound a table, after
 ; movement and before the CPU camera pass. This includes dynoff cars.
 ; Failed searches retain the last index, as in retail's normal branch.
-; TODO: Restore mode selection, steering and automatic advancement.
+; TODO: Connect mroute_modestep after mode/collision integration.
 ; The separate mupdate_carroute entry retains query-only zero-on-failure.
 	lm	r0,[m_routeptr]
 	mtest	r0
 	beq	.nroute
 	nop
 	mcall	mtrack_carroute
+	nop
+	mtest	r0
+	beq	.nroute
+	nop
+; The early bridge updates progress only after a successful route search.
+	mcall	mupdate_routeprogress
 	nop
 .nroute
 	mpop	pc
@@ -5721,6 +5758,482 @@ car1_anims
 	db	8,7,7,6,6,5,5,4	; thin - normal
 	db	4,3,3,2,2,1,1,0	; normal flat
 	db	4,4,9,9,10,10,11,11
+
+
+; US $04:b9ac-$04:ba04. r8 = car, RAM bank 0.
+; Build the matrix from negated Z/Y/X angles, transpose, save world XYZ
+; and update wheel poses. r8/r10 preserved; other regs/flags scratch.
+; Uses all three angles; the early wheel tick's zero-roll path differs.
+; mroute_modestep restores the route-mode transition caller.
+mroute_setupcar
+	mpush	r11
+	mpush	r8
+	mloadw	r0,OBJ_ROTZ,r8
+	mneg	r0
+	sms	[m_rotx],r0
+	mloadw	r0,OBJ_ROTY,r8
+	mneg	r0
+	sms	[m_roty],r0
+	mloadw	r0,OBJ_ROTX,r8
+	mneg	r0
+	sms	[m_rotz],r0
+	iwt	r9,#m_wmat11&WM
+	mcall	mcrotmatzxy16
+	nop
+	iwt	r9,#m_wmat11&WM
+	mcall	mtransmat16
+	nop
+	mpop	r8
+	mloadw	r0,OBJ_WORLDX,r8
+	sm	[m_carworldx],r0
+	mloadw	r0,OBJ_WORLDY,r8
+	sm	[m_carworldy],r0
+	mloadw	r0,OBJ_WORLDZ,r8
+	sm	[m_carworldz],r0
+	mcall	mroute_wheelpose
+	nop
+	mpop	pc
+	nop
+
+
+; US $04:a4ed-$04:a606. r8 = car, m_wmat/m_carworldXYZ prepared.
+; Rotate WHL_NOFFSET into WHL_ROTOFF, add car XYZ and set velocity to
+; eight times the position delta. WHLflag_routehold keeps the old pose
+; and zeros velocity. r8/r10 preserved; other registers/flags scratch.
+; RAM bank 0; ROM bank unchanged. This does not update render lists.
+mroute_wheelpose
+	mpush	r11
+	mloadw	r0,CAR_WHEELS,r8
+	mcache
+.next
+	moves	r9,r0
+	bne	.wheel
+	nop
+	miwt	pc,.done&WM
+	nop
+.wheel
+	nop
+	mloadw	r1,WHL_FLAGS,r9
+	iwt	r0,#WHLflag_routehold
+	and	r1
+	beq	.rotate
+	nop
+	miwt	pc,.hold&WM
+	nop
+.rotate
+	move	r12,r8
+	iwt	r8,#WHL_NOFFSETX
+	with	r8
+	add	r9
+	iwt	r11,#WHL_ROTOFFX
+	with	r11
+	add	r9
+	to	r1
+	mldwi	r8
+	to	r2
+	mldwi	r8
+	to	r3
+	mldwi	r8
+	mdotprod16mq	m_wmat11,m_wmat21,m_wmat31
+	mstwi	r11
+	mdotprod16mq	m_wmat12,m_wmat22,m_wmat32
+	mstwi	r11
+	mdotprod16mq	m_wmat13,m_wmat23,m_wmat33
+	mstwi	r11
+	move	r8,r12
+	iwt	r6,#1<<dynshift
+	mloadw	r1,WHL_ROTOFFX,r9
+	lm	r0,[m_carworldx]
+	mloadw	r2,OBJ_WORLDX,r9
+	with	r1
+	add	r0
+	mstorew	r1,OBJ_WORLDX,r9
+	with	r1
+	sub	r2
+	with	r1
+	lmult
+	mstorew	r4,OBJ_VELX,r9
+	mloadw	r1,WHL_ROTOFFY,r9
+	lm	r0,[m_carworldy]
+	mloadw	r2,OBJ_WORLDY,r9
+	with	r1
+	add	r0
+	mstorew	r1,OBJ_WORLDY,r9
+	with	r1
+	sub	r2
+	with	r1
+	lmult
+	mstorew	r4,OBJ_VELY,r9
+	mloadw	r1,WHL_ROTOFFZ,r9
+	lm	r0,[m_carworldz]
+	mloadw	r2,OBJ_WORLDZ,r9
+	with	r1
+	add	r0
+	mstorew	r1,OBJ_WORLDZ,r9
+	with	r1
+	sub	r2
+	with	r1
+	lmult
+	mstorew	r4,OBJ_VELZ,r9
+	mloadw	r0,WHL_NEXT,r9
+	miwt	pc,.next&WM
+	nop
+	nop
+	bra	.done
+	nop
+.hold
+	ibt	r1,#0
+	mstorew	r1,OBJ_VELX,r9
+	mstorew	r1,OBJ_VELY,r9
+	mstorew	r1,OBJ_VELZ,r9
+	mloadw	r0,WHL_NEXT,r9
+	miwt	pc,.next&WM
+	nop
+	nop
+.done
+	mpop	pc
+	nop
+
+; Contact velocity, US $04:a301-$04:a344.
+; r7 = object, r6 = address of its contact-head word; RAM bank 0.
+; A cache supplies X/Z velocity and zero Y; without one use the object.
+; Store the result in m_x1/m_y1/m_z1. r0/r1/r11/flags scratch;
+; other registers and banks preserved. FIXME: Head-address argument
+; replaces retail's shared object+$18 field.
+mread_contactvelocity
+	mpush	r11
+	to	r1
+	ldw	[r6]
+	mtest	r1
+	beq	.object
+	nop
+	mloadw	r0,CT_VELX,r1
+	sm	[m_x1],r0
+	mloadw	r0,CT_VELZ,r1
+	sm	[m_z1],r0
+	sub	r0
+	sm	[m_y1],r0
+	bra	.done
+	nop
+.object
+	mloadw	r0,OBJ_VELX,r7
+	sm	[m_x1],r0
+	mloadw	r0,OBJ_VELY,r7
+	sm	[m_y1],r0
+	mloadw	r0,OBJ_VELZ,r7
+	sm	[m_z1],r0
+.done
+	mpop	pc
+	nop
+
+
+; Release an object's own contact cache, US $04:8a08-$04:8a28.
+; r1 = object, r2 = contact-head offset. RAM bank 0.
+; r1/r4-r6/r8/r10 preserved; r0/r2/r7/r9/r11/r12/flags scratch.
+; FIXME: Offset argument and saved r6 adapt retail's common layout;
+; callable return replaces continuation into retail object removal.
+mrelease_contacts
+	mpush	r11
+	mpush	r6
+	move	r0,r2
+	add	r1
+	move	r6,r0
+	ldw	[r6]
+	mtest	r0
+	beq	.done
+	nop
+	mpush	r8
+	mcall	mclear_contacts
+	nop
+	mcall	msweep_contacts
+	nop
+	mpop	r8
+.done
+	mpop	r6
+	mpop	pc
+	nop
+
+
+; Coalesce the dynamics heap, US $04:8898-$04:88d4.
+; The surviving macro matches retail's first-heap pass. Negative blocks
+; and nonadjacent free links are retained. A pass does not necessarily
+; combine an entire run; repeated passes may be needed after bulk frees.
+; r0-r3/flags scratch; other registers/banks preserved; callable return.
+; FIXME: Retail continues with a second heap, absent from this early tree.
+; The early frame's coalescing call remains disabled.
+mcoalesce_dynamics
+	munfrag_mem	m_dynmem,r1,r2,r3
+	move	pc,r11
+	nop
+
+
+; Car contact-record gate, US $04:a345-$04:a353.
+; r6 = owner car, r8 = source object; RAM bank 0.
+; AIFLAGS $0080 suppresses both lookup and allocation.
+; r6/r8/r10 preserved; r0/r7/r9/r11/flags scratch.
+; FIXME: The shared retail owner layout is adapted to CAR_AIFLAGS and
+; CAR_CONTACTS. Wheel definition flags and broad-phase callers remain.
+mput_carcontact
+	iwt	r0,#CAR_AIFLAGS
+	add	r6
+	ldw	[r0]
+	iwt	r9,#CARaiflag_skipcontact
+	and	r9
+	beq	.put
+	nop
+	move	pc,r11
+	nop
+.put
+	mpush	r11
+	mpush	r6
+	iwt	r0,#CAR_CONTACTS
+	add	r6
+	move	r6,r0
+	mcall	mput_contact
+	nop
+	mpop	r6
+	mpop	pc
+	nop
+
+
+; Collision-contact records, US $04:a354-$04:a440.
+; r6 = address of the owner's contact-head word, r8 = source object.
+; Reuse the record keyed by r8, or allocate CT_LEN from m_dynmem and
+; prepend it. Copy source X/Z velocity/position unless CTflag_hold;
+; always set CTflag_used. Exhaustion leaves the owner list unchanged.
+; r6/r8/r10/r11 preserved; r0/r7/r9/flags scratch; RAM bank 0.
+; FIXME: Head-word argument replaces retail owner+$18. The caller must
+; apply retail $a345's owner flag $0080 exclusion before this entry.
+; TODO: Restore broad-phase producers and collision-frame consumers.
+; Records share the dynamics heap but do not join m_objects. No extra
+; capacity is reserved here; the existing allocation-failure path applies.
+mput_contact
+	to	r7
+	ldw	[r6]
+	mtest	r7
+	beq	.allocate
+	nop
+.find
+	mloadw	r0,CT_OBJECT,r7
+	cmp	r8
+	bne	.next
+	nop
+	miwt	pc,.update&WM
+	nop
+.next
+	mloadw	r0,CT_NEXT,r7
+	moves	r7,r0
+	bne	.find
+	nop
+.allocate
+	mpush	r8
+	iwt	r9,#m_dynmem&WM
+	cache
+	ibt	r7,#CT_LEN
+	mpush	r9
+.exact
+	to	r8
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	ldw	[r9]
+	sub	r7
+	beq	.exactfit
+	nop
+	moves	r9,r8
+	bne	.exact
+	nop
+	mpop	r9
+.larger
+	to	r8
+	ldw	[r9]
+	inc	r9
+	inc	r9
+	ldw	[r9]
+	sub	r7
+	bpl	.split
+	nop
+	moves	r9,r8
+	bne	.larger
+	nop
+	ibt	r7,#0
+	bra	.allocated
+	nop
+.exactfit
+	mpop	r0
+	mneg	r7
+	sub	r0
+	bra	.take
+	nop
+.split
+	sub	#4
+	bpl	.remainder
+	nop
+	add	#4
+	with	r7
+	add	r0
+	mneg	r7
+	ibt	r0,#-4
+.remainder
+	add	#4
+	stw	[r9]
+.take
+	from	r9
+	to	r8
+	add	r0
+	from	r7
+	stw	[r8]
+	dec	r8
+	dec	r8
+	move	r7,r8
+.allocated
+	mpop	r8
+	mtest	r7
+	bne	.attach
+	nop
+	miwt	pc,.nomem&WM
+	nop
+.attach
+	nop
+	iwt	r9,#CT_LEN
+	mstorew	r8,CT_OBJECT,r7
+	to	r9
+	ldw	[r6]
+	mstorew	r9,CT_NEXT,r7
+	from	r7
+	stw	[r6]
+	ibt	r9,#0
+	mstorew	r9,CT_FLAGS,r7
+.update
+	mloadw	r9,CT_FLAGS,r7
+	iwt	r0,#CTflag_hold
+	and	r9
+	bne	.mark
+	nop
+	mloadw	r9,OBJ_VELX,r8
+	mstorew	r9,CT_VELX,r7
+	mloadw	r9,OBJ_VELZ,r8
+	mstorew	r9,CT_VELZ,r7
+	mloadw	r9,OBJ_WORLDX,r8
+	mstorew	r9,CT_WORLDX,r7
+	mloadw	r9,OBJ_WORLDZ,r8
+	mstorew	r9,CT_WORLDZ,r7
+.mark
+	mloadw	r0,CT_FLAGS,r7
+	iwt	r9,#CTflag_used
+	or	r9
+	sbk
+	move	pc,r11
+	nop
+.nomem
+	move	pc,r11
+	nop
+
+
+; Clear contact usage marks, US $04:a441-$04:a461.
+; r6 = address of the owner's contact-head word; RAM bank 0.
+; Preserve every other flag and all list/header/data words.
+; r6/r10/r11 preserved; r0/r8/r12/flags scratch.
+; FIXME: Head-word argument replaces retail owner+$18.
+mclear_contacts
+	to	r8
+	ldw	[r6]
+	mtest	r8
+	beq	.done
+	nop
+	iwt	r12,#CTflag_used
+.next
+	mloadw	r0,CT_FLAGS,r8
+	bic	r12
+	sbk
+	mloadw	r0,CT_NEXT,r8
+	moves	r8,r0
+	bne	.next
+	nop
+.done
+	move	pc,r11
+	nop
+
+
+; Sweep contact records, US $04:a462-$04:a4d4.
+; r6 = address of the owner's contact-head word; RAM bank 0.
+; Keep marked records in order, clear their usage bit, unlink unmarked
+; records and return them to m_dynmem. Negative sizes become positive;
+; positive-size records are reinserted at the heap head, as in mfree_mem.
+; r6/r10/r11 preserved; r0/r2/r7-r9/r12/flags scratch.
+; FIXME: Head-word argument replaces retail owner+$18. No coalescing.
+msweep_contacts
+	to	r8
+	ldw	[r6]
+	mtest	r8
+	beq	.done
+	nop
+	iwt	r12,#CTflag_used
+	ibt	r2,#0
+.next
+	mloadw	r0,CT_FLAGS,r8
+	to	r9
+	and	r12
+	beq	.remove
+	nop
+	bic	r12
+	sbk
+	move	r2,r8
+.follow
+	mloadw	r0,CT_NEXT,r8
+.advance
+	moves	r8,r0
+	bne	.next
+	nop
+.done
+	move	pc,r11
+	nop
+.remove
+	mloadw	r7,CT_NEXT,r8
+	mtest	r2
+	bne	.previous
+	nop
+	from	r7
+	stw	[r6]
+	bra	.free
+	nop
+.previous
+	mstorew	r7,CT_NEXT,r2
+.free
+	mpush	r7
+	inc	r8
+	inc	r8
+	ldw	[r8]
+	with	r7
+	from	r0
+	bpl	.header
+	nop
+	mneg	r7
+.header
+	dec	r8
+	dec	r8
+	iwt	r7,#m_dynmem&WM
+	move	r9,r8
+	inc	r9
+	inc	r9
+	ldw	[r9]
+	mtest	r0
+	bpl	.insert
+	nop
+	mneg	r0
+	stw	[r9]
+	bra	.freed
+	nop
+.insert
+	ldw	[r7]
+	stw	[r8]
+	from	r8
+	stw	[r7]
+.freed
+	mpop	r7
+	move	r0,r7
+	bra	.advance
+	nop
 
 
 

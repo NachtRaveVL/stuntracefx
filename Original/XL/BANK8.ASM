@@ -1,4 +1,5 @@
 	include	header.inc
+	include	spcmacs.inc
 	include	strathdr.inc
 	include	gstrats.ext
 	include	pstrats.ext
@@ -20,6 +21,7 @@
 bgmd	incbinfile	snd\sgbgmd.bin
 bgmdlen	equ	*-bgmd
 
+	incfile	xlspcw.asm
 	bankend	8
 
 	include	tail.inc

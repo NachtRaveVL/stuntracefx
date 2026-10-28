@@ -126,6 +126,32 @@
 	global	mroute_controls
 	global	mroute_avoidcars,m_avoidcarhead
 	global	mlink_avoidcar,munlink_avoidcar
+	global	mroute_drivestep,mcheck_carapproach,mroute_markerturn
+	global	mread_routetiming,mroute_advancecar,mroute_targetvelocity
+	global	mread_carflags
+	global	mread_carroutetiming,mroute_frozenstep
+	global	mroute_setupcar,mroute_wheelpose
+	global	mroute_modestep
+	global	mcoalesce_dynamics
+	global	mput_carcontact,mput_contact
+	global	mclear_contacts,msweep_contacts
+	global	mread_contactvelocity,mrelease_contacts
+	global	m_playercar
+	global	minit_routeprogress,mtrack_routeprogress
+	global	mrank_routecars,mrank_nextroutecar,mroute_pointdistance
+	global	mupdate_routeprogress
+	global	mrotate_xz8,minit_nearcardistance,mupdate_nearcar
+	global	m_nearcarapproach,m_nearcarpan,m_nearcarband
+	global	m_nearcar,m_nearcarside,m_nearcardepth
+	global	mread_retailcarheader,mread_retailwheel
+	global	m_retailshape,m_retailshapetag,m_retailwheelword
+	global	m_retaildefindex
+	global	mfinish_retailcar,mload_retailcarparms
+	global	m_retailparamindex,m_retailrouteword
+	global	mretail_gearforce,m_retailgearframe
+	global	mretail_driveprep,mretail_steer,mretail_driveforce
+	global	mretail_dragrate,mretail_limitmotion,mretail_driveinputs
+	global	m_retaildriveflags
 
 
 

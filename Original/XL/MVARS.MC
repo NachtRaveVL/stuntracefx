@@ -345,7 +345,11 @@ mmaxvistab	=	100	; was 128
 	malc	m_particlesON,2
 	malc	m_defaultID,2
 
-	malc	m_debugchars,8*16	; always last!
+; Keep the complete hex-font copy above the second bitmap, between the
+; fixed backup_check markers at $f849 and $f943. This releases low RAM
+; for the appended wheel contact heads without reducing any buffer.
+m_debugchars	equ	mrambank+bitmap2+usedchar+$80
+m_debugchars_end	equ	m_debugchars+8*16
 
 ;----------------------------------------------------------
 ; dynamic allocs.
@@ -380,9 +384,11 @@ mmaxvistab	=	100	; was 128
 	malc	m_whlrotposZ,2
 
 	malc	m_carflags,2
-	malc	m_carworldx,2
-	malc	m_carworldy,2
-	malc	m_carworldz,2
+; Dynamics words moved to zero page for the appended route-state fields.
+; Keep each XYZ/scratch/friction group contiguous.
+	zmalc	m_carworldx,2
+	zmalc	m_carworldy,2
+	zmalc	m_carworldz,2
 	malc	m_test1,2
 	malc	m_test2,2
 	
@@ -393,12 +399,12 @@ mmaxvistab	=	100	; was 128
 	malc	m_frictdispy,2
 	malc	m_frictdispz,2
 
-	malc	m_t1,2
-	malc	m_t2,2
-	malc	m_t3,2
-	malc	m_t4,2
-	malc	m_t5,2
-	malc	m_t6,2
+	zmalc	m_t1,2
+	zmalc	m_t2,2
+	zmalc	m_t3,2
+	zmalc	m_t4,2
+	zmalc	m_t5,2
+	zmalc	m_t6,2
 	
 	malc	m_normX,2
 	malc	m_normY,2
@@ -421,14 +427,16 @@ mmaxvistab	=	100	; was 128
 	malc	m_whlspringx,2
 	malc	m_whlspringy,2
 	malc	m_whlspringz,2
-	malc	m_dynvar1,2
-	malc	m_dynvar2,2
-	malc	m_dynvar3,2
+; Keep the CPU/GSU argument triple contiguous in zero page.
+; The appended car fields require the additional heap reservation.
+	zmalc	m_dynvar1,2
+	zmalc	m_dynvar2,2
+	zmalc	m_dynvar3,2
 	malc	m_lastroadobj,2
 	malc	m_lastmarkobj,2
 
-	malc	m_offroadfriction,2
-	malc	m_onroadfriction,2
+	zmalc	m_offroadfriction,2
+	zmalc	m_onroadfriction,2
 	malc	m_objspeed,2
 	
 	malc	m_groupblocks,(2*5)*max_groups
@@ -461,9 +469,9 @@ part_len	equ	14
 
 ; Packed route shared by the scene parser, GSU and CPU cameras.
 ; Retail $1092/$1094: ROM address followed by a zero-extended bank word.
-; Appended after existing MVARS allocations; m_aitest1 follows in MAI.
-	malc	m_routeptr,2
-	malc	m_routebank,2
+; Keep this pair contiguous for CPU viewrouteptr+2 accesses.
+	zmalc	m_routeptr,2
+	zmalc	m_routebank,2
 viewrouteptr	=	m_routeptr
 
 ; Retail $273c: bit 0 gates the GSU draw entry at $01:d12f.
@@ -473,9 +481,35 @@ viewrouteptr	=	m_routeptr
 ; TODO: Restore the GSU draw consumer.
 	malc	m_viewroadflags,2
 
+; Retail $2476: first player's GSU car, bound by the CPU player strategy.
+; This is independent of m_testcar1 (the first car allocated).
+	malc	m_playercar,2
+
+; Nearby-car audio state, retail $2642-$264c. Names reconstructed.
+; Approach is biased by $80; -1 disables it. Pan is 0..15; normal
+; distance bands are 0..7, with native signed/overflow behavior retained.
+; Side/depth retain the camera-space projection.
+	malc	m_nearcarapproach,2
+	malc	m_nearcarpan,2
+	malc	m_nearcarband,2
+	malc	m_nearcar,2
+	malc	m_nearcarside,2
+	malc	m_nearcardepth,2
+
+; Retail constructor-reader outputs and shared wheel descriptor word.
+; Separate from the early object allocator and shape state.
+	malc	m_retailshape,2
+	malc	m_retailshapetag,2
+	malc	m_retailwheelword,2
+	malc	m_retaildefindex,2
+	malc	m_retailparamindex,2
+	malc	m_retailrouteword,2
+	malc	m_retailgearframe,2
+	malc	m_retaildriveflags,2	; current raw car +8A, not scene flags
+
 ; Current map number for retail route-speed and AI tables.
 ; Retail copies CPU $0e3d to GSU RAM $26f4 while loading the scene.
-	malc	m_mapnumber,2
+	zmalc	m_mapnumber,2
 ;	malc	m_particlerand2,2
 ;	malc	m_drawparticles,(8+6)*(maxparticles+1)
 		  

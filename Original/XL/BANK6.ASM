@@ -1,4 +1,5 @@
 	include	header.inc
+	include	spcmacs.inc
 	include	strathdr.inc
 	include	pstrats.ext
 	include	shmacs.inc
@@ -25,6 +26,7 @@ cacheon	=	1
 	mario	off
 
 
+	incfile	xlspcu.asm
 	bankend	6
 
 	include	tail.inc

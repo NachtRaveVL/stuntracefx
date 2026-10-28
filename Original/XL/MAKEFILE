@@ -5,7 +5,7 @@ ASM=sasmx
 ASMFLAGS=-efilelist=0
 include symson.mak
 LINK=SL
-LOPTS=-b30 -h512 -t7d
+LOPTS=-b30 -h512 -t7d -m8
 EXTEND=EXTEND
 EXTOPTS=8 ff
 CHECK=SFCHECK
@@ -52,7 +52,7 @@ mvars.mc mmacs.mc mshtab.mc mmaths.mc \
 mwrot.mc mwcrot.mc mobj.mc mclip.mc \
 mdrawc.mc mdrawp.mc msprite.mc mgdots.mc \
 mdrawlis.mc mdecru.mc mdsprite.mc mpart.mc \
-mdynamic.mc mai.mc 
+mdynamic.mc mai.mc mrcar.mc
 
 ## Bank 2, 3
 bank2.sob: bank2.asm bgmacs.inc\
@@ -67,17 +67,18 @@ stratrou.asm draw.asm endseq.asm data\f-1.pcr
 
 
 ## Bank 4
-bank4.sob: bank4.asm \
+bank4.sob: bank4.asm xlspca.asm xlspca.ext rcardefs.mc rcardefs.ext xlrace.asm xlrace.ext xlsload.asm xlsload.ext xlspc.asm xlspcm.asm xlspcv.asm xlspcs.asm xlspc.ext xlspcb.ext spcmacs.inc \
+xlsound.ext mario.ext mkmacs.inc \
 $(STDFILES) $(STRATFILES) 
 
 ## Bank 5, bank 13
-bank5.sob: bank5.asm mapmacs.inc istrats.asm \
+bank5.sob: bank5.asm xlspct.asm xlspct.ext mapmacs.inc istrats.asm xlspcb.asm xlspcb.ext spcmacs.inc \
 $(STDFILES) mdynmacs.mc dynstruc.inc maps\test1.asm \
 maps\test2.asm maps\test3.asm maps\test4.asm maps\maplist.asm \
 data\and.ccr maps\MAPP.asm maps\maplist2.asm 
 
 ## Bank 6
-bank6.sob: bank6.asm \
+bank6.sob: bank6.asm xlspcu.asm xlspcu.ext spcmacs.inc \
 $(STDFILES) $(STRATFILES) gstrats.asm mmacs.mc \
 mhofs.mc 
 
@@ -91,19 +92,19 @@ xldata\game3.pco xldata\game4.pco xldata\obj.pcg xldata\bgpanel.pcg \
 xldata\back1.pcg xldata\back1.psc 
 
 ## Bank 8
-bank8.sob: bank8.asm \
+bank8.sob: bank8.asm xlspcw.asm xlspcw.ext spcmacs.inc \
 $(STDFILES) $(STRATFILES) gastrats.asm snd\sgbgmd.bin \
 
 ## Bank 9
-bank9.sob: bank9.asm \
+bank9.sob: bank9.asm xlspce.asm xlspce.ext spcmacs.inc \
 $(STDFILES) snd\sgbgm11.bin 
 
 ## Bank 10
-bank10.sob: bank10.asm \
+bank10.sob: bank10.asm xlspcq.mc xlspcq.ext crumacs.mc xlspcr.asm xlspcr.ext spcmacs.inc \
 $(STDFILES) $(STRATFILES) snd\sgbgml.bin 
 
 ## Bank 11
-bank11.sob: bank11.asm \
+bank11.sob: bank11.asm xlspcp.mc xlspcp.ext crumacs.mc spcmacs.inc \
 $(STDFILES) $(STRATFILES) pstrats.asm 
 
 ## Banks 12, 13, 14, 15, 16, 17, 22

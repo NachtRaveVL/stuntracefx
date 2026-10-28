@@ -53,6 +53,7 @@ yyy	mario	on
 
 	incfile	mdynamic.mc
 	incfile	mai.mc
+	incfile	mrcar.mc
 
 	mario	off
 

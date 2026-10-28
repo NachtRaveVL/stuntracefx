@@ -1,0 +1,2 @@
+	global	racesound_reload_l,racesound_unpack_l,racesound_init_l
+	global	racesound_stopwait_l,racesound_wait_l

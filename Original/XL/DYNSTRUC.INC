@@ -165,6 +165,7 @@ CARflag_makestop	equ	32768
 ; early CAR_FLAGS word; bit 1 selects reverse route traversal.
 ; TODO: Restore the retail producers for this and its remaining bits.
 CARroutemode_reverse	equ	2
+CARroutemode_query	equ	4
 CARroutemode_slowspeed	equ	32
 	struct		CAR_ROUTEMODE,2
 
@@ -179,12 +180,55 @@ CARroutemode_slowspeed	equ	32
 
 ; Retail car $74/$16 avoidance-list link and skip flags. Keep these
 ; separate from the early mixed object list and OBJ_TYPE field.
-; FIXME: Names reconstructed; only flag $0400 is identified here.
+; FIXME: Names reconstructed; flags $0080/$0400 are identified here.
 ; mlink_avoidcar restores list insertion; early lifetime hooks maintain it.
-; TODO: Restore the retail skip-flag producer.
+; mread_carflags reads the retail definition's flags, including $0400.
+; TODO: Restore its constructor caller; the early cardef format differs.
+CARaiflag_skipcontact	equ	$0080
 CARaiflag_skipavoid	equ	$0400
 	struct		CAR_AINEXT,2
 	struct		CAR_AIFLAGS,2
+
+; Retail car $72/$88 frozen-route countdown and race rank.
+; Appended to retain all early offsets; mmake_obj clears both words.
+; FIXME: Names reconstructed. Slots must differ by -3..3 for the timing
+; table. mrank_routecars assigns the one-based ranks.
+	struct		CAR_ROUTECOUNT,2
+	struct		CAR_ROUTESLOT,2
+
+; Retail car $1c/$2c/$18 state, motion flags and contact list.
+; Keep these separate from early object type/collision fields.
+; FIXME: Names reconstructed. TODO: Restore flag/list producers.
+CARroutestate_player	equ	$0008
+CARroutestate_frozen	equ	$0010
+CARroutestate_contacts	equ	$0040
+CARmotion_skiproute	equ	$0040
+	struct		CAR_ROUTESTATE,2
+	struct		CAR_MOTIONFLAGS,2
+	struct		CAR_CONTACTS,2
+
+; Retail car $7a/$86/$84 progress used by the race-rank scan.
+; Keep accepted route position separate from CAR_ROUTEINDEX, which
+; nearest-point/query paths may change without advancing lap progress.
+	struct		CAR_ROUTELAPS,2
+	struct		CAR_ROUTESEEN,2
+	struct		CAR_ROUTEDIST,2
+
+; Retail $64 constructor/scene word and $8c nearby-car distance history.
+; Only scene bit $0008 is interpreted here: listen from the camera and
+; include the player in the scan. Remaining scene-word producers await
+; the retail constructor/scene integration; do not alias CAR_FLAGS.
+CARsceneflag_cameralistener	equ	$0008
+	struct		CAR_SCENEFLAGS,2
+	struct		CAR_NEARDIST,2
+
+; Retail car $66 definition offset in ROM bank 9. The early definition
+; format/bank differs; leave zero until its retail constructor is bound.
+; These three native identities are used by the nearby-car voice check.
+CARsounddef_1	equ	$876e
+CARsounddef_2	equ	$8aa8
+CARsounddef_3	equ	$8990
+	struct		CAR_RETAILDEF,2
 
  	
 	struct		CAR_LEN,0	
@@ -206,6 +250,10 @@ WHLflag_power		EQU	16
 WHLflag_ongnd		EQU	32	; if wheel IS on a ground polygon.
 WHLflag_skid		EQU	64
 WHLflag_onslope		EQU	128
+
+; Retail wheel $46 bit $0400: retain pose and zero velocity.
+; TODO: Restore the retail flag producer.
+WHLflag_routehold	EQU	$0400
 
 
 	structure	OBJ1_LEN
@@ -243,6 +291,10 @@ WHLflag_onslope		EQU	128
 	struct		WHL_TRACKFORCEZ,2
 
 	struct		WHL_DAMAGE,2
+
+; Retail wheel $18 collision-contact cache, separate from collision
+; object pointers and early scratch. mmake_obj clears the enlarged block.
+	struct		WHL_CONTACTS,2
 
 	struct		WHL_LEN,0
 
@@ -301,6 +353,22 @@ TOBJflag_stratflag1	equ	2
 
 
 	PRINTF	"hand obj struct size = ",HANDOBJ_LEN,"%n"
+
+; Retail collision-contact records. The first four bytes are the existing
+; dynamics allocator's next/size header; ownership uses a separate link.
+; FIXME: Names reconstructed. These are not early OBJ/CAR/WHL offsets.
+CT_NEXTFREE	equ	0
+CT_SIZE		equ	2
+CT_VELX		equ	4
+CT_VELZ		equ	6
+CT_WORLDX	equ	8
+CT_WORLDZ	equ	10
+CT_OBJECT	equ	12
+CT_NEXT		equ	14
+CT_FLAGS	equ	16
+CT_LEN		equ	18
+CTflag_used	equ	1
+CTflag_hold	equ	4
 
 
 ;******************************************************************************************
