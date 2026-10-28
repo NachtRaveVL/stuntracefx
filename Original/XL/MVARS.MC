@@ -509,6 +509,9 @@ viewrouteptr	=	m_routeptr
 	malc	m_retaillocalX,2
 	malc	m_retaillocalY,2
 	malc	m_retaillocalZ,2
+	malc	m_retaildynphase,2	; native dynamics substep selector
+	malc	m_retailimpact,2	; impact carried across the two substeps
+	malc	m_retailcontactyaw,2	; contact-normal yaw, unsigned byte domain
 
 ; Current map number for retail route-speed and AI tables.
 ; Retail copies CPU $0e3d to GSU RAM $26f4 while loading the scene.

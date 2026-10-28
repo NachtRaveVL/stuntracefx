@@ -1370,3 +1370,18 @@ mretail_normalreturn1
 	from	r0
 	ljmp	r13
 	nop
+
+; Bank-4 contact math uses the inherited rotation and divider routines.
+	extern	mretail_rotreturn4,mretail_divreturn4
+mretail_rotreturn1
+	iwt	r13,#mretail_rotreturn4>>16
+	iwt	r0,#mretail_rotreturn4&WM
+	from	r0
+	ljmp	r13
+	nop
+mretail_divreturn1
+	iwt	r13,#mretail_divreturn4>>16
+	iwt	r0,#mretail_divreturn4&WM
+	from	r0
+	ljmp	r13
+	nop

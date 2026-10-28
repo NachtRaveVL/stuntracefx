@@ -1,0 +1,12 @@
+	global	mrcoll_begin,mrcoll_end,mretail_rotreturn4,mretail_divreturn4
+	global	mretail_contactcache
+	global	mretail_applygroups
+	global	mretail_groupforce
+	global	mretail_findgroup
+	global	mretail_integrate
+	global	mretail_groundgroup
+	global	mretail_applycontact
+	global	mretail_impactdamage
+	global	mretail_recoverboost
+	global	mretail_repairdamage
+	global	mretail_peerimpulse

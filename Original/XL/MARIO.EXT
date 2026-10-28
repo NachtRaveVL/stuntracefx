@@ -155,6 +155,10 @@
 	global	m_retaillocalX,m_retaillocalY,m_retaillocalZ
 	global	mnormalise16,mretail_normalreturn1
 	global	m_mat11,m_mat12,m_mat22,m_mat33,m_t1,m_t2,m_t3
+	global	m_normX,m_normY,m_normZ,m_whlD,m_groupPtype
+	global	m_facePX,m_facePY,m_facePZ
+	global	m_retaildynphase,m_retailimpact,m_retailcontactyaw
+	global	mdivu3216,mretail_rotreturn1,mretail_divreturn1
 
 
 
