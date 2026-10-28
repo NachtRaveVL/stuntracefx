@@ -149,6 +149,9 @@
 	global	mfinish_retailcar,mload_retailcarparms
 	global	m_retailparamindex,m_retailrouteword
 	global	mretail_gearforce,m_retailgearframe
+	global	mretail_driveprep,mretail_steer,mretail_driveforce
+	global	mretail_dragrate,mretail_limitmotion,mretail_driveinputs
+	global	m_retaildriveflags
 
 
 

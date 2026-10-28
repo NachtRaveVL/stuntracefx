@@ -6,6 +6,11 @@
 ; Shift thresholds terminate at zero; a reverse torque row precedes each
 ; forward-gear curve table. Other parameter/auxiliary meanings remain unnamed.
 ; These records require the retail constructor/layout before live use.
+; Parameter words 3/4/5: acceleration, boost and deceleration forces;
+; 6/7: brake and coasting drag; 8/9: initial and hard steering steps;
+; 10/11/12: normal limit, hard-limit addition and recentering step;
+; 15/16: speed-dependent gravity scale and jump force;
+; 20/21: shift/curve pointers; 22: boost consumption per update.
 
 	incpublics	rcardefs.ext
 
