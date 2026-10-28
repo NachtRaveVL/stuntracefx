@@ -506,6 +506,9 @@ viewrouteptr	=	m_routeptr
 	malc	m_retailrouteword,2
 	malc	m_retailgearframe,2
 	malc	m_retaildriveflags,2	; current raw car +8A, not scene flags
+	malc	m_retaillocalX,2
+	malc	m_retaillocalY,2
+	malc	m_retaillocalZ,2
 
 ; Current map number for retail route-speed and AI tables.
 ; Retail copies CPU $0e3d to GSU RAM $26f4 while loading the scene.

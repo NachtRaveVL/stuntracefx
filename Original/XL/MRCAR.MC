@@ -1360,3 +1360,13 @@ mretail_driveinputs
 	mpop	r11
 	move	pc,r11
 	nop
+
+; Return from the inherited normalizer to the bank-4 force resolver.
+; r1/r2/r3 contain the result; r0/r13 and flags are scratch.
+	extern	mretail_normalreturn4
+mretail_normalreturn1
+	iwt	r13,#mretail_normalreturn4>>16
+	iwt	r0,#mretail_normalreturn4&WM
+	from	r0
+	ljmp	r13
+	nop

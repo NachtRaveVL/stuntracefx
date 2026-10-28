@@ -152,6 +152,9 @@
 	global	mretail_driveprep,mretail_steer,mretail_driveforce
 	global	mretail_dragrate,mretail_limitmotion,mretail_driveinputs
 	global	m_retaildriveflags
+	global	m_retaillocalX,m_retaillocalY,m_retaillocalZ
+	global	mnormalise16,mretail_normalreturn1
+	global	m_mat11,m_mat12,m_mat22,m_mat33,m_t1,m_t2,m_t3
 
 
 

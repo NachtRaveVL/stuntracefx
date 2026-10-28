@@ -19,6 +19,8 @@
 	include	xlsound.ext
 	include	mkmacs.inc
 	include	spcmacs.inc
+	include	marioi.inc
+	incpublics	mrforce.ext
 
 ;------------------------------------------------------------------
 	bank	4
@@ -29,6 +31,11 @@
 	incfile	xlspca.asm
 	incfile	rcardefs.mc
 	incfile	xlrace.asm
+	mario	on
+rsp	equr	10
+	incfile	mmacs.mc
+	incfile	mrforce.mc
+	mario	off
 	bankend	4
 ;------------------------------------------------------------------
 
