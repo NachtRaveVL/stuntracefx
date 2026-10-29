@@ -1098,3 +1098,16 @@ mretail_heapreturn5
 	nop
 
 mrheap_end
+
+; US $04:89FA. CPU-submitted release task; the raw pointer is supplied
+; in m_dynvar1. Scene ownership of car/AI links remains with the caller.
+mrheaptask_begin
+mretail_releaseobjecttask
+	iwt	r10,#m_stack&WM
+	lm	r1,[m_dynvar1]
+	link	#4
+	iwt	pc,#mretail_releaseobject&WM
+	nop
+	stop
+	nop
+mrheaptask_end

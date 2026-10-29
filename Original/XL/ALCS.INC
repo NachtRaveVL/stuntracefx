@@ -840,6 +840,27 @@ mio_mode	equ	$303a
 	alc	race_def1,2
 	alc	race_cachedkind,1
 
+; Serialized retail CPU object/control state. The GSU polygon workspace
+; is saved here between raw dynamics tasks; rendering may reuse it.
+	alc	race_rawcontext,86
+	alc	race_objowner,2
+	alc	race_buttons,2
+	alc	race_previous,2
+	alc	race_cheatclock,2
+	alc	race_cheatstate,2
+	alc	race_carstate0,2
+	alc	race_carstate1,2
+	alc	race_scratch,2
+	alc	race_coltype,2
+	alc	race_colresult,2
+	alc	race_colmode,2
+	alc	race_contactnext,2
+	alc	race_callback,2
+	alc	race_animcount,2
+race_rawreset	equ	race_rawcontext+58
+race_rawobjects	equ	race_rawcontext+64
+race_rawspawnflags	equ	race_rawcontext+80
+
 	IFGT	wmempt-$2000
 	printf	"%n%nTOO MANY ALCS USED%n%n"
 	fail

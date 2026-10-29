@@ -99,6 +99,9 @@ planetdmapos2	dw	100
 ;	minfo	sprites
 	incfile	world.asm
 	minfo	world
+	include	mrheap.ext
+	include	mrupdate.ext
+	incfile	mrcpu.asm
 	bankend	3
 
 	org	$1f8000+$3db0,$8000*$1f+$3db0

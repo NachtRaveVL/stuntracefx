@@ -13,3 +13,4 @@
 	global	mrhp_farreturn5
 	global	mrrt_8e82
 	global	mrrt_8f43
+	global	mretail_releaseobjecttask,mrheaptask_begin,mrheaptask_end
