@@ -1696,7 +1696,7 @@ mrcp_08cd61
 mrcp_08cd64
 	tax
 mrcp_08cd65
-	lda.w al_type,y
+	lda.w al_ptr,y
 mrcp_08cd68
 	ora.l $700016,x
 mrcp_08cd6c

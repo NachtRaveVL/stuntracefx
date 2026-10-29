@@ -861,6 +861,25 @@ race_rawreset	equ	race_rawcontext+58
 race_rawobjects	equ	race_rawcontext+64
 race_rawspawnflags	equ	race_rawcontext+80
 
+; Retail scene-map ownership and serialized actor presentation scratch.
+	alc	race_actorcurrent,2
+	alc	race_protectedactor,2
+	alc	race_removerequest,2
+	alc	race_visualowner,2
+	alc	race_visualsize,2
+	alc	race_visualoffset,2
+	alc	race_visualangle,2
+	alc	race_trigbytes,2
+	alc	race_shadowkind,2
+	alc	race_attachx,2
+	alc	race_attachy,2
+	alc	race_attachz,2
+; Keep palettes and the fixed hand-sprite/jewel reservation in bank $7F.
+	IFLT	xxmempt-nextaddress
+xxmempt	=	nextaddress
+	ENDC
+	xxalc	race_cellheads,2048
+
 	IFGT	wmempt-$2000
 	printf	"%n%nTOO MANY ALCS USED%n%n"
 	fail

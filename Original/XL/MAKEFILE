@@ -62,7 +62,7 @@ data\gfx\bg2-c.col data\gfx\over_d.col xlmain.asm xltrans.asm \
 game.asm windows.asm defspr.asm data\gfx\night.col \
 data\gfx\red.col data\gfx\blue.col coltab.asm light.asm \
 coltabs.asm obj.asm \
-mother.asm world.asm mrcpu.asm mrcpu.ext mrheap.ext mrupdate.ext debug.asm \
+mother.asm world.asm mrcpu.asm mrcpu.ext mrscene.asm mrscene.ext mrheap.ext mrupdate.ext debug.asm \
 stratrou.asm draw.asm endseq.asm data\f-1.pcr 
 
 
