@@ -513,6 +513,16 @@ viewrouteptr	=	m_routeptr
 	malc	m_retailimpact,2	; impact carried across the two substeps
 	malc	m_retailcontactyaw,2	; contact-normal yaw, unsigned byte domain
 
+; Retail wheel context shares the polygon work area while dynamics runs.
+; Rendering must not use m_polybuf until the wheel/body stages finish.
+; No allocation or buffer size changes; parameters occupy the first 50 bytes.
+m_retailwheelparams	equ	m_polybuf
+m_retailwheeldefs	equ	m_polybuf+50
+m_retailwheelobject	equ	m_polybuf+52
+m_retailwheelcontact	equ	m_polybuf+54
+m_retailwheelvertical	equ	m_polybuf+56
+m_retailwheelreset	equ	m_polybuf+58
+
 ; Current map number for retail route-speed and AI tables.
 ; Retail copies CPU $0e3d to GSU RAM $26f4 while loading the scene.
 	zmalc	m_mapnumber,2

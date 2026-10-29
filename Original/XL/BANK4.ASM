@@ -22,6 +22,8 @@
 	include	marioi.inc
 	incpublics	mrforce.ext
 	incpublics	mrcoll.ext
+	incpublics	mrwheel.ext
+	incpublics	sgdata.ext
 
 ;------------------------------------------------------------------
 	bank	4
@@ -37,6 +39,7 @@ rsp	equr	10
 	incfile	mmacs.mc
 	incfile	mrforce.mc
 	incfile	mrcoll.mc
+	incfile	mrwheel.mc
 	mario	off
 	bankend	4
 ;------------------------------------------------------------------

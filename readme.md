@@ -51,13 +51,13 @@ Once decompilation is complete, planned enhancements include:
 
 ## Reconstruction Progress
 
-**Overall planning estimate: about 24% complete, about 76% left.** This is the rounded weighted midpoint of the section estimates below; their bounds give approximately **16-31% complete / 69-84% remaining**. It estimates reconstruction and integration effort, not a measured percentage of decompiled instructions. Confidence is low outside the camera and route work and should be revised as the remaining banks are mapped.
+**Overall planning estimate: about 25% complete, about 75% left.** This is the rounded weighted midpoint of the section estimates below; their bounds give approximately **17-33% complete / 67-83% remaining**. It estimates reconstruction and integration effort, not a measured percentage of decompiled instructions. Confidence is low outside the camera and route work and should be revised as the remaining banks are mapped.
 
 ```mermaid
 pie showData
     title Estimated whole-project work
-    "Completed work, approximate" : 24
-    "Work remaining, approximate" : 76
+    "Completed work, approximate" : 25
+    "Work remaining, approximate" : 75
 ```
 
 ### Subsystem Assessment
@@ -66,7 +66,7 @@ pie showData
 | --- | ---: | ---: | ---: | --- |
 | CPU platform, startup, NMI, display and object runtime | 10% | 10-25% | 75-90% | `XLSTART`, `XLIRQ`, `RAMSTUFF`, `XLMAIN`, `XLTRANS`, `STRATROU`: retail hardware initialization and selected callback helpers recovered; complete retail initialization chain, NMI modes, scheduler, object lifetime and display transitions still need reconciliation. Retail anchors: `$02:8000`, `$03:89B4`, `$03:D388`, `$0B:B479`. |
 | Math, GSU rendering, clipping, sprites and effects | 15% | 15-35% | 65-85% | `MMATHS`, `MWROT`, `MWCROT`, `MOBJ`, `MCLIP`, `MDRAW*`, `MSPRITE`, `MDSPRITE`, `MPART`, `MDATA`: substantial early engine survives, with matching arithmetic and table spans; audit the rest of retail bank `$01`, material/draw paths, road rendering and the `$01:D12F` camera-flag consumer. |
-| Vehicle dynamics, wheels, physics and collision | 20% | 5-15% | 85-95% | `MDYNAMIC`, `DYNSTRUC`, `DYNPARMS`, `MRCAR`, `MRFORCE`, `MRCOLL`, `RCARDEFS`, car strategies in `GASTRATS`: nine retail vehicle definitions, constructor readers, traction/control gates, steering, boost/brake forces, gear/torque/revs calculations, local/world force resolution, torque variants, motion limits, shape-to-contact group generation, contact response, impact damage, nearby-car impulses and repair helpers restored. Geometry reuses the inherited point copier, including frame selection and reflection, with static/animated face normals. New constructor/physics helpers use retail record layouts; allocation, shape binding, remaining wheel/collision stages, complete physics dispatch and live frame integration remain. Retail anchors: `$04:8800`, `$04:8E59`, `$04:BCBA`, `$08:CC7C`. |
+| Vehicle dynamics, wheels, physics and collision | 20% | 10-25% | 75-90% | `MDYNAMIC`, `DYNSTRUC`, `DYNPARMS`, `MRCAR`, `MRFORCE`, `MRCOLL`, `MRWHEEL`, `RCARDEFS`, car strategies in `GASTRATS`: nine retail vehicle definitions, constructor readers, traction/control gates, steering, boost/brake forces, gear/torque/revs calculations, local/world force resolution, torque variants, motion limits, shape-to-contact group generation, contact response, impact damage, nearby-car impulses and repair helpers restored. Geometry reuses the inherited point copier, including frame selection and reflection, with static/animated face normals. Raw-layout broad-phase contact scanning, wheel traversal/followers, grip, springs, material response, reset/setup and the full body-contact driver are restored. A callable post-drive stage connects wheel/body response, height history, boost torque, velocity alignment and impact handling. Allocation, shape binding, heading correction, complete physics dispatch and live frame integration remain; wheel context shares the polygon workspace and must run separately from rendering. Retail anchors: `$04:8800`, `$04:8E59`, `$04:BCBA`, `$08:CC7C`. |
 | Camera records, animation and camera strategies | 10% | 55-75% | 25-45% | `GAME`, `GASTRATS`, `WORLD`: largest concentration of reconstructed retail behavior; finish remaining scene/mode selection, animation-15 initialization, camera/owner teardown, sound and draw consumers, and all race/attract/split-screen contexts. Anchors: `$02:DAD6-$02:DF78`, `$08:8525-$08:9BD8`, `$09:8090`. |
 | Route access, AI and driving controls | 10% | 35-55% | 45-65% | `MAI`, route helpers in `GASTRATS`, `WORLD`: normal driving, mode dispatch, lap/rank producers, player-bound timing, frozen-route motion and contact-cache invalidation reconstructed; remaining mode/flag producers, retail multiplayer lifetime, collision-frame integration and live AI scheduling remain. |
 | Race rules, frontend, menus and game flow | 15% | 0-10% | 90-100% | `XLMAIN`, `XLTITLE`, `XLINIT`, `PSTRATS`, `GSTRATS`, `GASTRATS`, `ENDSEQ`: early behavior is a starting point; final race progression, timing/results, vehicle/course selection, attract/demo, two-player flow and endings need retail mapping and restoration. Anchors include `$0B:AE0A` and `$0B:FB26`. |
@@ -81,7 +81,7 @@ pie showData
 | `$01` | 1,258 | 1,775 | 29,735 | GSU math/render engine; verified inherited matrix, math and backward-decompression spans, remaining draw pipeline |
 | `$02` | 1,319 | 4,084 | 27,365 | CPU NMI/display, camera records and retail audio port service; remaining runtime/control flow and SPC integration |
 | `$03` | 753 | 1,407 | 30,608 | Hardware setup, matrix/callback helpers, audio unpack/upload wrapper, mode-2 SPC driver switch and vehicle-kind/engine-command producers; remaining CPU engine |
-| `$04` | 13,568 | 80 | 19,120 | GSU dynamics/AI plus CPU audio; raw retail constructor readers, traction/steering/boost/brake stages, gear/torque/revs, force/torque resolution, motion limits, shape/contact-group generation and response, impact/repair stages, route modes/ranks and audio selection restored; remaining allocator/construction, wheel stages, complete physics/collision and runtime integration |
+| `$04` | 17,545 | 1 | 15,222 | GSU dynamics/AI plus CPU audio; raw retail constructor readers, traction/steering/boost/brake stages, gear/torque/revs, force/torque resolution, motion limits, shape/contact-group generation and response, impact/repair stages, route modes/ranks and audio selection restored; wheel traversal/grip/springs/followers, broad-phase contact maintenance and body-contact driver restored; remaining allocator/construction, heading correction, complete physics dispatch and runtime integration |
 | `$05-$06` | 0 | 0 | 65,536 | Content/source correspondence still unclassified |
 | `$07` | 80 | 0 | 32,688 | Nearby-car CPU audio consumer; remaining content/source correspondence audit |
 | `$08` | 3,905 | 65 | 28,798 | Camera/route helpers, first-player car binding, map and object systems; remaining vehicle/gameplay logic |
@@ -99,16 +99,16 @@ pie showData
 | `$1D` | 8,264 | 0 | 24,504 | Eight packed song streams reconstructed; remaining prefix content, padding, intended callers and final placement |
 | `$1E` | 30,861 | 32 | 1,875 | Four raw and eight packed songs reconstructed; all song content represented. Physical credit counts raw payloads and packed streams once; decoded sizes are not added again. Raw IPL headers, padding and final placement remain outside restoration credit |
 | `$1F` | 0 | 0 | 32,768 | Content/source correspondence still unclassified |
-| **All 32 banks** | **156,666** | **34,690** | **857,220** | **All 1 MiB accounted for exactly once** |
+| **All 32 banks** | **160,643** | **34,611** | **853,322** | **All 1 MiB accounted for exactly once** |
 
-**Measured ROM correspondence: 14.94% restored/adapted, 85.06% not yet credited.** This includes assets; identical candidates receive no restoration credit.
+**Measured ROM correspondence: 15.32% restored/adapted, 84.68% not yet credited.** This includes assets; identical candidates receive no restoration credit.
 
 ```mermaid
 pie showData
     title Retail ROM byte correspondence
-    "Restored/adapted" : 156666
-    "Additional identical candidates" : 34690
-    "Uncredited" : 857220
+    "Restored/adapted" : 160643
+    "Additional identical candidates" : 34611
+    "Uncredited" : 853322
 ```
 
 ## Building Original

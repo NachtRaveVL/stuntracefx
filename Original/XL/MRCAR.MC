@@ -1394,3 +1394,12 @@ mretail_pointsreturn1
 	from	r0
 	ljmp	r13
 	nop
+
+; Wheel matrix/parameter calls share this bank-4 return. Keep r0 intact.
+	extern	mretail_wheelreturn4
+mretail_wheelreturn1
+	iwt	r13,#mretail_wheelreturn4>>16
+	iwt	r12,#mretail_wheelreturn4&WM
+	from	r12
+	ljmp	r13
+	nop

@@ -11,6 +11,10 @@
 ; 10/11/12: normal limit, hard-limit addition and recentering step;
 ; 15/16: speed-dependent gravity scale and jump force; 19: impact gain;
 ; 20/21: shift/curve pointers; 22: boost consumption per update.
+; 0/1/2: wheel displacement scale, even torque selector and spring limit;
+; 13/14: zero-acceleration and front grip gains; 17/18: control grip gains;
+; 23/24: skid threshold and post-drive boost torque.
+; The wheel stages use a copied 25-word context.
 
 	incpublics	rcardefs.ext
 

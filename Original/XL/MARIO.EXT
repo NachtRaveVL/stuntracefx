@@ -162,6 +162,12 @@
 	global	m_y2,m_z2
 	global	m_faceD,m_oldshape,m_oldframenum,m_shapescale,m_rotpnts
 	global	mcopy_pnts,mretail_pointsreturn1
+	global	m_retailwheelparams,m_retailwheeldefs,m_retailwheelobject
+	global	m_retailwheelcontact,m_retailwheelvertical,m_retailwheelreset
+	global	m_whlgndfriction,m_whlspringx,m_whlspringy,m_whlspringz
+	global	m_offroadfriction,m_onroadfriction,m_mat13
+	global	m_carworldx,m_carworldy,m_carworldz
+	global	mcrotmatzxy16,mtransmat16,mretail_wheelreturn1
 
 
 
