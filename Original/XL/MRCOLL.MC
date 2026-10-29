@@ -1767,7 +1767,7 @@ mrcoll_nextface
 mrcoll_facegroup
 	with	r11
 	to	r0
-	sm	[m_groupPtype],r0
+	sm	[m_retailfacetype],r0
 	iwt	r1,#$00e0
 	with	r11
 	bic	r1
@@ -1794,7 +1794,7 @@ mrcoll_facenormal
 	iwt	pc,#mrcoll_romnormal&WM
 	nop
 mrcoll_frameflags
-	lm	r7,[m_groupPtype]
+	lm	r7,[m_retailfacetype]
 	iwt	r0,#$0040
 	and	r7
 	bne	mrcoll_animatednormal
@@ -2094,7 +2094,7 @@ mrcoll_planedistance
 	nop
 	with	r0
 	to	r12
-	lm	r0,[m_groupPtype]
+	lm	r0,[m_retailfacetype]
 	swap
 	to	r7
 	ldw	[r11]
@@ -2105,13 +2105,13 @@ mrcoll_planedistance
 	iwt	pc,#mrcoll_nextface&WM
 	nop
 mrcoll_insideface
-	lm	r7,[m_groupPtype]
+	lm	r7,[m_retailfacetype]
 	iwt	r12,#$0080
 	with	r12
 	and	r7
 	beq	mrcoll_minimumdistance
 	nop
-	lm	r0,[m_groupPtype]
+	lm	r0,[m_retailfacetype]
 	iwt	r7,#$00ff
 	to	r7
 	and	r7
@@ -2151,7 +2151,7 @@ mrcoll_storeplane
 	stw	[r11]
 	dec	r11
 	dec	r11
-	lm	r0,[m_groupPtype]
+	lm	r0,[m_retailfacetype]
 	stw	[r11]
 	with	r11
 	add	#4

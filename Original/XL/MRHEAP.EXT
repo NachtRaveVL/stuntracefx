@@ -1,0 +1,15 @@
+	global	mretail_allocobject
+	global	mretail_allocwheel
+	global	mretail_atanwindow
+	global	mretail_bindrawheaps
+	global	mretail_buildwheels
+	global	mretail_heapreturn5
+	global	mretail_makecar
+	global	mretail_releaseobject
+	global	mretail_releasewheels
+	global	mretail_spawncar
+	global	mrheap_begin
+	global	mrheap_end
+	global	mrhp_farreturn5
+	global	mrrt_8e82
+	global	mrrt_8f43

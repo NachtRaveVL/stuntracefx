@@ -27,6 +27,11 @@
 	include	trans.ext
 	include	bgmacs.inc
 	include	trackdat.ext
+	include	marioi.inc
+	incpublics	mrheap.ext
+	include	mrupdate.ext
+	include	mrwheel.ext
+	include	rcardefs.ext
 
 
 real_istrats =	0
@@ -42,6 +47,11 @@ real_istrats =	0
 
 
 	incfile	xlspcb.asm
+	mario	on
+rsp	equr	10
+	incfile	mmacs.mc
+	incfile	mrheap.mc
+	mario	off
 	bankend	5
 ;------------------------------------------------------------------
 	bank	13

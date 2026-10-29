@@ -48,7 +48,7 @@ rcar81b9_gearcurves
 rcar81b9
 rcar81b9_identity	equ	$81b9
 	rcardef_shape	$a200,$a7e8,$00
-; Header +05/+07/+09, flags +0B/+0D and frame +0F.
+; Header +05/+07/+09, type/flags +0B/+0D and collision mask +0F.
 	dw	$0000,$ffaa,$000a,$0012,$0000,$0505
 ; Bounds +11/+13/+15; five constructor-skipped words +17..+1F.
 	dw	$0190,$003c,$0190

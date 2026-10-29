@@ -1,4 +1,5 @@
 	global	mrforce_begin,mrforce_end,mretail_normalreturn4
+	global	mretail_normalise
 	global	mretail_forceclear
 	global	mretail_forceworld
 	global	mretail_forcelocal

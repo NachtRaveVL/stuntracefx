@@ -168,6 +168,28 @@
 	global	m_offroadfriction,m_onroadfriction,m_mat13
 	global	m_carworldx,m_carworldy,m_carworldz
 	global	mcrotmatzxy16,mtransmat16,mretail_wheelreturn1
+	global	m_avoidcarvx
+	global	m_avoidcary
+	global	m_avoidcarz
+	global	m_carflags
+	global	m_dynframe
+	global	m_retailarg4
+	global	m_retailarg5
+	global	m_retailarg6
+	global	m_retaildefinition
+	global	m_retailheap0
+	global	m_retailheap1
+	global	m_retailobjectcount
+	global	m_retailruntime1
+	global	m_retailruntime2
+	global	m_retailruntime3
+	global	m_retailspawnflags
+	global	m_retailtrigbase
+	global	m_retailfacetype
+	global	m_stack
+	global	m_viewroty
+	global	mdivu3115
+	global	mretail_runtimereturn1
 
 
 

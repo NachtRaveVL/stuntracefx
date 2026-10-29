@@ -523,6 +523,24 @@ m_retailwheelcontact	equ	m_polybuf+54
 m_retailwheelvertical	equ	m_polybuf+56
 m_retailwheelreset	equ	m_polybuf+58
 
+; Raw object/runtime context follows the wheel words in the same work area.
+; Bind valid heap roots before construction; rendering uses this buffer later.
+; Roots may name one shared heap or two separate caller-owned heaps.
+m_retailheap0	equ	m_polybuf+60
+m_retailheap1	equ	m_polybuf+62
+m_retailobjectcount	equ	m_polybuf+64
+m_retailarg4	equ	m_polybuf+66
+m_retailarg5	equ	m_polybuf+68
+m_retailarg6	equ	m_polybuf+70
+m_retailruntime1	equ	m_polybuf+72
+m_retailruntime2	equ	m_polybuf+74
+m_retaildefinition	equ	m_polybuf+76
+m_retailruntime3	equ	m_polybuf+78
+m_retailspawnflags	equ	m_polybuf+80
+m_retailtrigbase	equ	m_polybuf+82
+; Retail current-face type ($237C) is distinct from group flags ($2480).
+m_retailfacetype	equ	m_polybuf+84
+
 ; Current map number for retail route-speed and AI tables.
 ; Retail copies CPU $0e3d to GSU RAM $26f4 while loading the scene.
 	zmalc	m_mapnumber,2

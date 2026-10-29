@@ -23,6 +23,8 @@
 	incpublics	mrforce.ext
 	incpublics	mrcoll.ext
 	incpublics	mrwheel.ext
+	include	mrheap.ext
+	include	mrupdate.ext
 	incpublics	sgdata.ext
 
 ;------------------------------------------------------------------
@@ -40,6 +42,20 @@ rsp	equr	10
 	incfile	mrforce.mc
 	incfile	mrcoll.mc
 	incfile	mrwheel.mc
+
+; Return raw-runtime calls to their bank without changing r0.
+mretail_heapreturn4
+	iwt	r13,#5
+	iwt	r12,#mrhp_farreturn5&WM
+	from	r12
+	ljmp	r13
+	nop
+mretail_runtimereturn4
+	iwt	r13,#6
+	iwt	r12,#mrrt_farreturn6&WM
+	from	r12
+	ljmp	r13
+	nop
 	mario	off
 	bankend	4
 ;------------------------------------------------------------------

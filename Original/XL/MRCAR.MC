@@ -18,7 +18,7 @@ RCP_BOOSTCOST	equ	44
 ; Retail constructor readers, US $04:8DAC-$04:8E58 and $04:8EA6-$04:8F42.
 ; Raw retail car/wheel layouts: these are not the early OBJ/CAR structures.
 ; Caller provides cleared, allocated records and selects the definition bank.
-; Shape words are retail identities; allocation and live integration remain.
+; Shape words are retail identities; MRHEAP supplies raw allocation.
 
 ; r1 = raw car, r14 = 37-byte header, low r4 = alternate-shape selector.
 ; r5 = definition origin ($8090 in retail; rcardefs_begin-$A4 here).
@@ -421,7 +421,8 @@ mretail_gearforce
 ; Retail driving stages. These share the early dynamics accumulators but
 ; operate only on allocated retail-layout records, never early CAR fields.
 ; A caller must supply the selected definition bank and copied parameters.
-; Collision, optional impulses, the complete frame and live dispatch remain.
+; MRUPDATE joins these with route, force and collision stages.
+; CPU task selection and shape ownership remain separate.
 
 ; Parameter access keeps r0 intact unless r0 is the destination.
 mretailparm	macro
@@ -1400,6 +1401,15 @@ mretail_pointsreturn1
 mretail_wheelreturn1
 	iwt	r13,#mretail_wheelreturn4>>16
 	iwt	r12,#mretail_wheelreturn4&WM
+	from	r12
+	ljmp	r13
+	nop
+
+; Return bank-6 raw-runtime calls; r0 is a live result for several entries.
+	extern	mrrt_farreturn6
+mretail_runtimereturn1
+	iwt	r13,#6
+	iwt	r12,#mrrt_farreturn6&WM
 	from	r12
 	ljmp	r13
 	nop

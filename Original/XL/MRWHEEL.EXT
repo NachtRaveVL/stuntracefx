@@ -19,3 +19,4 @@
 	global	mretail_rawapproach
 	global	mretail_preparewheelparams,mretail_wheeltorques
 	global	mretail_collisionstep,mretail_velalignraw
+	global	mretail_heapreturn4,mretail_runtimereturn4

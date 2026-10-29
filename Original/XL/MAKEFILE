@@ -67,18 +67,18 @@ stratrou.asm draw.asm endseq.asm data\f-1.pcr
 
 
 ## Bank 4
-bank4.sob: bank4.asm marioi.inc mmacs.mc mrforce.mc mrforce.ext mrcoll.mc mrcoll.ext mrwheel.mc mrwheel.ext sgdata.ext xlspca.asm xlspca.ext rcardefs.mc rcardefs.ext xlrace.asm xlrace.ext xlsload.asm xlsload.ext xlspc.asm xlspcm.asm xlspcv.asm xlspcs.asm xlspc.ext xlspcb.ext spcmacs.inc \
+bank4.sob: bank4.asm marioi.inc mmacs.mc mrforce.mc mrforce.ext mrcoll.mc mrcoll.ext mrwheel.mc mrwheel.ext sgdata.ext xlspca.asm xlspca.ext rcardefs.mc rcardefs.ext xlrace.asm xlrace.ext xlsload.asm xlsload.ext xlspc.asm xlspcm.asm xlspcv.asm xlspcs.asm xlspc.ext xlspcb.ext spcmacs.inc  mrheap.ext mrupdate.ext \
 xlsound.ext mario.ext mkmacs.inc \
 $(STDFILES) $(STRATFILES) 
 
 ## Bank 5, bank 13
-bank5.sob: bank5.asm xlspct.asm xlspct.ext mapmacs.inc istrats.asm xlspcb.asm xlspcb.ext spcmacs.inc \
+bank5.sob: bank5.asm xlspct.asm xlspct.ext mapmacs.inc istrats.asm xlspcb.asm xlspcb.ext spcmacs.inc  marioi.inc mmacs.mc mrheap.mc mrheap.ext mrupdate.ext mrwheel.ext rcardefs.ext \
 $(STDFILES) mdynmacs.mc dynstruc.inc maps\test1.asm \
 maps\test2.asm maps\test3.asm maps\test4.asm maps\maplist.asm \
 data\and.ccr maps\MAPP.asm maps\maplist2.asm 
 
 ## Bank 6
-bank6.sob: bank6.asm xlspcu.asm xlspcu.ext spcmacs.inc \
+bank6.sob: bank6.asm xlspcu.asm xlspcu.ext spcmacs.inc  mrupdate.mc mrupdate.ext mrheap.ext mrforce.ext mrcoll.ext mrwheel.ext rcardefs.ext sgdata.ext \
 $(STDFILES) $(STRATFILES) gstrats.asm mmacs.mc \
 mhofs.mc 
 
