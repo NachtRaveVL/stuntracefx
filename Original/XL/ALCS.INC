@@ -886,6 +886,35 @@ race_rawspawnflags	equ	race_rawcontext+80
 	alc	race_impactcode,1
 	alc	race_debugmark,1
 	alc	race_effectclock,2
+; Raw-car scene inputs, four-car grid and the native 32-entry actor list.
+	alc	race_playeractor2,2
+	alc	race_input0,2
+	alc	race_input1,2
+	alc	race_lastinput0,2
+	alc	race_lastinput1,2
+	alc	race_cameraactor0,2
+	alc	race_cameraactor1,2
+	alc	race_sceneoptions,2
+	alc	race_playerphase,2
+	alc	race_gamephase,1
+	alc	race_endcamera,1
+	alc	race_carphase,1
+	alc	race_sequencez,2
+	alc	race_gridkind,8
+	alc	race_gridvariant,8
+	alc	race_def2,2
+	alc	race_def3,2
+	alc	race_griddef,2
+	alc	race_errorcolor,2
+	alc	race_errortarget,2
+	alc	race_errorpos,2
+	alc	race_startgrid,32
+	alc	race_gridranks,8
+	alc	race_gridactors,8
+	alc	race_gridbytes,2
+	alc	race_actorlist,66
+; Native list terminator at capacity aliases its byte-count word.
+race_actorbytes	equ	race_actorlist+64
 ; Keep palettes and the fixed hand-sprite/jewel reservation in bank $7F.
 	IFLT	xxmempt-nextaddress
 xxmempt	=	nextaddress
