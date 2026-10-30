@@ -2926,7 +2926,7 @@ rlf_08b15e
 rlf_08b161
 	tax
 rlf_08b162
-	lda.l m_y1,x
+	lda.l $70002c,x
 rlf_08b166
 	and #$0004
 rlf_08b169
@@ -4888,7 +4888,7 @@ rlf_08ef33
 rlf_08ef36
 	beq rlf_08ef73
 rlf_08ef38
-	lda.l m_bigy,x
+	lda.l $700022,x
 rlf_08ef3c
 	clc
 rlf_08ef3d

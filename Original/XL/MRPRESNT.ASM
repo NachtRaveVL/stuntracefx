@@ -673,7 +673,7 @@ rpr_08ba17
 rpr_08ba1b
 	lda.w al_worldz,y
 rpr_08ba1e
-	sta.l m_bigy,x
+	sta.l $700022,x
 rpr_08ba22
 	lda.w al_roty,y
 rpr_08ba25

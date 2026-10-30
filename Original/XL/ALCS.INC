@@ -915,6 +915,20 @@ race_rawspawnflags	equ	race_rawcontext+80
 	alc	race_actorlist,66
 ; Native list terminator at capacity aliases its byte-count word.
 race_actorbytes	equ	race_actorlist+64
+; Explicit CPU pool binding, native scene inputs and preview selection.
+	alc	race_poolfirst,2
+	alc	race_poolcount,2
+	alc	race_mapyaw,1
+	alc	race_mapid,2
+	alc	race_mapmode,1
+	alc	race_mapphase,1
+	alc	race_previewchoice,2
+	alc	race_previewcount,1
+	alc	race_previewactors,8
+	alc	race_previewdef,2
+	alc	race_selectedactor,2
+	alc	race_savedview,6
+	alc	race_gridsentinel,2
 ; Keep palettes and the fixed hand-sprite/jewel reservation in bank $7F.
 	IFLT	xxmempt-nextaddress
 xxmempt	=	nextaddress

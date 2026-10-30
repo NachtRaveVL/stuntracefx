@@ -3378,7 +3378,7 @@ rcf_08c156
 rcf_08c15a
 	tax
 rcf_08c15b
-	lda.l m_y1,x
+	lda.l $70002c,x
 rcf_08c15f
 	bit #$0080
 rcf_08c162
@@ -3858,7 +3858,7 @@ rcf_08c3a0
 rcf_08c3a2
 	plx
 rcf_08c3a3
-	lda.l m_y1,x
+	lda.l $70002c,x
 rcf_08c3a7
 	bit #$0100
 rcf_08c3aa
