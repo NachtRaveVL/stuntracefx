@@ -880,6 +880,12 @@ race_rawspawnflags	equ	race_rawcontext+80
 	alc	race_scenephase,1
 	alc	race_groundheight,2
 	alc	race_groundindex,2
+; Retail car collision feedback and diagnostic publication.
+	alc	race_wheelkind,1
+	alc	race_feedbackmode,2
+	alc	race_impactcode,1
+	alc	race_debugmark,1
+	alc	race_effectclock,2
 ; Keep palettes and the fixed hand-sprite/jewel reservation in bank $7F.
 	IFLT	xxmempt-nextaddress
 xxmempt	=	nextaddress

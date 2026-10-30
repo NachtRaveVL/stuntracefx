@@ -158,6 +158,7 @@
 	global	m_normX,m_normY,m_normZ,m_whlD,m_groupPtype
 	global	m_facePX,m_facePY,m_facePZ
 	global	m_retaildynphase,m_retailimpact,m_retailcontactyaw
+	global	m_retailimpactflash
 	global	mdivu3216,mretail_rotreturn1,mretail_divreturn1
 	global	m_y2,m_z2
 	global	m_faceD,m_oldshape,m_oldframenum,m_shapescale,m_rotpnts

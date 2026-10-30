@@ -1111,3 +1111,226 @@ mretail_releaseobjecttask
 	stop
 	nop
 mrheaptask_end
+
+; US $04:888E-$04:8914. CPU task and two-heap free-list coalescing.
+; Roots may be equal; this retains both native traversals. Each traversal
+; can leave a longer adjacent run for a later call. No heap is resized.
+mretail_coalescetask
+	iwt	r10,#m_stack&WM
+mrcf_8891
+	link	#4
+mrcf_8892
+	iwt	pc,#mretail_coalesceraw&WM
+mrcf_8895
+	nop
+mrcf_8896
+	stop
+mrcf_8897
+	nop
+mretail_coalesceraw
+	lm	r1,[m_retailheap0]
+mrcf_889b
+	to	r2
+mrcf_889c
+	ldw	[r1]
+mrcf_889d
+	inc	r1
+mrcf_889e
+	inc	r1
+mrcf_889f
+	with	r2
+mrcf_88a0
+	from	r2
+mrcf_88a1
+	beq	mrcf_88d5
+mrcf_88a3
+	nop
+mrcf_88a4
+	ldw	[r1]
+mrcf_88a5
+	with	r0
+mrcf_88a6
+	from	r0
+mrcf_88a7
+	bmi	mrcf_88c9
+mrcf_88a9
+	nop
+mrcf_88aa
+	sub	#2
+mrcf_88ac
+	to	r3
+mrcf_88ad
+	add	r1
+mrcf_88ae
+	with	r3
+mrcf_88af
+	cmp	r2
+mrcf_88b1
+	bne	mrcf_88c9
+mrcf_88b3
+	nop
+mrcf_88b4
+	inc	r2
+mrcf_88b5
+	inc	r2
+mrcf_88b6
+	to	r3
+mrcf_88b7
+	ldw	[r2]
+mrcf_88b8
+	with	r3
+mrcf_88b9
+	from	r3
+mrcf_88ba
+	bmi	mrcf_88ce
+mrcf_88bc
+	nop
+mrcf_88bd
+	add	r3
+mrcf_88be
+	add	#2
+mrcf_88c0
+	dec	r2
+mrcf_88c1
+	dec	r2
+mrcf_88c2
+	stw	[r1]
+mrcf_88c3
+	dec	r1
+mrcf_88c4
+	dec	r1
+mrcf_88c5
+	ldw	[r2]
+mrcf_88c6
+	stw	[r1]
+mrcf_88c7
+	inc	r1
+mrcf_88c8
+	inc	r1
+mrcf_88c9
+	with	r2
+mrcf_88ca
+	to	r1
+mrcf_88cb
+	bra	mrcf_889b
+mrcf_88cd
+	nop
+mrcf_88ce
+	dec	r2
+mrcf_88cf
+	dec	r2
+mrcf_88d0
+	with	r2
+mrcf_88d1
+	to	r1
+mrcf_88d2
+	bra	mrcf_889b
+mrcf_88d4
+	nop
+mrcf_88d5
+	lm	r1,[m_retailheap1]
+mrcf_88d8
+	to	r2
+mrcf_88d9
+	ldw	[r1]
+mrcf_88da
+	inc	r1
+mrcf_88db
+	inc	r1
+mrcf_88dc
+	with	r2
+mrcf_88dd
+	from	r2
+mrcf_88de
+	beq	mrcf_8912
+mrcf_88e0
+	nop
+mrcf_88e1
+	ldw	[r1]
+mrcf_88e2
+	with	r0
+mrcf_88e3
+	from	r0
+mrcf_88e4
+	bmi	mrcf_8906
+mrcf_88e6
+	nop
+mrcf_88e7
+	sub	#2
+mrcf_88e9
+	to	r3
+mrcf_88ea
+	add	r1
+mrcf_88eb
+	with	r3
+mrcf_88ec
+	cmp	r2
+mrcf_88ee
+	bne	mrcf_8906
+mrcf_88f0
+	nop
+mrcf_88f1
+	inc	r2
+mrcf_88f2
+	inc	r2
+mrcf_88f3
+	to	r3
+mrcf_88f4
+	ldw	[r2]
+mrcf_88f5
+	with	r3
+mrcf_88f6
+	from	r3
+mrcf_88f7
+	bmi	mrcf_890b
+mrcf_88f9
+	nop
+mrcf_88fa
+	add	r3
+mrcf_88fb
+	add	#2
+mrcf_88fd
+	dec	r2
+mrcf_88fe
+	dec	r2
+mrcf_88ff
+	stw	[r1]
+mrcf_8900
+	dec	r1
+mrcf_8901
+	dec	r1
+mrcf_8902
+	ldw	[r2]
+mrcf_8903
+	stw	[r1]
+mrcf_8904
+	inc	r1
+mrcf_8905
+	inc	r1
+mrcf_8906
+	with	r2
+mrcf_8907
+	to	r1
+mrcf_8908
+	bra	mrcf_88d8
+mrcf_890a
+	nop
+mrcf_890b
+	dec	r2
+mrcf_890c
+	dec	r2
+mrcf_890d
+	with	r2
+mrcf_890e
+	to	r1
+mrcf_890f
+	bra	mrcf_88d8
+mrcf_8911
+	nop
+mrcf_8912
+	with	r11
+mrcf_8913
+	to	pc
+mrcf_8914
+	nop
+mrcoalesce_end
