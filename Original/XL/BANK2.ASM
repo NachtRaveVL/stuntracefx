@@ -101,8 +101,10 @@ planetdmapos2	dw	100
 	minfo	world
 	include	mrheap.ext
 	include	mrupdate.ext
+	include	rcardefs.ext
 	incfile	mrcpu.asm
 	incfile	mrscene.asm
+	incfile	mrpresnt.asm
 	bankend	3
 
 	org	$1f8000+$3db0,$8000*$1f+$3db0

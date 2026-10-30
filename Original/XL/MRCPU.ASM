@@ -193,7 +193,7 @@ mrcp_08b9b8
 mrcp_08b9bb
 	ora #$80
 mrcp_08b9bd
-	sta.w $2018,x
+	sta.w al_sflags3,x
 mrcp_08b9c0
 	lda.w al_sflags,x
 mrcp_08b9c3
@@ -1815,7 +1815,7 @@ mrcp_08cfad
 mrcp_08cfb0
 	sta.w race_colresult
 mrcp_08cfb3
-	lda.l m_carflags
+	lda.l m_retailrouteword
 mrcp_08cfb7
 	and #$0020
 mrcp_08cfba

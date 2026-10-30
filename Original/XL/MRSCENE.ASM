@@ -4304,19 +4304,19 @@ retail_wheelframes
 	db $1f,$1e,$1d,$1c,$1b,$1a,$19,$18,$17,$16,$15,$14,$13,$12,$11,$10
 	db $0f,$0e,$0d,$0c,$0b,$0a,$09,$08,$07,$06,$05,$04,$03,$02,$01,$00
 	db $1f,$1e,$1d,$1c,$1b,$1a,$19,$18,$17,$16,$15,$14,$13,$12,$11,$10
-; Native descriptor callback words are identities, not callable source pointers.
-; Wheels read shape/view/height; the explicit shadow constructor accepts
-; only the four shadow descriptor identities and installs its source callback.
+; Retail visual descriptors: shape, sprite, height/control and callback.
+; Callback triples are rebound to reconstructed source strategies.
+; Shape and sprite words still require the caller's retail asset binding.
 retail_visualdefs
 	dw $a040,$0000
 	db $00,$00
 	dl $000000
 	dw $a740,$0000
 	db $00,$00
-	dl $08de31
+	dl retail_fourattachments_l
 	dw $a75c,$0000
 	db $00,$00
-	dl $08e158
+	dl retail_pairedcar_l
 	dw $a1c8,$9bbf
 	db $05,$00
 	dl $000000
@@ -4337,25 +4337,25 @@ retail_visualdefs
 	dl $000000
 	dw $a270,$0000
 	db $00,$00
-	dl $08dd8d
+	dl retail_shadowactor_l
 	dw $a254,$0000
 	db $00,$00
-	dl $08dd8d
+	dl retail_shadowactor_l
 	dw $a8e4,$0000
 	db $00,$00
-	dl $08dd8d
+	dl retail_shadowactor_l
 	dw $a238,$0000
 	db $00,$00
-	dl $08dd8d
+	dl retail_shadowactor_l
 	dw $a190,$9aaf
 	db $05,$00
-	dl $08e613
+	dl retail_eyeactor_l
 	dw $a190,$9aaf
 	db $05,$00
-	dl $08e443
+	dl retail_fixedeye_l
 	dw $a158,$995e
 	db $e1,$ff
-	dl $08e1d2
+	dl retail_carindicator_l
 
 ; Empty-list scene boundary only. CPU pool storage and list heads are
 ; supplied by the original allocator setup; no heap or actor is freed here.

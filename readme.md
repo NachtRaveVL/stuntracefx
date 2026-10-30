@@ -51,13 +51,13 @@ Once decompilation is complete, planned enhancements include:
 
 ## Reconstruction Progress
 
-**Overall planning estimate: about 31% complete, about 69% left.** This is the rounded weighted midpoint of the section estimates below; their bounds give approximately **22-39% complete / 61-78% remaining**. It estimates reconstruction and integration effort, not a measured percentage of decompiled instructions. Confidence remains low for the unclassified runtime, game-flow and asset work and should be revised as those banks are mapped.
+**Overall planning estimate: about 32% complete, about 68% left.** This is the rounded weighted midpoint of the section estimates below; their bounds give approximately **23-40% complete / 60-77% remaining**. It estimates reconstruction and integration effort, not a measured percentage of decompiled instructions. Confidence remains low for the unclassified runtime, game-flow and asset work and should be revised as those banks are mapped.
 
 ```mermaid
 pie showData
     title Estimated whole-project work
-    "Completed work, approximate" : 31
-    "Work remaining, approximate" : 69
+    "Completed work, approximate" : 32
+    "Work remaining, approximate" : 68
 ```
 
 ### Subsystem Assessment
@@ -66,7 +66,7 @@ pie showData
 | --- | ---: | ---: | ---: | --- |
 | CPU platform, startup, NMI, display and object runtime | 10% | 20-35% | 65-80% | `XLSTART`, `XLIRQ`, `RAMSTUFF`, `MRCPU`, `MRSCENE`, `XLMAIN`, `XLTRANS`, `STRATROU`: hardware initialization, synchronous GSU submission, raw object construction/binding, contact queries, actor pool lifetime and spatial ownership restored. Complete initialization, NMI modes, scheduler and display transitions remain. Anchors: `$02:8000`, `$02:BF1C`, `$03:89B4`, `$08:CB98`. |
 | Math, GSU rendering, clipping, sprites and effects | 15% | 15-35% | 65-85% | `MMATHS`, `MWROT`, `MWCROT`, `MOBJ`, `MCLIP`, `MDRAW*`, `MSPRITE`, `MDSPRITE`, `MPART`, `MDATA`: substantial early engine survives, with matching arithmetic and table spans; audit the rest of retail bank `$01`, material/draw paths, road rendering and the `$01:D12F` camera-flag consumer. |
-| Vehicle dynamics, wheels, physics and collision | 20% | 30-50% | 50-70% | `MDYNAMIC`, `MRCAR`, `MRFORCE`, `MRCOLL`, `MRWHEEL`, `MRHEAP`, `MRUPDATE`, `MRCPU`, `MRSCENE`, `RCARDEFS`: nine definitions, raw object lifetime, vehicle/object-frame callbacks, CPU controls/contact queries, body animation, wheel/split-view sprite strategies, material trails and shadow updates restored. CPU submission saves the polygon context and invalidates decoded points before reuse. Heap/shape binding, auxiliary/eye descriptor families, renderer scheduling and retail game-frame integration remain. The shadow constructor accepts four explicit descriptor identities; the generic auxiliary builder remains separate. Anchors: `$04:8800`, `$04:8CC6`, `$08:C60F`, `$08:CC7C`. |
+| Vehicle dynamics, wheels, physics and collision | 20% | 35-55% | 45-65% | `MDYNAMIC`, `MRCAR`, `MRFORCE`, `MRCOLL`, `MRWHEEL`, `MRHEAP`, `MRUPDATE`, `MRCPU`, `MRSCENE`, `MRPRESNT`, `RCARDEFS`: raw object lifetime, vehicle/object frames, CPU controls, body animation, auxiliary construction, eye states, split-view wheel/attachment poses and presentation effects restored. The composed vehicle entry creates raw, wheel and auxiliary records for all nine definitions. CPU submission saves polygon context and invalidates decoded points before reuse. Retail heap/shape binding, remaining car/game-flow consumers, renderer scheduling and game-frame integration remain. Anchors: `$04:8800`, `$04:8CC6`, `$08:B956`, `$08:DCB4`. |
 | Camera records, animation and camera strategies | 10% | 55-75% | 25-45% | `GAME`, `GASTRATS`, `WORLD`: largest concentration of reconstructed retail behavior; finish remaining scene/mode selection, animation-15 initialization, camera/owner teardown, sound and draw consumers, and all race/attract/split-screen contexts. Anchors: `$02:DAD6-$02:DF78`, `$08:8525-$08:9BD8`, `$09:8090`. |
 | Route access, AI and driving controls | 10% | 35-55% | 45-65% | `MAI`, `MRCPU`, route helpers in `GASTRATS`, `WORLD`: normal driving, mode dispatch, lap/rank producers, player timing, frozen-route motion, CPU button/edge gates and inactivity handling reconstructed; remaining scene mode producers, retail multiplayer lifetime and live AI scheduling remain. |
 | Race rules, frontend, menus and game flow | 15% | 0-10% | 90-100% | `XLMAIN`, `XLTITLE`, `XLINIT`, `PSTRATS`, `GSTRATS`, `GASTRATS`, `ENDSEQ`: early behavior is a starting point; final race progression, timing/results, vehicle/course selection, attract/demo, two-player flow and endings need retail mapping and restoration. Anchors include `$0B:AE0A` and `$0B:FB26`. |
@@ -80,12 +80,12 @@ pie showData
 | `$00` | 2,882 | 5,832 | 24,054 | Verified byte/interpolated sine tables and the full arctangent read window; remaining reset/header, shared-data and content audit |
 | `$01` | 1,258 | 1,775 | 29,735 | GSU math/render engine; verified inherited matrix, math and backward-decompression spans, remaining draw pipeline |
 | `$02` | 1,391 | 4,084 | 27,293 | CPU NMI/display, camera records, synchronous GSU launcher/RNG and audio port service; remaining runtime/control flow and SPC integration |
-| `$03` | 1,941 | 1,400 | 29,427 | CPU actor allocation/removal, byte-rotation kernels, hardware setup, callback helpers and audio/vehicle-kind producers; remaining CPU engine and scheduling |
+| `$03` | 2,512 | 1,339 | 28,917 | CPU actor lifetime, byte rotations, easing/pose helpers, hardware setup, callbacks and audio/vehicle-kind producers; remaining CPU engine and scheduling |
 | `$04` | 20,042 | 3 | 12,723 | GSU dynamics/AI and CPU audio: raw construction/teardown, release task, vehicle/object callbacks, route modes/ranks, wheel/body collision and audio helpers restored; remaining initialization/task wrappers, CPU ownership and integration |
 | `$05-$06` | 0 | 0 | 65,536 | Content/source correspondence still unclassified |
 | `$07` | 80 | 0 | 32,688 | Nearby-car CPU audio consumer; remaining content/source correspondence audit |
-| `$08` | 10,192 | 0 | 22,576 | Camera/route helpers, CPU car controls, body synchronization, spatial map links, wheel/material/split-view actors and shadow strategies; remaining auxiliary actors, presentation binding and gameplay logic |
-| `$09` | 2,781 | 94 | 29,893 | Camera presets, nine vehicle definitions and consumed wheel/shadow presentation fields; remaining auxiliary descriptors, scene/data and WRAM patch content |
+| `$08` | 15,068 | 0 | 17,700 | Camera/route helpers, CPU controls, composed vehicle/auxiliary creation, map ownership, wheel/shadow/eye/indicator and presentation strategies; remaining car/game-flow consumers, asset binding and scheduling |
+| `$09` | 2,875 | 0 | 29,893 | Camera presets, nine vehicle definitions and all 16 typed visual descriptors with source callbacks; remaining scene/data and WRAM patch content |
 | `$0A` | 0 | 0 | 32,768 | Content/source correspondence still unclassified |
 | `$0B` | 1,081 | 0 | 31,687 | Engine parameter dispatch, rev/filter/speed logic and five 152-byte curves restored; remaining title/entity/game-frame and audio integration |
 | `$0C` | 0 | 722 | 32,046 | Shape-data candidates; remaining content classification |
@@ -99,18 +99,18 @@ pie showData
 | `$1D` | 8,264 | 0 | 24,504 | Eight packed song streams reconstructed; remaining prefix content, padding, intended callers and final placement |
 | `$1E` | 30,861 | 32 | 1,875 | Four raw and eight packed songs reconstructed; all song content represented. Physical credit counts raw payloads and packed streams once; decoded sizes are not added again. Raw IPL headers, padding and final placement remain outside restoration credit |
 | `$1F` | 0 | 0 | 32,768 | Content/source correspondence still unclassified |
-| **All 32 banks** | **172,785** | **34,105** | **841,686** | **All 1 MiB accounted for exactly once** |
+| **All 32 banks** | **178,326** | **33,950** | **836,300** | **All 1 MiB accounted for exactly once** |
 
 The GSU dynamics/AI window `$04:8800-$04:D03F` has verified correspondence for **18,164 of 18,496 bytes (98.21%)**, leaving **332 bytes not yet credited**. This covers that kernel and its tables; CPU callers, asset binding and game integration are assessed separately above.
 
-**Measured ROM correspondence: 16.48% restored/adapted, 83.52% not yet credited.** This includes assets; identical candidates receive no restoration credit.
+**Measured ROM correspondence: 17.01% restored/adapted, 82.99% not yet credited.** This includes assets; identical candidates receive no restoration credit.
 
 ```mermaid
 pie showData
     title Retail ROM byte correspondence
-    "Restored/adapted" : 172785
-    "Additional identical candidates" : 34105
-    "Uncredited" : 841686
+    "Restored/adapted" : 178326
+    "Additional identical candidates" : 33950
+    "Uncredited" : 836300
 ```
 
 ## Building Original
