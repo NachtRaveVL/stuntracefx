@@ -929,6 +929,16 @@ race_actorbytes	equ	race_actorlist+64
 	alc	race_selectedactor,2
 	alc	race_savedview,6
 	alc	race_gridsentinel,2
+; Retail diagnostic inputs; producer binding remains with the caller.
+	alc	race_diagtimes,28
+	alc	race_diagframe,1
+	alc	race_diagoldchip,2
+	alc	race_diagchecksum,2
+	alc	race_diagword0,2
+	alc	race_diagword1,2
+	alc	race_diagword2,2
+	alc	race_diagturn,2
+	alc	race_diagcell,2
 ; Keep palettes and the fixed hand-sprite/jewel reservation in bank $7F.
 	IFLT	xxmempt-nextaddress
 xxmempt	=	nextaddress

@@ -82,6 +82,7 @@ xoffset	equ	*-ramstart
 	include	mrcoll.ext
 	incfile	mrlife.asm
 	incfile	mrviews.asm
+	incfile	mrhud.asm
 	bankend	2
 
 
