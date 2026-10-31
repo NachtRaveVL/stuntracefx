@@ -972,6 +972,41 @@ race_actorbytes	equ	race_actorlist+64
 	alc	race_entities,968
 	alc	race_oamflags,1
 	alc	race_oam,544
+; Frontend display requests, native reverse queues and window inputs.
+race_spriteheap	equ	race_entityflags
+	alc	race_streambytes,2
+	alc	race_displayrequests,1
+	alc	race_frontwait,2
+	alc	race_frontbright,1
+	alc	race_fronttarget,1
+	alc	race_fronttoggle,1
+	alc	race_frontxor,2
+	alc	race_frontseed,2
+	alc	race_frontdebug,2
+	alc	race_frontfast,2
+	alc	race_regbytes,2
+	alc	race_regqueue,128
+	alc	race_transferused,2
+	alc	race_transferbytes,2
+	alc	race_transfersource,2
+	alc	race_transferbank,2
+	alc	race_transferdest,2
+	alc	race_transferqueue,512
+	alc	race_frontscroll0,2
+	alc	race_frontscroll1,2
+	alc	race_frontscroll2,2
+	alc	race_frontscroll3,2
+	alc	race_bitmapstage,2
+	alc	race_frontdmaflip,1
+	alc	race_frontwindow,2
+	alc	race_frontwindowpos,2
+	alc	race_frontanimy,2
+	alc	race_frontbasey0,2
+	alc	race_frontbasey1,2
+	alc	race_frontwindowy0,2
+	alc	race_frontwindowy1,2
+	alc	race_frontcliptop,2
+	alc	race_frontclipbottom,2
 ; Keep palettes and the fixed hand-sprite/jewel reservation in bank $7F.
 	IFLT	xxmempt-nextaddress
 xxmempt	=	nextaddress
@@ -984,7 +1019,9 @@ xxmempt	=	nextaddress
 	xxalc	race_paltarget,512
 	xxalc	race_palshadow,512
 	xxalc	race_tilecopy,2048
-	xxalc	race_spritelists,2048
+	xxalc	race_spritelists,$3000
+	xxalc	race_palfadebase,512
+	xxalc	race_fronttables,129
 
 	IFGT	wmempt-$2000
 	printf	"%n%nTOO MANY ALCS USED%n%n"

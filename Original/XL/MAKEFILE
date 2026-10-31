@@ -35,7 +35,7 @@ info: $(ALLFILES)
 	@$(LINK) $(LOPTS) -l1024 @flist
 
 ## Bank 0
-bank0.sob: bank0.asm $(STRATFILES) \
+bank0.sob: bank0.asm mrforms.asm mrforms.ext $(STRATFILES) \
 $(STDFILES) mdynmacs.mc dynstruc.inc blink.asm \
 data\etabs.dat sgtabs.asm data\nintendo.pal data\map-obj.cgx \
 sgdata.asm data\arctan.asm istrats.asm shapes.asm \
@@ -92,11 +92,11 @@ xldata\game3.pco xldata\game4.pco xldata\obj.pcg xldata\bgpanel.pcg \
 xldata\back1.pcg xldata\back1.psc 
 
 ## Bank 8
-bank8.sob: bank8.asm xlspcw.asm xlspcw.ext spcmacs.inc \
+bank8.sob: bank8.asm xlspcw.asm xlspcw.ext spcmacs.inc mrblank.asm mrblank.ext mrforms.ext mario.ext \
 $(STDFILES) $(STRATFILES) gastrats.asm snd\sgbgmd.bin \
 
 ## Bank 9
-bank9.sob: bank9.asm xlspce.asm xlspce.ext spcmacs.inc mrdisp.asm mrdisp.ext mrpals.ext \
+bank9.sob: bank9.asm xlspce.asm xlspce.ext spcmacs.inc mrdisp.asm mrdisp.ext mrpals.ext mrfront.asm mrfront.ext mrblank.ext mrforms.ext \
 $(STDFILES) snd\sgbgm11.bin 
 
 ## Bank 10
