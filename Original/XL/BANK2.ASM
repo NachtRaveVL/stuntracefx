@@ -128,6 +128,7 @@ planetdmapos2	dw	100
 	inccru	bgf1pcr,data\f-1.pcr
 ;	incfile	cont.asm
 ;	minfo	cont
+	incfile	mrpals.asm
 	bankend	31
 ;------------------------------------------------------------------
 

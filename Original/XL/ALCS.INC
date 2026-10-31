@@ -939,11 +939,52 @@ race_actorbytes	equ	race_actorlist+64
 	alc	race_diagword2,2
 	alc	race_diagturn,2
 	alc	race_diagcell,2
+; Retail display inputs and independent 2D entity/OAM state.
+	alc	race_displayoverride,1
+	alc	race_displayrace,1
+	alc	race_displaychoice,1
+	alc	race_displaybrief,1
+	alc	race_displayack,1
+	alc	race_displaytimers,4
+	alc	race_displaycost,2
+	alc	race_displaycolors,12
+	alc	race_paletteblocks,2
+	alc	race_oambits,2
+	alc	race_oamword,2
+	alc	race_spritesleft,2
+	alc	race_entityscrollx,2
+	alc	race_entityscrolly,2
+	alc	race_spritexbit,2
+	alc	race_spritesize,2
+	alc	race_entityfreebytes,2
+	alc	race_entitybytes,2
+	alc	race_entitycurrent,2
+	alc	race_entityindex,2
+	alc	race_entityx,2
+	alc	race_entityy,2
+	alc	race_oamoldbytes,2
+	alc	race_oamoldhigh,2
+	alc	race_oambytes,2
+	alc	race_oamhigh,2
+	alc	race_entityflags,2
+	alc	race_entityfree,44
+	alc	race_entitylist,44
+	alc	race_entities,968
+	alc	race_oamflags,1
+	alc	race_oam,544
 ; Keep palettes and the fixed hand-sprite/jewel reservation in bank $7F.
 	IFLT	xxmempt-nextaddress
 xxmempt	=	nextaddress
 	ENDC
 	xxalc	race_cellheads,2048
+	xxalc	race_palramps,2304
+	xxalc	race_palfill,512
+	xxalc	race_palbase,512
+	xxalc	race_palsource,512
+	xxalc	race_paltarget,512
+	xxalc	race_palshadow,512
+	xxalc	race_tilecopy,2048
+	xxalc	race_spritelists,2048
 
 	IFGT	wmempt-$2000
 	printf	"%n%nTOO MANY ALCS USED%n%n"
