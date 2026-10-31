@@ -1007,6 +1007,50 @@ race_spriteheap	equ	race_entityflags
 	alc	race_frontwindowy1,2
 	alc	race_frontcliptop,2
 	alc	race_frontclipbottom,2
+; Frontend menu inputs, selection state and record glyph producers.
+	alc	race_menurank,2
+	alc	race_menumode,2
+	alc	race_menutotal,4
+	alc	race_rankvalues,13
+	alc	race_recordtimes,38
+	alc	race_recordselected,2
+	alc	race_menucursors,8
+	alc	race_menuedges,2
+	alc	race_menuheld,2
+	alc	race_menuinputbytes,2
+	alc	race_menuinputqueue,16
+	alc	race_menutemp,2
+	alc	race_menuexit,2
+	alc	race_newentity,2
+	alc	race_menuactive,2
+	alc	race_menuunknown0,2
+	alc	race_menupending,2
+	alc	race_menunext,2
+	alc	race_menuchoice,2
+	alc	race_menucurrent,2
+	alc	race_menuoptions0,2
+	alc	race_menuoptions1,2
+	alc	race_menuoptions2,2
+	alc	race_menumatch,2
+	alc	race_menuunknown1,2
+	alc	race_menuunknown2,2
+	alc	race_menulimit,2
+	alc	race_menuoption,2
+	alc	race_menuunknown3,2
+	alc	race_menuaudio0,2
+	alc	race_menuaudio1,2
+	alc	race_menuaudio2,2
+	alc	race_menuunknown4,2
+	alc	race_menuunknown5,2
+	alc	race_menucolor,2
+	alc	race_menuunknown6,2
+	alc	race_menuunknown7,2
+	alc	race_menuunknown8,2
+	alc	race_recordflashcount,2
+	alc	race_recordflashphase,2
+	alc	race_menuinputbytes0,2
+	alc	race_menuinputqueue0,16
+	alc	race_menucursory,2
 ; Keep palettes and the fixed hand-sprite/jewel reservation in bank $7F.
 	IFLT	xxmempt-nextaddress
 xxmempt	=	nextaddress
@@ -1022,6 +1066,7 @@ xxmempt	=	nextaddress
 	xxalc	race_spritelists,$3000
 	xxalc	race_palfadebase,512
 	xxalc	race_fronttables,129
+	xxalc	race_menurecords,512
 
 	IFGT	wmempt-$2000
 	printf	"%n%nTOO MANY ALCS USED%n%n"

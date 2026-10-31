@@ -51,7 +51,7 @@ Once decompilation is complete, planned enhancements include:
 
 ## Reconstruction Progress
 
-**Overall planning estimate: about 38% complete, about 62% left.** This is the rounded weighted midpoint of the section estimates below; their bounds give approximately **29-46% complete / 54-71% remaining**. It estimates reconstruction and integration effort, not a measured percentage of decompiled instructions. Confidence remains low for the unclassified runtime, game-flow and asset work and should be revised as those banks are mapped.
+**Overall planning estimate: about 38% complete, about 62% left.** This is the rounded weighted midpoint of the section estimates below; their bounds give approximately **30-47% complete / 53-70% remaining**. It estimates reconstruction and integration effort, not a measured percentage of decompiled instructions. Confidence remains low for the unclassified runtime, game-flow and asset work and should be revised as those banks are mapped.
 
 ```mermaid
 pie showData
@@ -69,7 +69,7 @@ pie showData
 | Vehicle dynamics, wheels, physics and collision | 20% | 45-65% | 35-55% | `MDYNAMIC`, `MRCAR`, `MRFORCE`, `MRCOLL`, `MRWHEEL`, `MRHEAP`, `MRUPDATE`, `MRCPU`, `MRSCENE`, `MRPRESNT`, `MRCARFX`, `MRLIFE`, `RCARDEFS`: raw object/vehicle frames, CPU controls, wheels, auxiliary/eye actors, four vehicle breakup families, fragment launch/return, collision feedback, sound-state transitions and debris restored. Player/opponent/attract lifecycles, car lists, ranked grid placement, single/two-player input producers, boost recovery/repair callers and lift/finish actor transitions restored. Both bound raw heaps can be coalesced through the CPU task entry. CPU submission preserves polygon context and invalidates decoded points. Retail heap/shape binding, remaining car/game-flow consumers, renderer scheduling and game-frame integration remain. Anchors: `$04:8800`, `$04:8CC6`, `$08:A034`, `$08:C124`. |
 | Camera records, animation and camera strategies | 10% | 65-85% | 15-35% | `GAME`, `GASTRATS`, `WORLD`, `MRLIFE`, `MRVIEWS`: early and raw-car camera interfaces coexist. Raw velocity/route fields, animation, road/intro/hold/driving, drift/end/braking shots, preset sound requests and player finish handoffs restored. Contact shake, first-grid target selection, close/fixed/low-chase shots, animation-15 initialization, free/reset transitions and preview cameras restored. Remaining mode selection, teardown, draw consumers and full race/attract/split-screen integration need restoration. Anchors: `$02:DAD6-$02:DF78`, `$08:8525-$08:9BD8`, `$09:8090`. |
 | Route access, AI and driving controls | 10% | 35-55% | 45-65% | `MAI`, `MRCPU`, `MRLIFE`, route helpers in `GASTRATS`, `WORLD`: normal driving, mode dispatch, lap/rank producers, player timing, frozen-route motion, CPU button/edge gates and inactivity handling reconstructed; car owner lifetime and input producers are restored, while remaining scene mode producers, multiplayer flow and live AI scheduling remain. |
-| Race rules, frontend, menus and game flow | 15% | 0-10% | 90-100% | `XLMAIN`, `XLTITLE`, `XLINIT`, `PSTRATS`, `GSTRATS`, `GASTRATS`, `ENDSEQ`: early behavior is a starting point; vehicle-preview actors and selection camera are restored in `MRVIEWS`; final race progression, timing/results, menu flow, course selection, attract/demo, two-player flow and endings need retail mapping and restoration. Anchors include `$0B:AE0A` and `$0B:FB26`. |
+| Race rules, frontend, menus and game flow | 15% | 5-15% | 85-95% | `MRMENU` restores input capture/navigation, record names/times/ranks, vehicle indicators, window transitions and 20 record-display definitions; bank-9 bridges connect their callbacks to the restored entity dispatcher. Entity construction preserves the native 88-byte copy and its spill, including rebinding the final-slot spill to the register queue. `MRVIEWS` restores vehicle-preview actors and the selection camera. Record snapshots, cursor output, packed scene graphics and sound/frame ownership remain caller-bound. `XLMAIN`, `XLTITLE`, `XLINIT`, `PSTRATS`, `GSTRATS`, `GASTRATS`, `ENDSEQ` remain an early foundation; final race progression, timing/results producers, remaining menu/course selection, attract/demo, two-player flow and endings need restoration and integration. Anchors include `$0B:AE0A` and `$0B:FB26`. |
 | Courses, scene streams, models, graphics and text | 15% | 10-20% | 80-90% | `MAPS`, shape sources, `MSPRITES`, `DATA`, `XLDATA`, `MDATA`, `SHBANKS`, `INCBINS`: inherited assets and some identical tables exist. `MRDISP`/`MRPALS` restore 17 full RGB555 palettes (16 referenced by the restored catalogue), 22 shared color ramps, palette expansion/change masks and OAM layouts. `MRFORMS` restores all 100 frontend sprite forms, 85 animation sequences (114 frames) and 129 bytes of HDMA recipes with rebound indirect pointers. Their tile graphics and scene loaders remain unbound; the built map still uses an early fallback route. The retail scene-command reader, four-car grid records, camera commands, bounds extraction, mode filters and breakable/rotating props are restored in `MRVIEWS`, requiring compiled callbacks and caller-bound assets. Restore final scene/course inventory, object placement, routes, model/texture/background differences and text, then validate references. |
 | Audio driver, command mapping, music and samples | 5% | 50-65% | 35-50% | `XLSOUND`, `XLSLOAD`, `XLRACE`, `XLSPC*`, `SPCMACS`, `CRUMACS`, `MAI`, `MDECRU`: both SPC cores, all identified scene/sample uploads and 20 songs have assembly correspondence, including 16 byte-exact packed streams. The split-screen loader, vehicle-kind selection, CPU queues and parameter producers match both live SPC profiles. Three additional songs have confirmed bank-separated callers. Remaining work includes final ROM placement, startup/game-frame/NMI scheduling, definition ownership/callers and intended callers for the extra sample and three songs; the early SPC path is still active. |
 
@@ -87,7 +87,7 @@ pie showData
 | `$08` | 31,148 | 1 | 1,619 | Camera/route helpers, player/opponent lifetime, grids/input, repair/recovery callers, lift/finish transitions, vehicle/auxiliary strategies, breakup, collision feedback, scene commands, preview actors, free/reset cameras and trackside effects, timing/car/wheel/cell diagnostics and error displays; remaining attachment helper and tail data, asset binding and scheduling |
 | `$09` | 2,875 | 0 | 29,893 | Camera presets, nine vehicle definitions and all 16 typed visual descriptors with source callbacks; remaining scene/data and WRAM patch content |
 | `$0A` | 0 | 0 | 32,768 | Content/source correspondence still unclassified |
-| `$0B` | 12,741 | 0 | 20,027 | Engine audio parameters/curves, 22-slot 2D entity allocation/composition, all frontend sprite forms and animation sequences, clone/motion helpers, palette scaling, display queues/publication, bitmap strips, window/HDMA recipes and setup restored; remaining title/entity strategies, constructors, game-frame and audio integration |
+| `$0B` | 17,273 | 3 | 15,492 | Engine audio parameters/curves, 22-slot 2D entities, native default-copy and record-group constructors, sprite forms/animation, record-display definitions and callbacks, menu input/navigation, palette scaling, display queues/publication, bitmap strips and window/HDMA restored; remaining menu definitions/strategies, scene resource binding, game-frame and audio integration |
 | `$0C` | 0 | 722 | 32,046 | Shape-data candidates; remaining content classification |
 | `$0D-$13` | 0 | 0 | 229,376 | Content/source correspondence still unclassified |
 | `$14` | 0 | 19,905 | 12,863 | `MDATA` wipe/Z-table/effect data candidates; validate table boundaries and consumers |
@@ -99,18 +99,18 @@ pie showData
 | `$1D` | 8,264 | 0 | 24,504 | Eight packed song streams reconstructed; remaining prefix content, padding, intended callers and final placement |
 | `$1E` | 30,861 | 32 | 1,875 | Four raw and eight packed songs reconstructed; all song content represented. Physical credit counts raw payloads and packed streams once; decoded sizes are not added again. Raw IPL headers, padding and final placement remain outside restoration credit |
 | `$1F` | 11,243 | 314 | 21,211 | 17 full RGB555 palettes, 22 shared ramps and three ramp-length schemes restored; one full palette has no bound catalogue caller. Remaining content, display resource integration and padding audit |
-| **All 32 banks** | **221,806** | **34,051** | **792,719** | **All 1 MiB accounted for exactly once** |
+| **All 32 banks** | **226,338** | **34,054** | **788,184** | **All 1 MiB accounted for exactly once** |
 
 The GSU dynamics/AI window `$04:8800-$04:D03F` has verified correspondence for **18,238 of 18,496 bytes (98.61%)**, leaving **258 bytes not yet credited**. This covers that kernel and its tables; CPU callers, asset binding and game integration are assessed separately above.
 
-**Measured ROM correspondence: 21.15% restored/adapted, 78.85% not yet credited.** This includes assets; identical candidates receive no restoration credit.
+**Measured ROM correspondence: 21.59% restored/adapted, 78.41% not yet credited.** This includes assets; identical candidates receive no restoration credit.
 
 ```mermaid
 pie showData
     title Retail ROM byte correspondence
-    "Restored/adapted" : 221806
-    "Additional identical candidates" : 34051
-    "Uncredited" : 792719
+    "Restored/adapted" : 226338
+    "Additional identical candidates" : 34054
+    "Uncredited" : 788184
 ```
 
 ## Building Original

@@ -217,3 +217,8 @@ bgholeapcr
 bgtsppcr
 bg24pcr
 bgtstpcr
+
+; Frontend CPU strategies occupy the unused source bank.
+	bank	29
+	incfile	mrmenu.asm
+	bankend	29
