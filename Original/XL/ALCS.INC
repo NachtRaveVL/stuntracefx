@@ -1051,6 +1051,29 @@ race_spriteheap	equ	race_entityflags
 	alc	race_menuinputbytes0,2
 	alc	race_menuinputqueue0,16
 	alc	race_menucursory,2
+; Frontend publication, serial probe and animation scratch.
+	alc	race_frontsoundoutput,2
+	alc	race_frontsoundramp,2
+	alc	race_frontprobe,1
+	alc	race_frontdevice,2
+	alc	race_frontinput0,2
+	alc	race_frontinput1,2
+	alc	race_menuwork1,2
+	alc	race_menuwork2,2
+; Title input and record validation diagnostics.
+	alc	race_titlesequence,2
+	alc	race_recorderror,1
+; Frontend choice decoder, raw held input and audio repeat state.
+	alc	race_choicecode,2
+	alc	race_optioncode0,2
+	alc	race_optioncode1,2
+	alc	race_optioncode2,2
+	alc	race_menuheld0,2
+	alc	race_audioupcount,2
+	alc	race_audiodowncount,2
+	alc	race_frontbufferphase,2
+; Caller-loaded option cards and independently owned texture strips.
+	xalc	race_fronttexture,$2000
 ; Keep palettes and the fixed hand-sprite/jewel reservation in bank $7F.
 	IFLT	xxmempt-nextaddress
 xxmempt	=	nextaddress
@@ -1067,6 +1090,11 @@ xxmempt	=	nextaddress
 	xxalc	race_palfadebase,512
 	xxalc	race_fronttables,129
 	xxalc	race_menurecords,512
+	xxalc	race_menugraphics,$6800
+	xxalc	race_recordimage,1024
+	IFGT	xxmempt-$800000
+	fail
+	ENDC
 
 	IFGT	wmempt-$2000
 	printf	"%n%nTOO MANY ALCS USED%n%n"

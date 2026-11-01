@@ -221,4 +221,13 @@ bgtstpcr
 ; Frontend CPU strategies occupy the unused source bank.
 	bank	29
 	incfile	mrmenu.asm
+	incfile	mrui.asm
+	incfile	mrtiles.asm
+	incfile	mrtitle.asm
+	incfile	mrselect.asm
 	bankend	29
+
+; Packed frontend resources retain their backward-crunch format.
+	bank	30
+	incfile	mrgfx.asm
+	bankend	30
