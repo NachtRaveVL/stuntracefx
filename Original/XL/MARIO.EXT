@@ -188,8 +188,24 @@
 	global	m_retailspawnflags
 	global	m_retailtrigbase
 	global	m_retailfacetype
+	global	m_retailviewflags
+	global m_sprx,m_spry,m_clipleft,m_clipright,mspr_pal,m_spr0,m_spra
+	global	m_depthsptr
+	global	m_objflags
+	global	m_projpnts
+	global	m_rotlightx
+	global	m_rotlighty
+	global	m_rotlightz
+	global	m_shadestab
+	global	m_sprbank
+	global	m_sprdata
+	global	m_sprmask
+	global	m_tcmodecol
+	global	m_texptr
+	global	m_texturemap
+	global	m_vistab
 	global	m_stack
-	global	m_viewroty
+	global	m_viewrotx,m_viewroty,m_viewrotz
 	global	mdivu3115
 	global	mretail_runtimereturn1
 

@@ -1,0 +1,2 @@
+	global mrcolr_begin,mrcolr_end
+	global mretail_material,mretail_facevis,mretail_facevis8,mretail_facevalue

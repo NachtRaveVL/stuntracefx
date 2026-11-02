@@ -514,6 +514,7 @@ viewrouteptr	=	m_routeptr
 	malc	m_retailcontactyaw,2	; contact-normal yaw, unsigned byte domain
 	malc	m_retailimpactflash,2	; CPU collision feedback, native $70:26EE
 	malc	m_retailplayer2,2	; second raw player car, native $70:2478
+	malc	m_retailviewflags,2	; published camera flags, native $70:2736
 
 ; Retail wheel context shares the polygon work area while dynamics runs.
 ; Rendering must not use m_polybuf until the wheel/body stages finish.

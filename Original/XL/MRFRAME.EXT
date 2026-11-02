@@ -1,0 +1,9 @@
+	global mrframe_begin
+	global mrframe_end
+	global retail_objectdraw_l
+	global retail_drawparallel_l
+	global retail_publishview_l
+	global retail_callactor_l
+	global retail_calltempactor_l
+	global retail_stepactors_l
+	global retail_initactorpool_l

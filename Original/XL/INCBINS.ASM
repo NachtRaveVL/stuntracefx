@@ -225,6 +225,15 @@ bgtstpcr
 	incfile	mrtiles.asm
 	incfile	mrtitle.asm
 	incfile	mrselect.asm
+	incfile	mrdraw.asm
+	incfile	mrframe.asm
+	incpublics mrsprite.ext
+	incpublics mrcolr.ext
+	include mrmatdat.ext
+	mario on
+	incfile mrcolr.mc
+	incfile mrsprite.mc
+	mario off
 	bankend	29
 
 ; Packed frontend resources retain their backward-crunch format.

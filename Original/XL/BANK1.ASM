@@ -66,6 +66,11 @@ oopspal	;incbin	data\oops.pal
 oopschr	;incbin	data\oops.chr
 oopspic	;incbin	data\oops.pic
 
+; Retail projection/culling task, sharing the original draw-list workspace.
+	incpublics mrsort.ext
+	mario	on
+	incfile	mrsort.mc
+	mario	off
 	bankend	1
 
 

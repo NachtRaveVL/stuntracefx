@@ -1072,8 +1072,17 @@ race_spriteheap	equ	race_entityflags
 	alc	race_audioupcount,2
 	alc	race_audiodowncount,2
 	alc	race_frontbufferphase,2
+; Retail visible-cell collection and draw-list ownership.
+	alc	race_visiblecells,316
+	alc	race_visiblecell,2
+	alc	race_visiblecol,2
+	alc	race_visiblerow,2
+	alc	race_drawplayer,2
+	alc	race_visiblekind,2
 ; Caller-loaded option cards and independently owned texture strips.
 	xalc	race_fronttexture,$2000
+; Native 49-record CPU staging list; published only after GSU ownership.
+	xalc	race_drawlist,49*30
 ; Keep palettes and the fixed hand-sprite/jewel reservation in bank $7F.
 	IFLT	xxmempt-nextaddress
 xxmempt	=	nextaddress

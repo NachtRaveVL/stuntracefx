@@ -46,7 +46,7 @@ data\and.pcr
 
 
 ## Bank 1
-bank1.sob: bank1.asm shmacs.inc gamemsgs.inc dynparms.inc\
+bank1.sob: bank1.asm mario.ext mrsort.mc mrsort.ext shmacs.inc gamemsgs.inc dynparms.inc\
 $(STDFILES) mdynmacs.mc dynstruc.inc dynparms.inc \
 mvars.mc mmacs.mc mshtab.mc mmaths.mc \
 mwrot.mc mwcrot.mc mobj.mc mclip.mc \
@@ -55,7 +55,7 @@ mdrawlis.mc mdecru.mc mdsprite.mc mpart.mc \
 mdynamic.mc mai.mc mrcar.mc
 
 ## Bank 2, 3
-bank2.sob: bank2.asm bgmacs.inc\
+bank2.sob: bank2.asm mrmatdat.asm mrmatdat.ext bgmacs.inc\
 $(STDFILES) mdynmacs.mc dynstruc.inc xlirq.asm \
 hdmatabs.asm ramstuff.asm data\gfx\mist.col data\gfx\bg2-c.col \
 data\gfx\bg2-c.col data\gfx\over_d.col xlmain.asm xltrans.asm \
@@ -117,7 +117,7 @@ snd\sgbgmj.bin ajshapes.asm aushapes.asm af2shape.asm \
 data\dog.ccr snd\sgbgm7.bin snd\sgbgm3.bin acshapes.asm \
 
 ## Banks 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29, 30, 31
-incbins.sob: incbins.asm mrselect.asm mrselect.ext mrtitle.asm mrtitle.ext mrtiles.asm mrtiles.ext mrgfx.asm mrgfx.ext mrui.asm mrui.ext mrmenu.asm mrmenu.ext mrhooks.ext mrdisp.ext mrfront.ext mrblank.ext xlsound.ext \
+incbins.sob: incbins.asm mrsprite.mc mrsprite.ext mdata.ext mrcolr.mc mrcolr.ext mrmatdat.ext mrframe.asm mrframe.ext mrupdate.ext mrcpu.ext mrscene.ext mrdraw.asm mrdraw.ext mrsort.ext mario.ext game.ext ramstuff.ext mrselect.asm mrselect.ext mrtitle.asm mrtitle.ext mrtiles.asm mrtiles.ext mrgfx.asm mrgfx.ext mrui.asm mrui.ext mrmenu.asm mrmenu.ext mrhooks.ext mrdisp.ext mrfront.ext mrblank.ext xlsound.ext \
 $(STDFILES) msprites\sprites1.dat msprites\sprites2.dat data\moji_2.fon \
 mdata.mc data\st-p.pcr data\2-2.ccr data\2-3.ccr data\2-3b.ccr \
 data\stars.ccr data\1-3-b.ccr data\space.ccr data\last.pcr \
