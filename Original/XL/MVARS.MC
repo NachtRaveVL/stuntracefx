@@ -506,6 +506,43 @@ viewrouteptr	=	m_routeptr
 	malc	m_retailrouteword,2
 	malc	m_retailgearframe,2
 	malc	m_retaildriveflags,2	; current raw car +8A, not scene flags
+	malc	m_retaillocalX,2
+	malc	m_retaillocalY,2
+	malc	m_retaillocalZ,2
+	malc	m_retaildynphase,2	; native dynamics substep selector
+	malc	m_retailimpact,2	; impact carried across the two substeps
+	malc	m_retailcontactyaw,2	; contact-normal yaw, unsigned byte domain
+	malc	m_retailimpactflash,2	; CPU collision feedback, native $70:26EE
+	malc	m_retailplayer2,2	; second raw player car, native $70:2478
+	malc	m_retailviewflags,2	; published camera flags, native $70:2736
+
+; Retail wheel context shares the polygon work area while dynamics runs.
+; Rendering must not use m_polybuf until the wheel/body stages finish.
+; No allocation or buffer size changes; parameters occupy the first 50 bytes.
+m_retailwheelparams	equ	m_polybuf
+m_retailwheeldefs	equ	m_polybuf+50
+m_retailwheelobject	equ	m_polybuf+52
+m_retailwheelcontact	equ	m_polybuf+54
+m_retailwheelvertical	equ	m_polybuf+56
+m_retailwheelreset	equ	m_polybuf+58
+
+; Raw object/runtime context follows the wheel words in the same work area.
+; Bind valid heap roots before construction; rendering uses this buffer later.
+; Roots may name one shared heap or two separate caller-owned heaps.
+m_retailheap0	equ	m_polybuf+60
+m_retailheap1	equ	m_polybuf+62
+m_retailobjectcount	equ	m_polybuf+64
+m_retailarg4	equ	m_polybuf+66
+m_retailarg5	equ	m_polybuf+68
+m_retailarg6	equ	m_polybuf+70
+m_retailruntime1	equ	m_polybuf+72
+m_retailruntime2	equ	m_polybuf+74
+m_retaildefinition	equ	m_polybuf+76
+m_retailruntime3	equ	m_polybuf+78
+m_retailspawnflags	equ	m_polybuf+80
+m_retailtrigbase	equ	m_polybuf+82
+; Retail current-face type ($237C) is distinct from group flags ($2480).
+m_retailfacetype	equ	m_polybuf+84
 
 ; Current map number for retail route-speed and AI tables.
 ; Retail copies CPU $0e3d to GSU RAM $26f4 while loading the scene.
@@ -532,6 +569,21 @@ viewrouteptr	=	m_routeptr
 ; 0280 free	    256		2
 ; 
 
+
+; Post-render effects staging: projection scratch and the unused draw-list
+; tail (records 49..69). No additional Super FX RAM is allocated.
+rfx_weatherbuf equ m_rotpnts
+rfx_splashes equ m_clippolybuf
+rfx_tmp equ m_clippolybuf+96
+rfx_prevangle equ m_clippolybuf+108
+rfx_drift equ m_clippolybuf+110
+rfx_mode equ m_clippolybuf+112
+rfx_flags equ m_clippolybuf+114
+rfx_speed equ m_clippolybuf+116
+rfx_present equ m_clippolybuf+118
+rfx_iconstyle equ m_clippolybuf+120
+rfx_iconcols equ m_clippolybuf+122
+rfx_stampbuf equ m_drawlist+49*dl_sizeof
 
 
 

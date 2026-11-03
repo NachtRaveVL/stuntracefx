@@ -1,0 +1,14 @@
+	global mrpals_begin
+	global mrpals_end
+	global retail_pal8800
+	global retail_pal8a00
+	global retail_pal8c00
+	global retail_pal8e00
+	global retail_pal9000
+	global retail_pal9200
+	global retail_pal9400
+	global retail_pal9600
+	global retail_pal9800
+	global retail_pal9a00
+	global retail_pal9c00
+	global retail_pal9e00

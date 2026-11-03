@@ -1,0 +1,14 @@
+	global mrgfx_begin
+	global mrgfx_end
+	global retail_frontobjectspack
+	global retail_frontobjectspack_end
+	global retail_frontmappack
+	global retail_frontmappack_end
+	global retail_frontbackpack
+	global retail_frontbackpack_end
+	global retail_menumappack
+	global retail_menumappack_end
+	global retail_fronttexturepack
+	global retail_fronttexturepack_end
+	global retail_optioncardspack
+	global retail_optioncardspack_end

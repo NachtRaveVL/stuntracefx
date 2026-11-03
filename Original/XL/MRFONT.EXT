@@ -1,0 +1,2 @@
+	global mrfont_begin,mrfont_end
+	global mretail_projectpnt,mretail_projectswap,mretail_projectmag,mretail_projectlist,mretail_sprint,mretail_copyface

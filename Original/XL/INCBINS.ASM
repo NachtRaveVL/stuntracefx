@@ -33,6 +33,8 @@ msprites3
 	inccru	bgstpccr,data\st-p.ccr
 	inccru	bg23hpcr,data\2-3h.pcr
 	endc
+	incpublics mrhudgsu.ext
+	incfile mrhudast.asm
 	bankend	20
 
 	bank	21
@@ -217,3 +219,73 @@ bgholeapcr
 bgtsppcr
 bg24pcr
 bgtstpcr
+
+; Frontend CPU strategies occupy the unused source bank.
+	bank	29
+	incfile	mrmenu.asm
+	incfile	mrui.asm
+	incfile	mrtiles.asm
+	incfile	mrtitle.asm
+	incfile	mrselect.asm
+	incfile	mrdraw.asm
+	incfile	mrframe.asm
+	incpublics mrshade.ext
+	incpublics mrgeom.ext
+	incpublics mrpoints.ext
+	incpublics mrproj.ext
+	incpublics mrface.ext
+	incpublics mrpacket.ext
+	incpublics mrflclip.ext
+	incpublics mrtxclip.ext
+	incpublics mrsprgat.ext
+	incpublics mrwhole.ext
+	incpublics mrlist.ext
+	incpublics mrpart.ext
+	incpublics mrfx.ext
+	include coltabs.ext
+	incpublics mrflrast.ext
+	incpublics mrdepth.ext
+	include mrshdat.ext
+	incpublics mrfont.ext
+	incpublics mrsprite.ext
+	incpublics mrcolr.ext
+	include mrmatdat.ext
+	mario on
+	incfile mrcolr.mc
+	incfile mrsprite.mc
+	incfile mrfont.mc
+	incfile mrshade.mc
+	incfile mrgeom.mc
+	incfile mrdepth.mc
+	incfile mrpoints.mc
+	incfile mrproj.mc
+	incfile mrface.mc
+	incfile mrpacket.mc
+	incfile mrflclip.mc
+	incfile mrtxclip.mc
+	incfile mrsprgat.mc
+	incfile mrwhbr.mc
+	incfile mrlsbr.mc
+	mario off
+	bankend	29
+
+; Packed frontend resources retain their backward-crunch format.
+	bank	30
+	incfile	mrgfx.asm
+	mario on
+	incfile mrflrast.mc
+	incfile mrwhole.mc
+	incfile mrlist.mc
+	mario off
+	incfile mrlist.asm
+	mario on
+	incfile mrpart.mc
+	incfile mrfx.mc
+	mario off
+	incfile mrfxdat.asm
+	incfile mrfxcpu.asm
+	mario on
+	incfile mrhudgsu.mc
+	mario off
+	incfile mrhudcpu.asm
+	bankend	30

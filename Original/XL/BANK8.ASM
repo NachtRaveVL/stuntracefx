@@ -22,6 +22,7 @@ bgmd	incbinfile	snd\sgbgmd.bin
 bgmdlen	equ	*-bgmd
 
 	incfile	xlspcw.asm
+	incfile	mrblank.asm
 	bankend	8
 
 	include	tail.inc

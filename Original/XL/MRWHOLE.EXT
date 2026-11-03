@@ -1,0 +1,2 @@
+	global mrwhole_begin,mrwhole_end,mretail_drawshape,mretail_drawfaces
+	global mrwhbr_begin,mrwhbr_end

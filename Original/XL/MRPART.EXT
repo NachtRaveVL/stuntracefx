@@ -1,0 +1,2 @@
+	global mrpart_begin,mrpart_end,mretail_makeparticles,mretail_showparticles,mretail_updateparticles
+	global retail_ageparticles_l

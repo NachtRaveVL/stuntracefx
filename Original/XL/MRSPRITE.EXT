@@ -1,0 +1,3 @@
+	global mrsprite_begin,mrsprite_end,mrsprite_codeend
+	global mretail_sprite32,mretail_usprite,mretail_ssprite,mretail_sprscale,mretail_sprproject,mretail_sprdivide
+	global retail_spriteztail,retail_spriteztail_end

@@ -1,0 +1,8 @@
+	global mrforms_begin
+	global mrforms_end
+	global retail_fronttables
+	global retail_fronttables_end
+	global retail_spriteforms
+	global retail_spriteforms_end
+	global retail_spriteanims
+	global retail_spriteanims_end

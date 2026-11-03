@@ -840,6 +840,271 @@ mio_mode	equ	$303a
 	alc	race_def1,2
 	alc	race_cachedkind,1
 
+; Serialized retail CPU object/control state. The GSU polygon workspace
+; is saved here between raw dynamics tasks; rendering may reuse it.
+	alc	race_rawcontext,86
+	alc	race_objowner,2
+	alc	race_buttons,2
+	alc	race_previous,2
+	alc	race_cheatclock,2
+	alc	race_cheatstate,2
+	alc	race_carstate0,2
+	alc	race_carstate1,2
+	alc	race_scratch,2
+	alc	race_coltype,2
+	alc	race_colresult,2
+	alc	race_colmode,2
+	alc	race_contactnext,2
+	alc	race_callback,2
+	alc	race_animcount,2
+race_rawreset	equ	race_rawcontext+58
+race_rawobjects	equ	race_rawcontext+64
+race_rawspawnflags	equ	race_rawcontext+80
+
+; Retail scene-map ownership and serialized actor presentation scratch.
+	alc	race_actorcurrent,2
+	alc	race_protectedactor,2
+	alc	race_removerequest,2
+	alc	race_visualowner,2
+	alc	race_visualsize,2
+	alc	race_visualoffset,2
+	alc	race_visualangle,2
+	alc	race_trigbytes,2
+	alc	race_shadowkind,2
+	alc	race_attachx,2
+	alc	race_attachy,2
+	alc	race_attachz,2
+; Retail auxiliary-actor inputs and surface publication.
+	alc	race_playeractor,2
+	alc	race_visualmode,1
+	alc	race_scenephase,1
+	alc	race_groundheight,2
+	alc	race_groundindex,2
+; Retail car collision feedback and diagnostic publication.
+	alc	race_wheelkind,1
+	alc	race_feedbackmode,2
+	alc	race_impactcode,1
+	alc	race_debugmark,1
+	alc	race_effectclock,2
+; Raw-car scene inputs, four-car grid and the native 32-entry actor list.
+	alc	race_playeractor2,2
+	alc	race_input0,2
+	alc	race_input1,2
+	alc	race_lastinput0,2
+	alc	race_lastinput1,2
+	alc	race_cameraactor0,2
+	alc	race_cameraactor1,2
+	alc	race_sceneoptions,2
+	alc	race_playerphase,2
+	alc	race_gamephase,1
+	alc	race_endcamera,1
+	alc	race_carphase,1
+	alc	race_sequencez,2
+	alc	race_gridkind,8
+	alc	race_gridvariant,8
+	alc	race_def2,2
+	alc	race_def3,2
+	alc	race_griddef,2
+	alc	race_errorcolor,2
+	alc	race_errortarget,2
+	alc	race_errorpos,2
+	alc	race_startgrid,32
+	alc	race_gridranks,8
+	alc	race_gridactors,8
+	alc	race_gridbytes,2
+	alc	race_actorlist,66
+; Native list terminator at capacity aliases its byte-count word.
+race_actorbytes	equ	race_actorlist+64
+; Explicit CPU pool binding, native scene inputs and preview selection.
+	alc	race_poolfirst,2
+	alc	race_poolcount,2
+	alc	race_mapyaw,1
+	alc	race_mapid,2
+	alc	race_mapmode,1
+	alc	race_mapphase,1
+	alc	race_previewchoice,2
+	alc	race_previewcount,1
+	alc	race_previewactors,8
+	alc	race_previewdef,2
+	alc	race_selectedactor,2
+	alc	race_savedview,6
+	alc	race_gridsentinel,2
+; Retail diagnostic inputs; producer binding remains with the caller.
+	alc	race_diagtimes,28
+	alc	race_diagframe,1
+	alc	race_diagoldchip,2
+	alc	race_diagchecksum,2
+	alc	race_diagword0,2
+	alc	race_diagword1,2
+	alc	race_diagword2,2
+	alc	race_diagturn,2
+	alc	race_diagcell,2
+; Retail display inputs and independent 2D entity/OAM state.
+	alc	race_displayoverride,1
+	alc	race_displayrace,1
+	alc	race_displaychoice,1
+	alc	race_displaybrief,1
+	alc	race_displayack,1
+	alc	race_displaytimers,4
+	alc	race_displaycost,2
+	alc	race_displaycolors,12
+	alc	race_paletteblocks,2
+	alc	race_oambits,2
+	alc	race_oamword,2
+	alc	race_spritesleft,2
+	alc	race_entityscrollx,2
+	alc	race_entityscrolly,2
+	alc	race_spritexbit,2
+	alc	race_spritesize,2
+	alc	race_entityfreebytes,2
+	alc	race_entitybytes,2
+	alc	race_entitycurrent,2
+	alc	race_entityindex,2
+	alc	race_entityx,2
+	alc	race_entityy,2
+	alc	race_oamoldbytes,2
+	alc	race_oamoldhigh,2
+	alc	race_oambytes,2
+	alc	race_oamhigh,2
+	alc	race_entityflags,2
+	alc	race_entityfree,44
+	alc	race_entitylist,44
+	alc	race_entities,968
+	alc	race_oamflags,1
+	alc	race_oam,544
+; Frontend display requests, native reverse queues and window inputs.
+race_spriteheap	equ	race_entityflags
+	alc	race_streambytes,2
+	alc	race_displayrequests,1
+	alc	race_frontwait,2
+	alc	race_frontbright,1
+	alc	race_fronttarget,1
+	alc	race_fronttoggle,1
+	alc	race_frontxor,2
+	alc	race_frontseed,2
+	alc	race_frontdebug,2
+	alc	race_frontfast,2
+	alc	race_regbytes,2
+	alc	race_regqueue,128
+	alc	race_transferused,2
+	alc	race_transferbytes,2
+	alc	race_transfersource,2
+	alc	race_transferbank,2
+	alc	race_transferdest,2
+	alc	race_transferqueue,512
+	alc	race_frontscroll0,2
+	alc	race_frontscroll1,2
+	alc	race_frontscroll2,2
+	alc	race_frontscroll3,2
+	alc	race_bitmapstage,2
+	alc	race_frontdmaflip,1
+	alc	race_frontwindow,2
+	alc	race_frontwindowpos,2
+	alc	race_frontanimy,2
+	alc	race_frontbasey0,2
+	alc	race_frontbasey1,2
+	alc	race_frontwindowy0,2
+	alc	race_frontwindowy1,2
+	alc	race_frontcliptop,2
+	alc	race_frontclipbottom,2
+; Frontend menu inputs, selection state and record glyph producers.
+	alc	race_menurank,2
+	alc	race_menumode,2
+	alc	race_menutotal,4
+	alc	race_rankvalues,13
+	alc	race_recordtimes,38
+	alc	race_recordselected,2
+	alc	race_menucursors,8
+	alc	race_menuedges,2
+	alc	race_menuheld,2
+	alc	race_menuinputbytes,2
+	alc	race_menuinputqueue,16
+	alc	race_menutemp,2
+	alc	race_menuexit,2
+	alc	race_newentity,2
+	alc	race_menuactive,2
+	alc	race_menuunknown0,2
+	alc	race_menupending,2
+	alc	race_menunext,2
+	alc	race_menuchoice,2
+	alc	race_menucurrent,2
+	alc	race_menuoptions0,2
+	alc	race_menuoptions1,2
+	alc	race_menuoptions2,2
+	alc	race_menumatch,2
+	alc	race_menuunknown1,2
+	alc	race_menuunknown2,2
+	alc	race_menulimit,2
+	alc	race_menuoption,2
+	alc	race_menuunknown3,2
+	alc	race_menuaudio0,2
+	alc	race_menuaudio1,2
+	alc	race_menuaudio2,2
+	alc	race_menuunknown4,2
+	alc	race_menuunknown5,2
+	alc	race_menucolor,2
+	alc	race_menuunknown6,2
+	alc	race_menuunknown7,2
+	alc	race_menuunknown8,2
+	alc	race_recordflashcount,2
+	alc	race_recordflashphase,2
+	alc	race_menuinputbytes0,2
+	alc	race_menuinputqueue0,16
+	alc	race_menucursory,2
+; Frontend publication, serial probe and animation scratch.
+	alc	race_frontsoundoutput,2
+	alc	race_frontsoundramp,2
+	alc	race_frontprobe,1
+	alc	race_frontdevice,2
+	alc	race_frontinput0,2
+	alc	race_frontinput1,2
+	alc	race_menuwork1,2
+	alc	race_menuwork2,2
+; Title input and record validation diagnostics.
+	alc	race_titlesequence,2
+	alc	race_recorderror,1
+; Frontend choice decoder, raw held input and audio repeat state.
+	alc	race_choicecode,2
+	alc	race_optioncode0,2
+	alc	race_optioncode1,2
+	alc	race_optioncode2,2
+	alc	race_menuheld0,2
+	alc	race_audioupcount,2
+	alc	race_audiodowncount,2
+	alc	race_frontbufferphase,2
+; Retail visible-cell collection and draw-list ownership.
+	alc	race_visiblecells,316
+	alc	race_visiblecell,2
+	alc	race_visiblecol,2
+	alc	race_visiblerow,2
+	alc	race_drawplayer,2
+	alc	race_visiblekind,2
+; Caller-loaded option cards and independently owned texture strips.
+	xalc	race_fronttexture,$2000
+; Native 49-record CPU staging list; published only after GSU ownership.
+	xalc	race_drawlist,49*30
+; Keep palettes and the fixed hand-sprite/jewel reservation in bank $7F.
+	IFLT	xxmempt-nextaddress
+xxmempt	=	nextaddress
+	ENDC
+	xxalc	race_cellheads,2048
+	xxalc	race_palramps,2304
+	xxalc	race_palfill,512
+	xxalc	race_palbase,512
+	xxalc	race_palsource,512
+	xxalc	race_paltarget,512
+	xxalc	race_palshadow,512
+	xxalc	race_tilecopy,2048
+	xxalc	race_spritelists,$3000
+	xxalc	race_palfadebase,512
+	xxalc	race_fronttables,129
+	xxalc	race_menurecords,512
+	xxalc	race_menugraphics,$6800
+	xxalc	race_recordimage,1024
+	IFGT	xxmempt-$800000
+	fail
+	ENDC
+
 	IFGT	wmempt-$2000
 	printf	"%n%nTOO MANY ALCS USED%n%n"
 	fail

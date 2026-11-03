@@ -9,8 +9,12 @@
 ; Parameter words 3/4/5: acceleration, boost and deceleration forces;
 ; 6/7: brake and coasting drag; 8/9: initial and hard steering steps;
 ; 10/11/12: normal limit, hard-limit addition and recentering step;
-; 15/16: speed-dependent gravity scale and jump force;
+; 15/16: speed-dependent gravity scale and jump force; 19: impact gain;
 ; 20/21: shift/curve pointers; 22: boost consumption per update.
+; 0/1/2: wheel displacement scale, even torque selector and spring limit;
+; 13/14: zero-acceleration and front grip gains; 17/18: control grip gains;
+; 23/24: skid threshold and post-drive boost torque.
+; The wheel stages use a copied 25-word context.
 
 	incpublics	rcardefs.ext
 
@@ -44,7 +48,7 @@ rcar81b9_gearcurves
 rcar81b9
 rcar81b9_identity	equ	$81b9
 	rcardef_shape	$a200,$a7e8,$00
-; Header +05/+07/+09, flags +0B/+0D and frame +0F.
+; Header +05/+07/+09, type/flags +0B/+0D and collision mask +0F.
 	dw	$0000,$ffaa,$000a,$0012,$0000,$0505
 ; Bounds +11/+13/+15; five constructor-skipped words +17..+1F.
 	dw	$0190,$003c,$0190

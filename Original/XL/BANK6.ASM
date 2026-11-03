@@ -12,6 +12,12 @@
 	
 
 	incpublics	mhofs.ext
+	include	mrheap.ext
+	incpublics	mrupdate.ext
+	include	mrforce.ext
+	include	mrcoll.ext
+	include	mrwheel.ext
+	include	rcardefs.ext
 
 ;------------------------------------------------------------------
 	bank	6
@@ -27,6 +33,10 @@ cacheon	=	1
 
 
 	incfile	xlspcu.asm
+	mario	on
+rsp	equr	10
+	incfile	mrupdate.mc
+	mario	off
 	bankend	6
 
 	include	tail.inc

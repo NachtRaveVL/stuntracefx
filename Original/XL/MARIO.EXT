@@ -7,7 +7,7 @@
 	global	m_clrbitmaps
 	global	m_x1,m_z1,m_xp1
 	global	mwmatrotp16,mwmatrotp16t,m_bigz
-	global	m_drawlist,m_enddatabnk,m_enddata,m_bossmaxhp
+	global	m_dlptr,m_drawlist,m_enddatabnk,m_enddata,m_bossmaxhp
 	global	m_viewposy,mvanishx,mvanishy,mcallarctan16
 	global	m_cnt
 ;	global	m_lxpos,m_lypos,m_lzpos,mspr_pal,m_radius
@@ -152,7 +152,79 @@
 	global	mretail_driveprep,mretail_steer,mretail_driveforce
 	global	mretail_dragrate,mretail_limitmotion,mretail_driveinputs
 	global	m_retaildriveflags
+	global	m_retaillocalX,m_retaillocalY,m_retaillocalZ
+	global	mnormalise16,mretail_normalreturn1
+	global	m_mat11,m_mat12,m_mat22,m_mat33,m_t1,m_t2,m_t3
+	global	m_normX,m_normY,m_normZ,m_whlD,m_groupPtype
+	global	m_facePX,m_facePY,m_facePZ
+	global	m_retaildynphase,m_retailimpact,m_retailcontactyaw
+	global	m_retailimpactflash
+	global	m_retailplayer2
+	global	mdivu3216,mretail_rotreturn1,mretail_divreturn1
+	global	m_y2,m_z2
+	global	m_faceD,m_oldshape,m_oldframenum,m_shapescale,m_rotpnts
+	global	mcopy_pnts,mretail_pointsreturn1
+	global	m_retailwheelparams,m_retailwheeldefs,m_retailwheelobject
+	global	m_retailwheelcontact,m_retailwheelvertical,m_retailwheelreset
+	global	m_whlgndfriction,m_whlspringx,m_whlspringy,m_whlspringz
+	global	m_offroadfriction,m_onroadfriction,m_mat13
+	global	m_carworldx,m_carworldy,m_carworldz
+	global	mcrotmatzxy16,mtransmat16,mretail_wheelreturn1
+	global	m_avoidcarvx
+	global	m_avoidcary
+	global	m_avoidcarz
+	global	m_carflags
+	global	m_dynframe
+	global	m_retailarg4
+	global	m_retailarg5
+	global	m_retailarg6
+	global	m_retaildefinition
+	global	m_retailheap0
+	global	m_retailheap1
+	global	m_retailobjectcount
+	global	m_retailruntime1
+	global	m_retailruntime2
+	global	m_retailruntime3
+	global	m_retailspawnflags
+	global	m_retailtrigbase
+	global	m_retailfacetype
+	global	m_retailviewflags
+	global m_shadowpass,m_tr2
+	global m_or_of_outcodes
+	global m_sprx,m_spry,m_clipleft,m_clipright,mspr_pal,m_spr0,m_spra
+	global	m_depthsptr
+	global	m_objflags
+	global	m_projpnts
+	global	m_rotlightx
+	global	m_rotlighty
+	global	m_rotlightz
+	global	m_shadestab
+	global	m_sprbank
+	global	m_sprdata
+	global	m_sprmask
+	global	m_tcmodecol
+	global	m_texptr
+	global	m_texturemap
+	global	m_vistab
+	global	m_stack
+	global	m_viewrotx,m_viewroty,m_viewrotz
+	global	mdivu3115
+	global	mretail_runtimereturn1
 
+	global m_lightx,m_lighty,m_lightz,m_mat0033,m_mat1211
+	global m_mat21,m_mat2113,m_mat23,m_mat2322,m_mat31
+	global m_mat32,m_mat3231,m_numpnts,m_rmat11,m_rmat12
+	global m_rmat13,m_rmat21,m_rmat22,m_rmat23,m_rmat31
+	global m_rmat32,m_rmat33,m_rotptr
+	global mretail_georeturn1
+	global m_sp
+	global m_particles,m_bspptr,m_bsplist,m_zbuf,m_numgroups,m_groupnum,m_grouptab,m_fnumpnts
+	global m_tr1,m_polybuf,m_dy1,m_dy2,m_sprb,m_sprc,m_sprd
+	global m_clippolybuf,m_clipdx,m_clippnts,m_clipx,m_clipy,m_clipz,m_clip2drsp,m_sprxmin
+	global m_x1inc,m_x2inc,m_dxp1,m_dxp2,m_xp1inc,m_xp2inc
+	global m_yp1,m_yp2,m_dyp1,m_dyp2,m_yp1inc,m_yp2inc
+	global m_sprxscroll,m_spryscroll
+	global m_sprz
+	global rfx_weatherbuf,rfx_splashes,rfx_tmp,rfx_prevangle,rfx_drift,rfx_mode
+	global rfx_flags,rfx_speed,rfx_present,rfx_stampbuf,rfx_iconstyle,rfx_iconcols
 
-
-

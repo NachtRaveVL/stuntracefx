@@ -76,6 +76,13 @@ xoffset	equ	*-ramstart
 	minfo	game
 	incfile	windows.asm
 	minfo	windows
+	include	mrheap.ext
+	include	mrupdate.ext
+	include	rcardefs.ext
+	include	mrcoll.ext
+	incfile	mrlife.asm
+	incfile	mrviews.asm
+	incfile	mrhud.asm
 	bankend	2
 
 
@@ -99,6 +106,12 @@ planetdmapos2	dw	100
 ;	minfo	sprites
 	incfile	world.asm
 	minfo	world
+	incfile	mrcpu.asm
+	incfile	mrscene.asm
+	incfile	mrpresnt.asm
+	incfile	mrcarfx.asm
+	incfile	mrmatdat.asm
+	incfile	mrshdat.asm
 	bankend	3
 
 	org	$1f8000+$3db0,$8000*$1f+$3db0
@@ -117,6 +130,7 @@ planetdmapos2	dw	100
 	inccru	bgf1pcr,data\f-1.pcr
 ;	incfile	cont.asm
 ;	minfo	cont
+	incfile	mrpals.asm
 	bankend	31
 ;------------------------------------------------------------------
 

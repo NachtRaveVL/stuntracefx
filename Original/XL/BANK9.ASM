@@ -17,6 +17,9 @@ bgm11	incbinfile	snd\sgbgm11.bin
 bgm11len	equ	*-bgm11
 
 	incfile	xlspce.asm
+	incfile	mrdisp.asm
+	incfile	mrfront.asm
+	incfile	mrhooks.asm
 	bankend	9
 
 	include	tail.inc
