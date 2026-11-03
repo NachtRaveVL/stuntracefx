@@ -1,0 +1,2 @@
+	global mrlist_begin,mrlist_end,mretail_renderlist,mrlsbr_begin,mrlsbr_end,retail_renderlist_l
+	global retail_renderframe_l,mrlistcpu_begin,mrlistcpu_end

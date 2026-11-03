@@ -7,7 +7,7 @@
 	global	m_clrbitmaps
 	global	m_x1,m_z1,m_xp1
 	global	mwmatrotp16,mwmatrotp16t,m_bigz
-	global	m_drawlist,m_enddatabnk,m_enddata,m_bossmaxhp
+	global	m_dlptr,m_drawlist,m_enddatabnk,m_enddata,m_bossmaxhp
 	global	m_viewposy,mvanishx,mvanishy,mcallarctan16
 	global	m_cnt
 ;	global	m_lxpos,m_lypos,m_lzpos,mspr_pal,m_radius
@@ -218,7 +218,7 @@
 	global m_rmat32,m_rmat33,m_rotptr
 	global mretail_georeturn1
 	global m_sp
-	global m_bspptr,m_bsplist,m_zbuf,m_numgroups,m_groupnum,m_grouptab,m_fnumpnts
+	global m_particles,m_bspptr,m_bsplist,m_zbuf,m_numgroups,m_groupnum,m_grouptab,m_fnumpnts
 	global m_tr1,m_polybuf,m_dy1,m_dy2,m_sprb,m_sprc,m_sprd
 	global m_clippolybuf,m_clipdx,m_clippnts,m_clipx,m_clipy,m_clipz,m_clip2drsp,m_sprxmin
 	global m_x1inc,m_x2inc,m_dxp1,m_dxp2,m_xp1inc,m_xp2inc

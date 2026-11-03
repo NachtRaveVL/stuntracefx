@@ -368,14 +368,16 @@ rpk_9045
 	and r1
 	bne rpk_905e
 	nop
-	from r3
-	lob
-	lms r3,[m_depthsptr]
-	to r14
-	add r3
-	getb
-	bra rpk_90b6
-	colour
+; Keep this slot fixed so the existing bank-29 entries do not move.
+	iwt r15,#rrl_depthmaterial&WM
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 rpk_905e
 	dec r0
 	dec r0

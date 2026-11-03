@@ -237,6 +237,9 @@ bgtstpcr
 	incpublics mrtxclip.ext
 	incpublics mrsprgat.ext
 	incpublics mrwhole.ext
+	incpublics mrlist.ext
+	incpublics mrpart.ext
+	include coltabs.ext
 	incpublics mrflrast.ext
 	incpublics mrdepth.ext
 	include mrshdat.ext
@@ -259,6 +262,7 @@ bgtstpcr
 	incfile mrtxclip.mc
 	incfile mrsprgat.mc
 	incfile mrwhbr.mc
+	incfile mrlsbr.mc
 	mario off
 	bankend	29
 
@@ -268,5 +272,10 @@ bgtstpcr
 	mario on
 	incfile mrflrast.mc
 	incfile mrwhole.mc
+	incfile mrlist.mc
+	mario off
+	incfile mrlist.asm
+	mario on
+	incfile mrpart.mc
 	mario off
 	bankend	30
