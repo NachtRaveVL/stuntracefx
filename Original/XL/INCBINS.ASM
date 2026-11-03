@@ -239,6 +239,7 @@ bgtstpcr
 	incpublics mrwhole.ext
 	incpublics mrlist.ext
 	incpublics mrpart.ext
+	incpublics mrfx.ext
 	include coltabs.ext
 	incpublics mrflrast.ext
 	incpublics mrdepth.ext
@@ -277,5 +278,8 @@ bgtstpcr
 	incfile mrlist.asm
 	mario on
 	incfile mrpart.mc
+	incfile mrfx.mc
 	mario off
+	incfile mrfxdat.asm
+	incfile mrfxcpu.asm
 	bankend	30

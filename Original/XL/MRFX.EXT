@@ -1,0 +1,3 @@
+	global mrfx_begin,mrfx_end,mretail_posteffects,retail_posteffects_l,mretail_nearcarmarker
+	global rfx_data_begin,rfx_data_end
+	global retail_renderfx_l,rfx_cpu_end

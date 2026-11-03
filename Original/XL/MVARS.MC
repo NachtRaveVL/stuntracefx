@@ -569,6 +569,21 @@ m_retailfacetype	equ	m_polybuf+84
 ; 0280 free	    256		2
 ; 
 
+
+; Post-render effects staging: projection scratch and the unused draw-list
+; tail (records 49..69). No additional Super FX RAM is allocated.
+rfx_weatherbuf equ m_rotpnts
+rfx_splashes equ m_clippolybuf
+rfx_tmp equ m_clippolybuf+96
+rfx_prevangle equ m_clippolybuf+108
+rfx_drift equ m_clippolybuf+110
+rfx_mode equ m_clippolybuf+112
+rfx_flags equ m_clippolybuf+114
+rfx_speed equ m_clippolybuf+116
+rfx_present equ m_clippolybuf+118
+rfx_iconstyle equ m_clippolybuf+120
+rfx_iconcols equ m_clippolybuf+122
+rfx_stampbuf equ m_drawlist+49*dl_sizeof
 
 
 

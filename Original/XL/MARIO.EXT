@@ -225,4 +225,6 @@
 	global m_yp1,m_yp2,m_dyp1,m_dyp2,m_yp1inc,m_yp2inc
 	global m_sprxscroll,m_spryscroll
 	global m_sprz
+	global rfx_weatherbuf,rfx_splashes,rfx_tmp,rfx_prevangle,rfx_drift,rfx_mode
+	global rfx_flags,rfx_speed,rfx_present,rfx_stampbuf,rfx_iconstyle,rfx_iconcols
 
