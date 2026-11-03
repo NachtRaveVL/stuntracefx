@@ -33,6 +33,8 @@ msprites3
 	inccru	bgstpccr,data\st-p.ccr
 	inccru	bg23hpcr,data\2-3h.pcr
 	endc
+	incpublics mrhudgsu.ext
+	incfile mrhudast.asm
 	bankend	20
 
 	bank	21
@@ -282,4 +284,8 @@ bgtstpcr
 	mario off
 	incfile mrfxdat.asm
 	incfile mrfxcpu.asm
+	mario on
+	incfile mrhudgsu.mc
+	mario off
+	incfile mrhudcpu.asm
 	bankend	30
