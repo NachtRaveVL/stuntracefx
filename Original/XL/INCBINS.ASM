@@ -227,16 +227,46 @@ bgtstpcr
 	incfile	mrselect.asm
 	incfile	mrdraw.asm
 	incfile	mrframe.asm
+	incpublics mrshade.ext
+	incpublics mrgeom.ext
+	incpublics mrpoints.ext
+	incpublics mrproj.ext
+	incpublics mrface.ext
+	incpublics mrpacket.ext
+	incpublics mrflclip.ext
+	incpublics mrtxclip.ext
+	incpublics mrsprgat.ext
+	incpublics mrwhole.ext
+	incpublics mrflrast.ext
+	incpublics mrdepth.ext
+	include mrshdat.ext
+	incpublics mrfont.ext
 	incpublics mrsprite.ext
 	incpublics mrcolr.ext
 	include mrmatdat.ext
 	mario on
 	incfile mrcolr.mc
 	incfile mrsprite.mc
+	incfile mrfont.mc
+	incfile mrshade.mc
+	incfile mrgeom.mc
+	incfile mrdepth.mc
+	incfile mrpoints.mc
+	incfile mrproj.mc
+	incfile mrface.mc
+	incfile mrpacket.mc
+	incfile mrflclip.mc
+	incfile mrtxclip.mc
+	incfile mrsprgat.mc
+	incfile mrwhbr.mc
 	mario off
 	bankend	29
 
 ; Packed frontend resources retain their backward-crunch format.
 	bank	30
 	incfile	mrgfx.asm
+	mario on
+	incfile mrflrast.mc
+	incfile mrwhole.mc
+	mario off
 	bankend	30

@@ -71,6 +71,9 @@ oopspic	;incbin	data\oops.pic
 	mario	on
 	incfile	mrsort.mc
 	mario	off
+	mario on
+	incfile mrgeoret.mc
+	mario off
 	bankend	1
 
 

@@ -1501,6 +1501,7 @@ rsp_b42d
 rsp_b42e
 	nop
 ; Same-bank copy of the inherited divider; no new physical credit.
+mretail_sprdivide
 rsp_81bc
 	with r0
 rsp_81bd

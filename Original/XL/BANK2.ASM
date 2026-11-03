@@ -111,6 +111,7 @@ planetdmapos2	dw	100
 	incfile	mrpresnt.asm
 	incfile	mrcarfx.asm
 	incfile	mrmatdat.asm
+	incfile	mrshdat.asm
 	bankend	3
 
 	org	$1f8000+$3db0,$8000*$1f+$3db0
